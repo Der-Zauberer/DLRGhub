@@ -1,0 +1,14 @@
+:root {
+    font-family: Arial, Helvetica, sans-serif;
+    --theme-primary-color: #e30613;
+    --theme-secondary-color: #ffed00;
+    --theme-accent-color: #0069b4;
+}
+
+.primary-color { background: #e30613 !important }
+.secondary-color { background: #ffed00 !important }
+.accent-color { background: #0069b4 !important }
+
+.primary-text { color: #e30613 !important }
+.secondary-text { color: #ffed00 !important }
+.accent-text { color: #0069b4 !important }
