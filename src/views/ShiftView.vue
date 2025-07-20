@@ -11,7 +11,13 @@
 
     <div class="container-xl" v-if="plans.value && selectedPlan !== undefined">
 
-        <button @click="selectedPlan = undefined">Close</button>
+        <div class="flex flex-center">
+            <button class="grey-color" @click="selectedPlan = undefined">
+                <swd-icon class="left-icon"></swd-icon>
+                Zurück
+            </button>
+            <div>{{ plans.value[selectedPlan].name }}</div>
+        </div>
 
         <div class="grid-cols-xl-5 grid-cols-lg-4 grid-cols-md-3 grid-cols-sm-2 grid-cols-1 shift-table">
 
@@ -22,12 +28,13 @@
                 </div>
                 <div>
                 <div class="shift__role">Wachleiter:</div>
-                <div class="shift__name">Felix Hohenberger</div>
+                <div class="shift__name">Herbert Groß</div>
                 </div>
                 <div>
                 <div class="shift__role">Wachgänger:</div>
-                <div class="shift__name">André Sommer</div>
-                <div class="shift__name">Cari Ruh</div>
+                <div class="shift__name">Emely Schwarz</div>
+                <div class="shift__name">Frederik Hubert</div>
+                <div class="shift__name">Laura Wälder</div>
                 </div>
             </div>
 
@@ -100,33 +107,17 @@
 <script setup lang="ts">
 import { resource } from '@/core/resource';
 import type { ShiftPlan } from '@/core/types';
+import type { DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
+
+const dataService = inject('dataService') as DataService
 
 const selectedPlan = ref<number | undefined>()
 const selectedShift = ref<number | undefined>()
 
 const plans = resource({
-    loader: () => [{
-        id: new RecordId('shift_plan', 'abcd'),
-        name: 'Wachplan 2025',
-        shifts: [
-            { name: 'SA', date: new Date('2025-07-12') },
-            { name: 'SO', date: new Date('2025-07-13') },
-            { name: 'SA', date: new Date('2025-07-19') },
-            { name: 'SO', date: new Date('2025-07-20') },
-            { name: 'SA', date: new Date('2025-07-26') }
-        ],
-        roles: [
-            'Wachleiter',
-            'Sanitäter'
-        ],
-        people: [
-            { firstName: 'André', lastName: 'Sommer' },
-            { firstName: 'Cari', lastName: 'Ruh' },
-            { firstName: 'Felix', lastName: 'Hohenberger' }
-        ]
-    } as ShiftPlan]
+    loader: () => dataService.getShiftPlans()
 })
 
 </script>
