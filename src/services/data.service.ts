@@ -1,8 +1,15 @@
-import type { ShiftPlan } from "@/core/types";
+import type { Plan, ShiftPlan } from "@/core/types";
 import { RecordId } from "surrealdb";
-import type { App } from "vue";
+import { type App } from "vue";
+import type { SurrealDbService } from "./surrealdb.service";
 
 export class DataService {
+
+    constructor(private surrealDbService: SurrealDbService) {}
+
+    async getPlans(): Promise<Plan[]> {
+        return this.surrealDbService.select<Plan>('plan')
+    }
 
     getShiftPlans(): ShiftPlan[] {
         return [
@@ -52,10 +59,13 @@ export class DataService {
 
 }
 
+export const DATA_SERVICE = 'dataService'
+
 export default {
     install(app: App) {
-        const dataService = new DataService() 
+        const surrealDbService = app.config.globalProperties.$surrealDbService
+        const dataService = new DataService(surrealDbService)
         app.config.globalProperties.$dataService = dataService
-        app.provide('dataService', dataService)
+        app.provide(DATA_SERVICE, dataService)
     }
 }

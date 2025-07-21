@@ -15,3 +15,28 @@ export type ShiftPlan = {
         lastName: string
     }[]
 }
+
+export type Plan = {
+    id: RecordId<'plan'>
+    name: string
+    roles: string[]
+    shifts: Shift[]
+}
+
+export type Shift = {
+    id: RecordId<'shift'>
+    name: string
+    date: Date
+    startTime?: string
+    endTime?: string
+    people: {
+        firstName: string
+        lastName: string
+        role: string
+    }[]
+}
+
+export type User = {
+    id: RecordId<'user'>
+    password: string
+}

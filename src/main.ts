@@ -7,19 +7,35 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import ShiftView from './views/ShiftView.vue'
 import dataService from './services/data.service'
+import PlanView from './views/PlanView.vue'
+import surrealdbService, { auth } from './services/surrealdb.service'
+import LoginView from './views/LoginView.vue'
+
+export const profiles = {
+  local: {
+    address: 'ws://localhost:8080/rpc',
+    namespace: 'dlrg.derzauberer.eu',
+    database: 'develop'
+  }
+}
+
+export const profile = profiles.local
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: HomeView },
-    { path: '/shift', name: 'shift-list', component: ShiftView },
-    { path: '/shift/:id', name: 'shift', component: ShiftView }
+    { path: '/', name: 'home', component: HomeView, beforeEnter: auth},
+    { path: '/login', name: 'login', component: LoginView },
+    { path: '/shift', name: 'shift-list', component: ShiftView, beforeEnter: auth },
+    { path: '/shift/:id', name: 'shift', component: ShiftView, beforeEnter: auth },
+    { path: '/plans', name: 'plans', component: PlanView, beforeEnter: auth }
   ],
 })
 
 const app = createApp(App)
 
 app.use(router)
+app.use(surrealdbService)
 app.use(dataService)
 
 app.mount('#app')
