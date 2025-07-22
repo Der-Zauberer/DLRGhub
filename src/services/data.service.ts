@@ -1,5 +1,5 @@
-import type { Plan, ShiftPlan } from "@/core/types";
-import { RecordId } from "surrealdb";
+import type { Plan, Shift, ShiftPlan } from "@/core/types";
+import { RecordId, surql } from "surrealdb";
 import { type App } from "vue";
 import type { SurrealDbService } from "./surrealdb.service";
 
@@ -9,6 +9,11 @@ export class DataService {
 
     async getPlans(): Promise<Plan[]> {
         return this.surrealDbService.select<Plan>('plan')
+    }
+
+    async getPlan(id: RecordId<'plan'>): Promise<{ plan: Plan, shifts: Shift[] } | undefined> {
+        const [plan, shifts] = await this.surrealDbService.query<[Plan, Shift[]]>(surql`SELECT * FROM ONLY ${id}; SELECT * FROM ${id}->scedules->shift;`)
+        return plan ? { plan, shifts } : undefined
     }
 
     getShiftPlans(): ShiftPlan[] {

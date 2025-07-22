@@ -26,9 +26,8 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView, beforeEnter: auth},
     { path: '/login', name: 'login', component: LoginView },
-    { path: '/shift', name: 'shift-list', component: ShiftView, beforeEnter: auth },
-    { path: '/shift/:id', name: 'shift', component: ShiftView, beforeEnter: auth },
-    { path: '/plans', name: 'plans', component: PlanView, beforeEnter: auth }
+    { path: '/shifts', name: 'plans', component: PlanView, beforeEnter: auth },
+    { path: '/shifts/:id', name: 'shifts', component: ShiftView, beforeEnter: auth }
   ],
 })
 

@@ -30,8 +30,8 @@ export type Shift = {
     startTime?: string
     endTime?: string
     people: {
-        firstName: string
-        lastName: string
+        firstname: string
+        lastname: string
         role: string
     }[]
 }

@@ -12,3 +12,10 @@
 .primary-text { color: #e30613 !important }
 .secondary-text { color: #ffed00 !important }
 .accent-text { color: #0069b4 !important }
+
+/** Unfixed **/
+
+.flex, [class*="grid-cols-"] {
+    padding: 0;
+    list-style: none;
+}
