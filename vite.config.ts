@@ -17,7 +17,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true
+        enabled: false
       },
       manifest: {
         name: 'DLRG',
@@ -43,7 +43,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ttf,ico,png,svg}'],
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\//,
+            urlPattern: ({ url }) => url.hostname === 'dlrg.derzauberer.eu',
             handler: 'NetworkOnly',
             options: {
               cacheName: 'external-resources',

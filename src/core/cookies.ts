@@ -17,7 +17,11 @@ export class Cookies {
         return new Map(this.cookies)
     }
 
-    set(name: string, value: string, date: Date) {
+    set(name: string, value: string, date?: Date) {
+        if (!date) {
+            date = new Date()
+            date.setFullYear(date.getFullYear() + 1);
+        }
         document.cookie = `${name}=${encodeURIComponent(value)}; expires=${date.toUTCString()}; path=/; SameSite=Strict`
         this.cookies.set(name, value)
     }

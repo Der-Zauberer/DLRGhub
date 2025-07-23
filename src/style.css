@@ -15,7 +15,7 @@
 
 /** Unfixed **/
 
-.flex, [class*="grid-cols-"] {
+ul.flex, ul[class*="grid-cols-"] {
     padding: 0;
     list-style: none;
 }

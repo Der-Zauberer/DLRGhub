@@ -11,16 +11,6 @@ import PlanView from './views/PlanView.vue'
 import surrealdbService, { auth } from './services/surrealdb.service'
 import LoginView from './views/LoginView.vue'
 
-export const profiles = {
-  local: {
-    address: 'ws://localhost:8080/rpc',
-    namespace: 'dlrg.derzauberer.eu',
-    database: 'develop'
-  }
-}
-
-export const profile = profiles.local
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -32,9 +22,7 @@ const router = createRouter({
 })
 
 const app = createApp(App)
-
 app.use(router)
 app.use(surrealdbService)
 app.use(dataService)
-
 app.mount('#app')
