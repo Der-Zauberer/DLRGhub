@@ -10,6 +10,7 @@ import dataService from './services/data.service'
 import PlanView from './views/PlanView.vue'
 import surrealdbService, { auth } from './services/surrealdb.service'
 import LoginView from './views/LoginView.vue'
+import type { BeforeInstallPromptEvent } from './core/types'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,6 +20,13 @@ const router = createRouter({
     { path: '/shifts', name: 'plans', component: PlanView, beforeEnter: auth },
     { path: '/shifts/:id', name: 'shifts', component: ShiftView, beforeEnter: auth }
   ],
+})
+
+export let pwa: BeforeInstallPromptEvent | undefined = undefined
+
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault()
+  pwa = event as BeforeInstallPromptEvent
 })
 
 const app = createApp(App)
