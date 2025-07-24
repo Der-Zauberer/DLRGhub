@@ -67,8 +67,7 @@ export class SurrealDbService extends Surreal {
         return await super.invalidate()
     }
 
-    async invalidateAndRedirect(route: string | RouteLocationNormalized = '/') {
-        await this.invalidate()
+    async redirectPostInvalidate(route: string | RouteLocationNormalized = '/') {
         this.router.push(route)
     }
 
