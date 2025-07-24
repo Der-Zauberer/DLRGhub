@@ -12,7 +12,7 @@
 
             <div class="grid-cols-2">
                 <button class="grey-color" @click="open = false">Cancel</button>
-                <button @click="open = false">{{ action }}</button>
+                <button @click="open = false, $emit('success')">{{ action }}</button>
             </div>
 
         </swd-card>

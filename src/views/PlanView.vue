@@ -5,8 +5,8 @@
         <div class="headline">
             <h4>Dienstpläne</h4>
             <button class="grey-color" @click="planCreateDialog = true"><swd-icon class="add-icon"></swd-icon></button>
-            <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog">
-                
+            <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" @success="createPlan()">
+                <InputComponent label="Name" v-model="createPlanForm.name"/>
             </DialogComponent>
         </div>
 
@@ -61,16 +61,23 @@
 
 <script setup lang="ts">
 import DialogComponent from '@/components/DialogComponent.vue';
+import InputComponent from '@/components/InputComponent.vue';
 import { resource } from '@/core/resource';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { inject, ref } from 'vue';
+import { inject, reactive, ref } from 'vue';
 
 const data = inject(DATA_SERVICE) as DataService
 
 const planCreateDialog = ref<boolean>(false)
 
+const createPlanForm = reactive<{ name?: string }>({})
+
 const plans = resource({
     loader: () => data.getPlans()
 })
+
+function createPlan() {
+    console.log('TODO')
+}
 
 </script>
