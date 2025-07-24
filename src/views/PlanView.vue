@@ -4,7 +4,10 @@
 
         <div class="headline">
             <h4>Dienstpläne</h4>
-            <button class="grey-color"><swd-icon class="add-icon"></swd-icon></button>
+            <button class="grey-color" @click="planCreateDialog = true"><swd-icon class="add-icon"></swd-icon></button>
+            <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog">
+                
+            </DialogComponent>
         </div>
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
@@ -57,11 +60,14 @@
 </style>
 
 <script setup lang="ts">
+import DialogComponent from '@/components/DialogComponent.vue';
 import { resource } from '@/core/resource';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { inject } from 'vue';
+import { inject, ref } from 'vue';
 
 const data = inject(DATA_SERVICE) as DataService
+
+const planCreateDialog = ref<boolean>(false)
 
 const plans = resource({
     loader: () => data.getPlans()

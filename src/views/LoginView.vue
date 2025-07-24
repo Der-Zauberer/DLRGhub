@@ -47,7 +47,6 @@ async function login() {
     loading.value = true
     error.value = undefined
     try {
-        console.log(profiles[credentials.profile].address, credentials.profile !== 'local')
         if (credentials.profile !== 'local') await surrealdb.reconnect(profiles[credentials.profile])
         await surrealdb.signin(credentials)
         await surrealdb.redirectPostLogin()
