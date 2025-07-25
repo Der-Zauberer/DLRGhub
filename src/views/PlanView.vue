@@ -6,7 +6,9 @@
             <h4>Dienstpläne</h4>
             <button class="grey-color" @click="planCreateDialog = true"><swd-icon class="add-icon"></swd-icon></button>
             <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" @success="createPlan()">
-                <InputComponent label="Name" v-model="createPlanForm.name"/>
+                <form class="grid-cols-1">
+                    <InputComponent label="Name" v-model="createPlanForm.name"/>
+                </form>
             </DialogComponent>
         </div>
 
@@ -42,7 +44,7 @@
 
 .headline:not(:first-child) { margin-top: calc(var(--theme-element-spacing) * 2) }
 .headline:not(:last-child) { margin-bottom: var(--theme-element-spacing) }
-.headline * { margin: 0;}
+.headline > * { margin: 0 }
 
 .button-grid a {
     display: flex;

@@ -10,7 +10,7 @@
 
             <slot></slot>
 
-            <div class="grid-cols-2">
+            <div class="grid-cols-2" v-if="action">
                 <button class="grey-color" @click="open = false">Cancel</button>
                 <button @click="open = false, $emit('success')">{{ action }}</button>
             </div>
@@ -24,7 +24,7 @@
 
 const open = defineModel<boolean>()
 
-defineProps<{ name: string, action: string }>()
+defineProps<{ name: string, action?: string }>()
 defineEmits<{ ( e: 'success', value: void ): void }>()
 
 </script>
