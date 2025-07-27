@@ -19,11 +19,11 @@
                 <div v-for="role of plan.value?.plan.roles" class="margin-bottom">
                     <div><strong>{{ role }}</strong></div>
                     <div v-for="person of shift.people.filter(person => person.role === role)">
-                        <i>{{ person.firstname }} {{ person.lastname }}</i>
+                        <i>{{ person.name }}</i>
                     </div>
                 </div>
                 <div v-for="person of shift.people.filter(person => !plan.value?.plan.roles.includes(person.role))">
-                    <i>{{ person.firstname }} {{ person.lastname }}</i>
+                    <i>{{ person.name }}</i>
                 </div>
             </li>
         </ul>
@@ -32,30 +32,20 @@
 
             <div class="grid-cols-1" v-for="role of plan.value?.plan.roles" v-if="shiftEditData">
                 <h6>{{ role }}</h6>
-                <div>
-                    <div v-for="person of shiftEditData.people.filter(person => person.role === role)">
-                        <span>{{ person.firstname }} {{ person.lastname }}</span>
-                        <button class="ghost"><swd-icon class="delete-icon"></swd-icon></button>
-                    </div>
-                </div>
-                <div class="flex">
-                    <input :ref="`person-${role}`">
-                    <button class="grey-color" @click="console.log((($refs[`person-${role}`] as [HTMLInputElement])[0] as HTMLInputElement).value)"><swd-icon class="add-icon"></swd-icon></button>
-                </div>
+                <ListInputComponent 
+                    :list="shiftEditData.people.filter(person => person.role === role).map(person => person.name)"
+                    @add="data.addShiftPerson(shiftEditData.id, { name: $event, role: role }), plan.reload()"
+                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event, role: role }), plan.reload()"
+                />
             </div>
 
             <div class="grid-cols-1" v-if="shiftEditData">
                 <h6>Sonstige</h6>
-                <div>
-                    <div v-for="person of shiftEditData.people.filter(person => !plan.value?.plan.roles.includes(person.role))">
-                        <span>{{ person.firstname }} {{ person.lastname }}</span>
-                        <button class="ghost"><swd-icon class="delete-icon"></swd-icon></button>
-                    </div>
-                </div>
-                <div class="flex">
-                    <input ref="person">
-                    <button class="grey-color" @click="console.log(($refs.person as HTMLInputElement).value)"><swd-icon class="add-icon"></swd-icon></button>
-                </div>
+                <ListInputComponent 
+                    :list="shiftEditData.people.filter(person => !plan.value?.plan.roles.includes(person.role)).map(person => person.name)"
+                    @add="data.addShiftPerson(shiftEditData.id, { name: $event }), plan.reload()"
+                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event }), plan.reload()"
+                />
             </div>
         </DialogComponent>
 
@@ -89,11 +79,12 @@
 
 <script setup lang="ts">
 import DialogComponent from '@/components/DialogComponent.vue';
+import ListInputComponent from '@/components/ListInputComponent.vue';
 import { resource } from '@/core/resource';
 import type { Shift } from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';
-import { computed, inject, ref } from 'vue';
+import { inject, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 const route = useRoute()

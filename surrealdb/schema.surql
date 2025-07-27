@@ -14,8 +14,7 @@ DEFINE FIELD OVERWRITE date ON TABLE shift TYPE datetime;
 DEFINE FIELD OVERWRITE beginn ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
 DEFINE FIELD OVERWRITE end ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
 DEFINE FIELD OVERWRITE people ON TABLE shift TYPE array<object>;
-DEFINE FIELD OVERWRITE people[*].firstname ON TABLE shift TYPE string;
-DEFINE FIELD OVERWRITE people[*].lastname ON TABLE shift TYPE string;
+DEFINE FIELD OVERWRITE people[*].name ON TABLE shift TYPE string;
 DEFINE FIELD OVERWRITE people[*].role ON TABLE shift TYPE option<string>;
 
 DEFINE TABLE OVERWRITE scedules SCHEMAFULL TYPE RELATION IN plan OUT shift
