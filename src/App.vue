@@ -3,8 +3,8 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <div class="page">
-    <nav>
+
+    <swd-menu role="navigation">
       <div class="logo">
         <img src="@/assets/logo.svg" height="25px">
         <div class="logo__seperator"></div>
@@ -14,49 +14,30 @@ import { RouterLink, RouterView } from 'vue-router'
         </div>
       </div>
       <div class="menu">
-        <RouterLink class="button ghost" :to="{ name: 'home' }" :exact="false"><swd-icon class="home-icon"></swd-icon><span>Home</span></RouterLink>
-        <RouterLink class="button ghost" :to="{ name: 'plans' }" :class="{ 'router-link-active': $route.path.startsWith($router.resolve({ name: 'plans' }).path) }" :exact="false"><swd-icon class="calendar-icon"></swd-icon><span>Dienstpläne</span></RouterLink>
-        <RouterLink class="button ghost" :to="{ name: 'profile' }" :exact="false"><swd-icon class="user-icon"></swd-icon><span>Profil</span></RouterLink>
+        <RouterLink :to="{ name: 'home' }" :exact="false"><swd-icon class="home-icon"></swd-icon><span>Home</span></RouterLink>
+        <RouterLink :to="{ name: 'plans' }" :class="{ 'router-link-active': $route.path.startsWith($router.resolve({ name: 'plans' }).path) }" :exact="false"><swd-icon class="calendar-icon"></swd-icon><span>Dienstpläne</span></RouterLink>
+        <RouterLink :to="{ name: 'profile' }" :exact="false"><swd-icon class="user-icon"></swd-icon><span>Profil</span></RouterLink>
       </div>
-    </nav>
+    </swd-menu>
+
     <main>
       <RouterView />
     </main>
-  </div>
+
 </template>
 
 <style scoped>
 
-.page {
-  display: flex;
-  flex-direction: column;
-}
-
-nav {
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  height: var(--theme-menu-height);
-  background-color: var(--theme-primary-color);
-  padding: 0 round(0.6em, 1px);
-}
-
-nav a {
-  text-decoration: none;
-  --theme-element-primary-color: var(--theme-primary-color);
-  --theme-element-secondary-color: var(--theme-primary-color);
-}
-
-nav a, nav a * {
+swd-menu a, swd-menu a * {
   color: var(--theme-secondary-color);
 }
 
-nav a:hover, nav a:hover *,
-nav a.router-link-active, nav a.router-link-active * {
+swd-menu a:hover, swd-menu a:hover *,
+swd-menu a.router-link-active, swd-menu a.router-link-active * {
   color: white;
 }
 
-nav a {
+swd-menu a {
   display: flex;
   gap: 0.5em;
 }
@@ -90,28 +71,27 @@ nav a {
 
 @media only screen and (max-width: 575px) {
 
-  .page {
-    flex-direction: column-reverse;
-  }
-
   main {
-    height: calc(100vh - var(--theme-menu-height));
-    overflow-y: auto;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: var(--theme-menu-height);
   }
 
-  nav {
-    top: calc(100vh - var(--theme-menu-height));
+  swd-menu {
+    position: fixed;
+    top: initial;
     bottom: 0;
     width: 100%;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    --theme-menu-height: 50px + env(safe-area-inset-bottom, 0);
   }
 
-  nav a {
+  swd-menu a {
     align-items: center;
     text-align: center;
     flex-direction: column;
   }
 
-  nav a span {
+  swd-menu a span {
     line-height: 0.5em;
     font-size: 0.5em;
   }
