@@ -1,6 +1,6 @@
 import { isReactive, isRef, reactive, toRaw, watch, type Reactive, type Ref } from "vue";
 
-export type ResourceValue<T, P> = ((parameter: P, abortSignal: AbortSignal) => Promise<T> | T | undefined) | Promise<T> | T | undefined
+export type ResourceValue<T, P> = ((parameter: P, abortSignal: AbortSignal) => Promise<T> | T | undefined) | Promise<T | undefined> | T | undefined
 export type ResourceParameter<P> = Reactive<P> | { [K in keyof P]: Ref<P[K]> | Reactive<P[K]> }
 
 export type UnknownResource = {
@@ -17,7 +17,7 @@ export type Resource<T, P> = {
     readonly empty: boolean
     readonly status: 'EMPTY' | 'LOADING' | 'RESOLVED' | 'ERROR'
     readonly value?: T
-    reload: (value?: ResourceValue<T, P>) => Promise<T>
+    reload: (value?: ResourceValue<T, P>) => Promise<T | undefined> | T | undefined
 }
 
 type MutableResource<T, P> = {
@@ -26,7 +26,7 @@ type MutableResource<T, P> = {
     empty: boolean
     status: 'EMPTY' | 'LOADING' | 'RESOLVED' | 'ERROR'
     value?: T
-    reload: (value?: ResourceValue<T, P>) => Promise<T>
+    reload: (value?: ResourceValue<T, P>) => Promise<T | undefined> | T | undefined
 }
 
 export type ResourceOptions<T, P> = {
@@ -44,7 +44,7 @@ export function resource<T, P>(options: ResourceOptions<T, P>): Resource<T, P> {
         empty: true,
         status: 'EMPTY',
         value: undefined,
-        reload: async (value) => await resolve(value || options.loader, resource, options, calls, ++calls.index)
+        reload: (value) => resolve(value || options.loader, resource, options, calls, ++calls.index)
     })
 
     if (options.initializer) {
@@ -71,28 +71,38 @@ export function unwrapParameters<P>(parameters?: ResourceParameter<P>): P | unde
     return Object.fromEntries(Object.entries(parameters).map(([key, value]) => [key, isRef(value) || isReactive(parameters) ? toRaw(value) : value])) as P;
 }
 
-async function resolve<T, P>(value: ResourceValue<T, P>, resource: MutableResource<T, P>, options: ResourceOptions<T, P>, calls: { index: number }, index: number): Promise<T> {
+function resolve<T, P>(value: ResourceValue<T, P>, resource: MutableResource<T, P>, options: ResourceOptions<T, P>, calls: { index: number }, index: number): Promise<T | undefined> | T | undefined {
     const parameter = unwrapParameters(options.parameter)
+    const handleSuccess = (value: T | undefined) => {
+        if (index < calls.index) return value
+        resource.value = value
+        resource.error = undefined
+        resource.empty = value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)
+        resource.status = resource.empty ? 'EMPTY' : 'RESOLVED'
+        resource.loading = false
+        return value
+    }
+    const handleError = (error: unknown) => {
+        if (index < calls.index) return value
+        resource.error = error as Error
+        resource.status = 'ERROR'
+        resource.loading = false
+        return error
+    }
+
     resource.loading = true
     resource.status = 'LOADING'
-    let resolved
+
     try {
-        resolved = await Promise.resolve(typeof value === 'function' ? (value as (parameter: P) => Promise<T> | T | undefined)(parameter as unknown as P) : value as Promise<T> | T | undefined)
-        if (index >= calls.index) {
-            resource.loading = false
-            resource.value = resolved
-            resource.error = undefined
-            resource.status = resolved === undefined || resolved === null ? 'EMPTY' : 'RESOLVED'
+        const result = typeof value === 'function' ? (value as (parameter: P) => Promise<T> | T | undefined)(parameter as unknown as P) : value as Promise<T | undefined> | T | undefined
+        if (result instanceof Promise) {
+            return result.then(result => handleSuccess(result)).catch(error => { throw handleError(error) })
+        } else {
+            return handleSuccess(result)
         }
-    } catch (error: unknown) {
-        if (index >= calls.index) {
-            resource.loading = false
-            resource.error = error as Error
-            resource.status = 'ERROR'
-        }
+    } catch(error) {
+        handleError(error)
     }
-    if (index >= calls.index) {
-        resource.empty = resource.value === undefined || resolved === null || resolved === '' || (Array.isArray(resolved) && resolved.length === 0)
-    }
-    return resolved as T
+
+    return undefined
 }

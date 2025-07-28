@@ -1,6 +1,6 @@
 import type { Plan, PlanScedulesShift, Shift } from "@/core/types";
 import { RecordId, surql } from "surrealdb";
-import { ref, type App } from "vue";
+import { type App } from "vue";
 import type { SurrealDbService } from "./surrealdb.service";
 import { resource } from "@/core/resource";
 import SuperJSON from "superjson";
@@ -19,13 +19,18 @@ export class DataService {
 
     getPlans(kill: Promise<void>) {
         const cached = this.cache.getAll<Plan>('plan')
-        const query = async (): Promise<Plan[]> => await this.surrealDbService.select<Plan>('plan')
+
+        const query = async (): Promise<Plan[]> => {
+            const plans = await this.surrealDbService.select<Plan>('plan')
+            this.cache.deleteAll('plan')
+            plans.forEach(plan => this.cache.set(plan.id.tb, plan.id.id.toString(), plan))
+            return plans
+        }
 
         const plan = resource({
-            initializer: () => cached.length !== 0 ? cached : query(),
-            loader: () => query()
+            initializer: cached.length !== 0 ? cached : query(),
+            loader: query()
         })
-
         if (cached) plan.reload()
 
         const live = this.surrealDbService.live('plan', async () => plan.reload(await query()))
@@ -47,11 +52,10 @@ export class DataService {
         }
 
         const plan = resource({
-            initializer: () => cached || query(id),
-            loader: () => query(id)
+            initializer: cached || query(id),
+            loader: query(id)
         })
-
-        if (cached) plan.reload()
+        if (this.cache) plan.reload()
         
         const livePlans = this.surrealDbService.live('plan', async () => plan.reload(await query(id)))
         const liveShifts = this.surrealDbService.live('shift', async () => plan.reload(await query(id)))
