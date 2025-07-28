@@ -64,9 +64,8 @@
 <script setup lang="ts">
 import DialogComponent from '@/components/DialogComponent.vue';
 import InputComponent from '@/components/InputComponent.vue';
-import { resource } from '@/core/resource';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { inject, reactive, ref } from 'vue';
+import { inject, onBeforeUnmount, reactive, ref } from 'vue';
 
 const data = inject(DATA_SERVICE) as DataService
 
@@ -74,9 +73,7 @@ const planCreateDialog = ref<boolean>(false)
 
 const createPlanForm = reactive<{ name?: string }>({})
 
-const plans = resource({
-    loader: () => data.getPlans()
-})
+const plans = data.getPlans(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 function createPlan() {
     console.log('TODO')

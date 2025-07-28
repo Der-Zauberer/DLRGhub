@@ -5,8 +5,14 @@
             <RouterLink :to="{ name: 'plans' }" class="button grey-color">
                 <swd-icon class="left-icon" ></swd-icon>
             </RouterLink>
-            <p>{{ plan.value?.plan.name }}</p>
+            <p>{{ plan.value?.name }} <swd-icon v-if="plan.loading" class="loading-spinner-icon"></swd-icon></p>
         </div>
+
+        <div>{{ plan.status }}</div>
+        <div>{{ !!plan.value }}</div>
+        <div>{{ plan.error }}</div>
+
+        <button @click="plan.reload()">Reload</button>
 
         <ul class="shifts grid-cols-xl-5 grid-cols-lg-4 grid-cols-md-3 grid-cols-sm-2 grid-cols-1">
             <li v-for="shift of plan.value?.shifts" tabindex="0" @click="openShiftEditDialog(shift)" @keydown.enter="openShiftEditDialog(shift)">
@@ -16,13 +22,13 @@
                     <swd-subtitle v-if="shift.startTime && shift.endTime">{{ shift.startTime }} - {{ shift.endTime }}</swd-subtitle>
                 </h5>
 
-                <div v-for="role of plan.value?.plan.roles" class="margin-bottom">
+                <div v-for="role of plan.value?.roles" class="margin-bottom">
                     <div><strong>{{ role }}</strong></div>
                     <div v-for="person of shift.people.filter(person => person.role === role)">
                         <i>{{ person.name }}</i>
                     </div>
                 </div>
-                <div v-for="person of shift.people.filter(person => !plan.value?.plan.roles.includes(person.role))">
+                <div v-for="person of shift.people.filter(person => !plan.value?.roles.includes(person.role))">
                     <i>{{ person.name }}</i>
                 </div>
             </li>
@@ -30,21 +36,21 @@
 
         <DialogComponent :name="shiftEditData?.name || ''" v-model="shiftEditDialog">
 
-            <div class="grid-cols-1" v-for="role of plan.value?.plan.roles" v-if="shiftEditData">
+            <div class="grid-cols-1" v-for="role of plan.value?.roles" v-if="shiftEditData">
                 <h6>{{ role }}</h6>
                 <ListInputComponent 
                     :list="shiftEditData.people.filter(person => person.role === role).map(person => person.name)"
-                    @add="data.addShiftPerson(shiftEditData.id, { name: $event, role: role }), plan.reload()"
-                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event, role: role }), plan.reload()"
+                    @add="data.addShiftPerson(shiftEditData.id, { name: $event, role: role })"
+                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event, role: role })"
                 />
             </div>
 
             <div class="grid-cols-1" v-if="shiftEditData">
                 <h6>Sonstige</h6>
                 <ListInputComponent 
-                    :list="shiftEditData.people.filter(person => !plan.value?.plan.roles.includes(person.role)).map(person => person.name)"
-                    @add="data.addShiftPerson(shiftEditData.id, { name: $event }), plan.reload()"
-                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event }), plan.reload()"
+                    :list="shiftEditData.people.filter(person => !plan.value?.roles.includes(person.role)).map(person => person.name)"
+                    @add="data.addShiftPerson(shiftEditData.id, { name: $event })"
+                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event })"
                 />
             </div>
         </DialogComponent>
@@ -80,11 +86,10 @@
 <script setup lang="ts">
 import DialogComponent from '@/components/DialogComponent.vue';
 import ListInputComponent from '@/components/ListInputComponent.vue';
-import { resource } from '@/core/resource';
 import type { Shift } from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';
-import { inject, ref } from 'vue';
+import { inject, onBeforeUnmount, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 const route = useRoute()
@@ -93,9 +98,7 @@ const data = inject(DATA_SERVICE) as DataService
 const shiftEditData = ref<Shift | undefined>()
 const shiftEditDialog = ref<boolean>()
 
-const plan = resource({
-    loader: () => data.getPlan(new RecordId('plan', route.params.id))
-})
+const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 function openShiftEditDialog(shift: Shift) {
     shiftEditData.value = shift

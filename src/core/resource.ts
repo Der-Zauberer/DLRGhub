@@ -87,7 +87,6 @@ async function resolve<T, P>(value: ResourceValue<T, P>, resource: MutableResour
     } catch (error: unknown) {
         if (index >= calls.index) {
             resource.loading = false
-            resource.value = undefined
             resource.error = error as Error
             resource.status = 'ERROR'
         }

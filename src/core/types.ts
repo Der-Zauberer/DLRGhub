@@ -20,6 +20,9 @@ export type Plan = {
     id: RecordId<'plan'>
     name: string
     roles: string[]
+}
+
+export type PlanScedulesShift = Plan & {
     shifts: Shift[]
 }
 
