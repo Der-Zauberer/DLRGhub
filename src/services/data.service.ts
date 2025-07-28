@@ -28,8 +28,8 @@ export class DataService {
         }
 
         const plan = resource({
-            initializer: cached.length !== 0 ? cached : query(),
-            loader: query()
+            initializer: () => cached.length !== 0 ? cached : query(),
+            loader: () => query()
         })
         if (cached) plan.reload()
 
@@ -52,8 +52,8 @@ export class DataService {
         }
 
         const plan = resource({
-            initializer: cached || query(id),
-            loader: query(id)
+            initializer: () => cached || query(id),
+            loader: () => query(id)
         })
         if (this.cache) plan.reload()
         
