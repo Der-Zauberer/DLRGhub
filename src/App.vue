@@ -9,8 +9,8 @@ import { RouterLink, RouterView } from 'vue-router'
         <img src="@/assets/logo.svg" height="25px">
         <div class="logo__seperator"></div>
         <div class="logo__client">
-          <span class="secondary-text">Gruppe</span>
-          <span class="secondary-text">Gailingen e.V.</span>
+          <span class="accent-text">Gruppe</span>
+          <span class="accent-text">Gailingen e.V.</span>
         </div>
       </div>
       <div class="menu">
@@ -29,7 +29,7 @@ import { RouterLink, RouterView } from 'vue-router'
 <style scoped>
 
 swd-menu a, swd-menu a * {
-  color: var(--theme-secondary-color);
+  color: var(--theme-accent-color);
 }
 
 swd-menu a:hover, swd-menu a:hover *,
@@ -52,7 +52,7 @@ swd-menu a {
   width: 2px;
   height: 30px;
   margin: 0 8px;
-  background: var(--theme-secondary-color);
+  background: var(--theme-accent-color);
 }
 
 .logo .logo__client {
@@ -60,7 +60,7 @@ swd-menu a {
   flex-direction: column;
   line-height: 15px;
   font-size: 12px;
-  color: var(--theme-secondary-color) !important;
+  color: var(--theme-accent-color) !important;
   font-weight: bold;
 }
 
@@ -73,7 +73,7 @@ swd-menu a {
 
   main {
     padding-top: env(safe-area-inset-top, 0);
-    padding-bottom: var(--theme-menu-height);
+    padding-bottom: calc(var(--theme-menu-height) + env(safe-area-inset-bottom, 0));
   }
 
   swd-menu {

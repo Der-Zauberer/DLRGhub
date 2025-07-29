@@ -4,29 +4,16 @@
 
         <HeadlineComponent :title="plan.value?.name" :status="plan.status" :back="{ name: 'plans' }"/>
 
-        <button @click="plan.reload()">Reload</button>
+        <swd-card-outline v-if="plan.status === 'EMPTY'">TODO Empty State</swd-card-outline>
+
+        <swd-loading-spinner v-if="plan.status === 'LOADING' && plan.empty" loading="true" class="width-100"></swd-loading-spinner>
 
         <swd-card class="red-color" v-if="plan.error">{{ plan.error }}</swd-card>
 
-        <ul class="shifts grid-cols-xl-5 grid-cols-lg-4 grid-cols-md-3 grid-cols-sm-2 grid-cols-1">
-            <li v-for="shift of plan.value?.shifts" tabindex="0" @click="openShiftEditDialog(shift)" @keydown.enter="openShiftEditDialog(shift)">
-                <h5 class="margin-top-0">
-                    {{ shift.name }}
-                    <swd-subtitle>{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }) }}</swd-subtitle>
-                    <swd-subtitle v-if="shift.startTime && shift.endTime">{{ shift.startTime }} - {{ shift.endTime }}</swd-subtitle>
-                </h5>
-
-                <div v-for="role of plan.value?.roles" class="margin-bottom">
-                    <div><strong>{{ role }}</strong></div>
-                    <div v-for="person of shift.people.filter(person => person.role === role)">
-                        <i>{{ person.name }}</i>
-                    </div>
-                </div>
-                <div v-for="person of shift.people.filter(person => !plan.value?.roles.includes(person.role))">
-                    <i>{{ person.name }}</i>
-                </div>
-            </li>
+        <ul class="grid-cols-xl-4 grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
+            <li v-for="shift of plan.value?.shifts"><ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/></li>
         </ul>
+        
 
         <DialogComponent :name="shiftEditData?.name || ''" v-model="shiftEditDialog">
 
@@ -81,6 +68,7 @@
 import DialogComponent from '@/components/DialogComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import ListInputComponent from '@/components/ListInputComponent.vue';
+import ShiftComponent from '@/components/ShiftComponent.vue';
 import type { Shift } from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';

@@ -1,17 +1,25 @@
 :root {
     font-family: Arial, Helvetica, sans-serif;
     --theme-primary-color: #e30613;
-    --theme-secondary-color: #ffed00;
-    --theme-accent-color: #0069b4;
+    --theme-secondary-color: #a5010c;
+    --theme-accent-color: #ffed00;
 }
 
 .primary-color { background: #e30613 !important }
-.secondary-color { background: #ffed00 !important }
-.accent-color { background: #0069b4 !important }
+.secondary-color { background: #a5010c !important }
+.accent-color { background: #ffed00 !important }
 
 .primary-text { color: #e30613 !important }
-.secondary-text { color: #ffed00 !important }
-.accent-text { color: #0069b4 !important }
+.secondary-text { color: #a5010c !important }
+.accent-text { color: #ffed00 !important }
+
+
+
+@media (display-mode: standalone) {
+    html, body {
+        overscroll-behavior: none;
+    }
+}
 
 /** Unfixed **/
 
@@ -19,3 +27,9 @@ ul.flex, ul[class*="grid-cols-"] {
     padding: 0;
     list-style: none;
 }
+
+@media only screen and (max-width: 575px) { swd-dialog > * {
+    width: 100%;
+    max-width: 100%;
+}}
+

@@ -9,9 +9,9 @@ DEFINE TABLE OVERWRITE shift SCHEMAFULL TYPE NORMAL
     PERMISSIONS
         FOR select, create, update, delete WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE shift;
-DEFINE FIELD OVERWRITE name ON TABLE shift TYPE string;
+DEFINE FIELD OVERWRITE name ON TABLE shift TYPE option<string>;
 DEFINE FIELD OVERWRITE date ON TABLE shift TYPE datetime;
-DEFINE FIELD OVERWRITE beginn ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
+DEFINE FIELD OVERWRITE begin ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
 DEFINE FIELD OVERWRITE end ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
 DEFINE FIELD OVERWRITE people ON TABLE shift TYPE array<object>;
 DEFINE FIELD OVERWRITE people[*].name ON TABLE shift TYPE string;

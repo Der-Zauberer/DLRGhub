@@ -28,10 +28,10 @@ export type PlanScedulesShift = Plan & {
 
 export type Shift = {
     id: RecordId<'shift'>
-    name: string
+    name?: string
     date: Date
-    startTime?: string
-    endTime?: string
+    begin?: string
+    end?: string
     people: {
         name: string
         role: string
