@@ -15,6 +15,7 @@ export class DataService {
 
     private readonly CACHE_PLAN = 'plan'
     private readonly CACHE_PLAN_SCEDULES_SHIFT = 'plan->scedules->shift'
+    private readonly CACHE_PERSON_SHIFT = 'person_shift'
 
     private readonly cache = new InMemoryDb()
 
@@ -50,11 +51,8 @@ export class DataService {
         const cached = this.cache.get<PlanScedulesShift>(this.CACHE_PLAN_SCEDULES_SHIFT, id.id.toString())
 
         const query = async (id: RecordId<'plan'>): Promise<PlanScedulesShift | undefined> => {
-            const [plan, shifts] = await this.surrealDbService.query<[PlanScedulesShift, Shift[]]>(surql`SELECT * FROM ONLY ${id}; SELECT * FROM ${id}->scedules->shift;`)
-            if (plan) {
-                plan.shifts = shifts
-                this.cache.set(this.CACHE_PLAN_SCEDULES_SHIFT, id.id.toString(), plan)
-            }
+            const [plan] = await this.surrealDbService.query<[PlanScedulesShift]>(surql`SELECT *, (SELECT * FROM id->scedules->shift) as shifts FROM ONLY ${id};`)
+            if (plan) this.cache.set(this.CACHE_PLAN_SCEDULES_SHIFT, plan.id.id.toString(), plan)
             return plan
         }
 
@@ -73,6 +71,27 @@ export class DataService {
         })
 
         return plan
+    }
+
+    getPersonShift(name: string, kill: Promise<void>) {
+        const cached = this.cache.get<Shift[]>(this.CACHE_PERSON_SHIFT, '*')
+
+        const query = async (name: string): Promise<Shift[] | undefined> => {
+            const [shifts] = await this.surrealDbService.query<[Shift[], string]>(surql`SELECT * FROM shift WHERE people.map(|$person| $person.name).includes(${name});`)
+            this.cache.set(this.CACHE_PERSON_SHIFT, '*', shifts)
+            return shifts
+        }
+
+        const shifts = resource({
+            initializer: () => cached || query(name),
+            loader: () => query(name)
+        })
+        if (this.cache) shifts.reload()
+        
+        const liveShifts = this.surrealDbService.live('shift', async () => shifts.reload(await query(name)))
+        kill.then(() => liveShifts.then((id) => this.surrealDbService.kill(id)))
+
+        return shifts
     }
 
     async addShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {

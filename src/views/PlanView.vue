@@ -29,15 +29,18 @@
 
         <swd-card class="red-color" v-if="plans.error">{{ plans.error }}</swd-card>
 
-        <HeadlineComponent title="Meine Schichten" subtitle="Keine ausgewählt" status="EMPTY" type="Schichten">
+        <HeadlineComponent title="Meine Schichten" subtitle="Keine ausgewählt" :status="shifts.status" type="Schichten">
             <button class="grey-color">
                 <swd-icon class="settings-icon"></swd-icon>
-                <span> Konfigurieren</span>
+                <span v-if="shifts.status==='EMPTY'"> Konfigurieren</span>
             </button>
         </HeadlineComponent>
 
         <ul class="grid-cols-md-2 grid-cols-1">
-            TODO
+            <li v-for="shift of shifts.value">
+                {{ shift.name }}
+                {{ shift.date }}
+            </li>
         </ul>
 
     </div>
@@ -75,6 +78,7 @@ const planCreateDialog = ref<boolean>(false)
 const createPlanForm = reactive<{ name?: string }>({})
 
 const plans = data.getPlans(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
+const shifts = data.getPersonShift('André Sommer', new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 function createPlan() {
     console.log('TODO')
