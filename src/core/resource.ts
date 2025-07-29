@@ -1,5 +1,6 @@
 import { isReactive, isRef, reactive, toRaw, watch, type Reactive, type Ref } from "vue";
 
+export type ResourceStatus = 'EMPTY' | 'LOADING' | 'RESOLVED' | 'ERROR'
 export type ResourceValue<T, P> = ((parameter: P, abortSignal: AbortSignal) => Promise<T> | T | undefined) | Promise<T | undefined> | T | undefined
 export type ResourceParameter<P> = Reactive<P> | { [K in keyof P]: Ref<P[K]> | Reactive<P[K]> }
 
@@ -7,7 +8,7 @@ export type UnknownResource = {
     readonly error?: Error
     readonly loading: boolean
     readonly empty: boolean
-    readonly status: 'EMPTY' | 'LOADING' | 'RESOLVED' | 'ERROR'
+    readonly status: ResourceStatus
     readonly value?: unknown
 }
 
@@ -15,7 +16,7 @@ export type Resource<T, P> = {
     readonly error?: Error
     readonly loading: boolean
     readonly empty: boolean
-    readonly status: 'EMPTY' | 'LOADING' | 'RESOLVED' | 'ERROR'
+    readonly status: ResourceStatus
     readonly value?: T
     reload: (value?: ResourceValue<T, P>) => Promise<T | undefined> | T | undefined
 }
@@ -24,7 +25,7 @@ type MutableResource<T, P> = {
     error?: Error
     loading: boolean
     empty: boolean
-    status: 'EMPTY' | 'LOADING' | 'RESOLVED' | 'ERROR'
+    status: ResourceStatus
     value?: T
     reload: (value?: ResourceValue<T, P>) => Promise<T | undefined> | T | undefined
 }

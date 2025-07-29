@@ -13,41 +13,48 @@ SuperJSON.registerCustom<RecordId, [string, any]>({
 
 export class DataService {
 
+    private readonly CACHE_PLAN = 'plan'
+    private readonly CACHE_PLAN_SCEDULES_SHIFT = 'plan->scedules->shift'
+
     private readonly cache = new InMemoryDb()
 
     constructor(private surrealDbService: SurrealDbService) {}
 
     getPlans(kill: Promise<void>) {
-        const cached = this.cache.getAll<Plan>('plan')
+        const table = this.CACHE_PLAN
+        const cached = this.cache.get<Plan[]>(table, '*')
 
         const query = async (): Promise<Plan[]> => {
-            const plans = await this.surrealDbService.select<Plan>('plan')
-            this.cache.deleteAll('plan')
-            plans.forEach(plan => this.cache.set(plan.id.tb, plan.id.id.toString(), plan))
+            const plans = await this.surrealDbService.select<Plan>(table)
+            this.cache.set(table, '*', plans)
+            const set = new Set(plans.map(plan => plan.id.id.toString()))
+            this.cache.getAll<PlanScedulesShift>(this.CACHE_PLAN_SCEDULES_SHIFT)
+                .filter(plan => !set.has(plan.id.id.toString()))
+                .forEach(plan => this.cache.delete(this.CACHE_PLAN_SCEDULES_SHIFT, plan.id.id.toString()))
             return plans
         }
 
         const plan = resource({
-            initializer: () => cached.length !== 0 ? cached : query(),
+            initializer: () => cached || query(),
             loader: () => query()
         })
         if (cached) plan.reload()
 
-        const live = this.surrealDbService.live('plan', async () => plan.reload(await query()))
+        const live = this.surrealDbService.live(table, async () => plan.reload(await query()))
         kill.then(() => live.then(id => this.surrealDbService.kill(id)))
 
         return plan
     }
 
     getPlan(id: RecordId<'plan'>, kill: Promise<void>) {
-        const cached = this.cache.get<PlanScedulesShift>(id.tb, id.id.toString())
-        if (cached) cached.shifts = this.cache.get<Shift[]>('plan->scedules->shift', id.id.toString()) || []
+        const cached = this.cache.get<PlanScedulesShift>(this.CACHE_PLAN_SCEDULES_SHIFT, id.id.toString())
 
         const query = async (id: RecordId<'plan'>): Promise<PlanScedulesShift | undefined> => {
             const [plan, shifts] = await this.surrealDbService.query<[PlanScedulesShift, Shift[]]>(surql`SELECT * FROM ONLY ${id}; SELECT * FROM ${id}->scedules->shift;`)
-            if (plan) this.cache.set(id.tb, id.id.toString(), plan)
-            if (shifts) this.cache.set('plan->scedules->shift', id.id.toString(), shifts)
-            if (plan) plan.shifts = shifts
+            if (plan) {
+                plan.shifts = shifts
+                this.cache.set(this.CACHE_PLAN_SCEDULES_SHIFT, id.id.toString(), plan)
+            }
             return plan
         }
 

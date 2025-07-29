@@ -1,18 +1,12 @@
 <template>
 
     <div class="container-xl">
-        <div class="flex flex-center">
-            <RouterLink :to="{ name: 'plans' }" class="button grey-color">
-                <swd-icon class="left-icon" ></swd-icon>
-            </RouterLink>
-            <p>{{ plan.value?.name }} <swd-icon v-if="plan.loading" class="loading-spinner-icon"></swd-icon></p>
-        </div>
 
-        <div>{{ plan.status }}</div>
-        <div>{{ !!plan.value }}</div>
-        <div>{{ plan.error }}</div>
+        <HeadlineComponent :title="plan.value?.name" :status="plan.status" :back="{ name: 'plans' }"/>
 
         <button @click="plan.reload()">Reload</button>
+
+        <swd-card class="red-color" v-if="plan.error">{{ plan.error }}</swd-card>
 
         <ul class="shifts grid-cols-xl-5 grid-cols-lg-4 grid-cols-md-3 grid-cols-sm-2 grid-cols-1">
             <li v-for="shift of plan.value?.shifts" tabindex="0" @click="openShiftEditDialog(shift)" @keydown.enter="openShiftEditDialog(shift)">
@@ -85,6 +79,7 @@
 
 <script setup lang="ts">
 import DialogComponent from '@/components/DialogComponent.vue';
+import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import ListInputComponent from '@/components/ListInputComponent.vue';
 import type { Shift } from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';

@@ -2,15 +2,17 @@
 
     <div class="container-xl">
 
-        <div class="headline">
-            <h4>Dienstpläne</h4>
-            <button class="grey-color" @click="planCreateDialog = true"><swd-icon class="add-icon"></swd-icon></button>
+        <HeadlineComponent title="Dienstpläne" :status="plans.status" type="Dienstpläne">
+            <button class="grey-color" @click="planCreateDialog = true">
+                <swd-icon class="add-icon"></swd-icon>
+                <span v-if="plans.status==='EMPTY'"> Neuen Dienstplan erstellen</span>
+            </button>
             <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" @success="createPlan()">
                 <form class="grid-cols-1">
                     <InputComponent label="Name" v-model="createPlanForm.name"/>
                 </form>
             </DialogComponent>
-        </div>
+        </HeadlineComponent>
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
             <li v-for="plan of plans.value">
@@ -21,10 +23,18 @@
             </li>
         </ul>
 
-        <div class="headline">
-            <h4>Meine Schichten <swd-subtitle>Keine ausgewählt</swd-subtitle></h4>
-            <button class="grey-color"><swd-icon class="settings-icon"></swd-icon> <span></span></button>
-        </div>
+        <ul class="button-grid grid-cols-md-2 grid-cols-1" v-if="plans.status === 'LOADING' && plans.empty">
+            <li v-for="plan of Array(2)"><a><swd-skeleton-text></swd-skeleton-text></a></li>
+        </ul>
+
+        <swd-card class="red-color" v-if="plans.error">{{ plans.error }}</swd-card>
+
+        <HeadlineComponent title="Meine Schichten" subtitle="Keine ausgewählt" status="EMPTY" type="Schichten">
+            <button class="grey-color">
+                <swd-icon class="settings-icon"></swd-icon>
+                <span> Konfigurieren</span>
+            </button>
+        </HeadlineComponent>
 
         <ul class="grid-cols-md-2 grid-cols-1">
             TODO
@@ -35,16 +45,6 @@
 </template>
 
 <style scoped>
-
-.headline {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-}
-
-.headline:not(:first-child) { margin-top: calc(var(--theme-element-spacing) * 2) }
-.headline:not(:last-child) { margin-bottom: var(--theme-element-spacing) }
-.headline > * { margin: 0 }
 
 .button-grid a {
     display: flex;
@@ -63,6 +63,7 @@
 
 <script setup lang="ts">
 import DialogComponent from '@/components/DialogComponent.vue';
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { inject, onBeforeUnmount, reactive, ref } from 'vue';
