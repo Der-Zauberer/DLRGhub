@@ -36,10 +36,3 @@ app.use(router)
 app.use(surrealdbService)
 app.use(dataService)
 app.mount('#app')
-
-declare module '@vue/runtime-core' {
-  interface ComponentCustomProperties {
-    $surrealDbService: SurrealDbService
-    $dataService: DataService
-  }
-}

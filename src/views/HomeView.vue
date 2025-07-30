@@ -5,9 +5,7 @@
 
     <h3>TODO</h3>
     <ul>
-      <li>My Shifts</li>
       <li>Edit Plan / Add Plan</li>
-      <li>Profile</li>
       <li>Auth</li>
       <li>Reconnect</li>
       <li>Weather Widget</li>

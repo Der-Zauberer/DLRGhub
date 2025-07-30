@@ -1,7 +1,3 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-</script>
-
 <template>
 
     <swd-menu role="navigation">
@@ -108,3 +104,7 @@ swd-menu a {
 }
 
 </style>
+
+<script setup lang="ts">
+import { RouterLink, RouterView } from 'vue-router'
+</script>
