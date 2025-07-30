@@ -29,17 +29,29 @@
 
         <swd-card class="red-color" v-if="plans.error">{{ plans.error }}</swd-card>
 
-        <HeadlineComponent title="Meine Schichten" subtitle="Keine ausgewählt" :status="shifts.status" type="Schichten">
-            <button class="grey-color">
+        <HeadlineComponent title="Meine Schichten" :subtitle="profileName || 'Nicht konfiguriert'" :status="profileName ? shifts.status : undefined" type="Schichten">
+            <RouterLink :to="{ name: 'profile' }" class="button grey-color">
                 <swd-icon class="settings-icon"></swd-icon>
-                <span v-if="shifts.status==='EMPTY'"> Konfigurieren</span>
-            </button>
+                <span v-if="!profileName"> Konfigurieren</span>
+            </RouterLink>
         </HeadlineComponent>
 
-        <ul class="grid-cols-md-2 grid-cols-1">
+        <ul class="button-grid grid-cols-md-2 grid-cols-1">
             <li v-for="shift of shifts.value">
-                {{ shift.name }}
-                {{ shift.date }}
+                <RouterLink :to="{ name: 'shifts', params: { id: shift.plan.id.id.toString()} }">
+                    <div class="shift">
+                        <div>
+                            <div class="shift__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>     
+                            <div>{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }}</div>
+                        </div>
+                        <div>
+                            <div>{{ shift.name }}<swd-subtitle>{{ shift.plan.name }}</swd-subtitle></div>
+                            <div></div>
+                            <div>{{ shift.people.find(person => person.name === profileName)?.role }}</div>
+                        </div>
+                    </div>
+                    <swd-icon class="arrow-right-icon"></swd-icon>
+                </RouterLink>
             </li>
         </ul>
 
@@ -51,7 +63,7 @@
 
 .button-grid a {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     text-decoration: none;
     padding: var(--theme-inner-element-spacing);
@@ -61,6 +73,16 @@
 }
 
 .button-grid a:hover, .button-grid a:focus, .button-grid a:active, .button-grid a[selected] { background-color: var(--theme-element-secondary-color) } 
+
+.shift {
+    display: flex;
+    gap: var(--theme-element-spacing)
+}
+
+.shift .shift__day {
+    font-size: 2em;
+    transform: translateY(5%);
+}
 
 </style>
 
@@ -73,12 +95,13 @@ import { inject, onBeforeUnmount, reactive, ref } from 'vue';
 
 const data = inject(DATA_SERVICE) as DataService
 
+const profileName = data.profileName
 const planCreateDialog = ref<boolean>(false)
 
 const createPlanForm = reactive<{ name?: string }>({})
 
 const plans = data.getPlans(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
-const shifts = data.getPersonShift('André Sommer', new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
+const shifts = data.getPersonShift(profileName.value, new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 function createPlan() {
     console.log('TODO')

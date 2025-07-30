@@ -6,9 +6,9 @@ import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
 import ShiftView from './views/ShiftView.vue'
-import dataService from './services/data.service'
+import dataService, { DataService } from './services/data.service'
 import PlanView from './views/PlanView.vue'
-import surrealdbService, { auth } from './services/surrealdb.service'
+import surrealdbService, { auth, SurrealDbService } from './services/surrealdb.service'
 import LoginView from './views/LoginView.vue'
 import type { BeforeInstallPromptEvent } from './core/types'
 import ProfileView from './views/ProfileView.vue'
@@ -36,3 +36,10 @@ app.use(router)
 app.use(surrealdbService)
 app.use(dataService)
 app.mount('#app')
+
+declare module '@vue/runtime-core' {
+  interface ComponentCustomProperties {
+    $surrealDbService: SurrealDbService
+    $dataService: DataService
+  }
+}

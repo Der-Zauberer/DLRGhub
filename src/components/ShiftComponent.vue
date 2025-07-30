@@ -2,9 +2,15 @@
 
     <button class="shift" @click="dialog = true">
         <div class="shift__descriptor">
-            <div class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>     
-            <div class="shift__descriptor__date">{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }}</div>
-            <div class="shift__descriptor__time" v-if="shift.begin"><span>{{ shift.begin }}</span><span v-if="shift.end">{{ shift.end }}</span></div>
+            <div>
+                <div class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>     
+                <div>{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }}</div>
+            </div>
+            <div v-if="shift.begin">
+                <div>{{ shift.begin }}</div>
+                <div v-if="shift.end">{{ shift.end }}</div>
+            </div>
+            <swd-icon class="shift__descriptor__marked star-filled-icon" v-if="data.profileName.value && shift.people.filter((person) => person.name === data.profileName.value).length"></swd-icon>
         </div>
         <div class="shift__content">
             <h5 v-if="shift.name">{{ shift?.name }}</h5>
@@ -44,20 +50,26 @@
 
 <style scoped>
 
-.shift, .shift:hover {
+.shift {
     display: flex;
     height: 100%;
     width: 100%;
     cursor: pointer;
-    background: initial;
     padding: initial;
     text-align: initial;
     border: solid var(--theme-element-primary-color) var(--theme-border-width);
     border-radius: var(--theme-border-radius);
     --theme-element-spacing: var(--theme-inner-element-spacing);
+    --theme-primary-color: initial;
+    --theme-secondary-color: var(--theme-element-primary-color);
 }
 
 .shift .shift__descriptor {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    gap: var(--theme-element-spacing);
+    height: 100%;
     font-size: 0.8em;
     background: var(--theme-element-primary-color);
     padding: calc(var(--theme-inner-element-spacing) - var(--theme-border-width));
@@ -67,10 +79,11 @@
     font-size: 2em;
 }
 
-.shift .shift__descriptor .shift__descriptor__time {
-    display: flex;
-    flex-direction: column;
-    margin-top: var(--theme-element-spacing);
+.shift__descriptor__marked {
+    display: block;
+    margin: auto auto 0 auto;
+    color: var(--theme-accent-color);
+    font-size: 2em;
 }
 
 .shift .shift__content {

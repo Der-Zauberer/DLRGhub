@@ -1,6 +1,6 @@
-import type { Plan, PlanScedulesShift, Shift } from "@/core/types";
+import type { Plan, PlanScedulesShift, Shift, ShiftSecduledByPlan } from "@/core/types";
 import { RecordId, surql } from "surrealdb";
-import { type App } from "vue";
+import { ref, watch, type App } from "vue";
 import type { SurrealDbService } from "./surrealdb.service";
 import { resource } from "@/core/resource";
 import SuperJSON from "superjson";
@@ -13,13 +13,23 @@ SuperJSON.registerCustom<RecordId, [string, any]>({
 
 export class DataService {
 
+    private readonly PROFILE_NAME = 'profile_name'
     private readonly CACHE_PLAN = 'plan'
     private readonly CACHE_PLAN_SCEDULES_SHIFT = 'plan->scedules->shift'
     private readonly CACHE_PERSON_SHIFT = 'person_shift'
 
     private readonly cache = new InMemoryDb()
 
-    constructor(private surrealDbService: SurrealDbService) {}
+    public readonly profileName = ref<string>('')
+
+    constructor(private surrealDbService: SurrealDbService) {
+        const name = localStorage.getItem(this.PROFILE_NAME)
+        if (name && name.length !== 0) this.profileName.value = name
+        watch(this.profileName, () => {
+            console.log(this.profileName.value)
+            localStorage.setItem(this.PROFILE_NAME, this.profileName.value)
+        })
+    }
 
     getPlans(kill: Promise<void>) {
         const table = this.CACHE_PLAN
@@ -74,10 +84,10 @@ export class DataService {
     }
 
     getPersonShift(name: string, kill: Promise<void>) {
-        const cached = this.cache.get<Shift[]>(this.CACHE_PERSON_SHIFT, '*')
+        const cached = this.cache.get<ShiftSecduledByPlan[]>(this.CACHE_PERSON_SHIFT, '*')
 
-        const query = async (name: string): Promise<Shift[] | undefined> => {
-            const [shifts] = await this.surrealDbService.query<[Shift[], string]>(surql`SELECT * FROM shift WHERE people.map(|$person| $person.name).includes(${name});`)
+        const query = async (name: string): Promise<ShiftSecduledByPlan[] | undefined> => {
+            const [shifts] = await this.surrealDbService.query<[ShiftSecduledByPlan[]]>(surql`SELECT *, (<-scedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name});`)
             this.cache.set(this.CACHE_PERSON_SHIFT, '*', shifts)
             return shifts
         }
@@ -100,6 +110,11 @@ export class DataService {
 
     async removeShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people -= ${person}`)
+    }
+
+    clearCache() {
+        this.cache.clear()
+        localStorage.clear()
     }
 
 }
@@ -156,6 +171,9 @@ class InMemoryDb {
         return Array.from(this.tables[table].values() as MapIterator<T>)
     }
 
+    clear() {
+        for (let key in this.tables) delete this.tables[key]
+    }
 }
 
 export const DATA_SERVICE = 'dataService'

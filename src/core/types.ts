@@ -22,10 +22,6 @@ export type Plan = {
     roles: string[]
 }
 
-export type PlanScedulesShift = Plan & {
-    shifts: Shift[]
-}
-
 export type Shift = {
     id: RecordId<'shift'>
     name?: string
@@ -36,6 +32,14 @@ export type Shift = {
         name: string
         role: string
     }[]
+}
+
+export type PlanScedulesShift = Plan & {
+    shifts: Shift[]
+}
+
+export type ShiftSecduledByPlan = Shift & {
+    plan: Plan
 }
 
 export type User = {
