@@ -61,7 +61,7 @@ export class DataService {
         const cached = this.cache.get<PlanScedulesShift>(this.CACHE_PLAN_SCEDULES_SHIFT, id.id.toString())
 
         const query = async (id: RecordId<'plan'>): Promise<PlanScedulesShift | undefined> => {
-            const [plan] = await this.surrealDbService.query<[PlanScedulesShift]>(surql`SELECT *, (SELECT * FROM id->scedules->shift) as shifts FROM ONLY ${id};`)
+            const [plan] = await this.surrealDbService.query<[PlanScedulesShift]>(surql`SELECT *, (SELECT * FROM id->scedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
             if (plan) this.cache.set(this.CACHE_PLAN_SCEDULES_SHIFT, plan.id.id.toString(), plan)
             return plan
         }
@@ -87,7 +87,7 @@ export class DataService {
         const cached = this.cache.get<ShiftSecduledByPlan[]>(this.CACHE_PERSON_SHIFT, '*')
 
         const query = async (name: string): Promise<ShiftSecduledByPlan[] | undefined> => {
-            const [shifts] = await this.surrealDbService.query<[ShiftSecduledByPlan[]]>(surql`SELECT *, (<-scedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name});`)
+            const [shifts] = await this.surrealDbService.query<[ShiftSecduledByPlan[]]>(surql`SELECT *, (<-scedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) ORDER BY date;`)
             this.cache.set(this.CACHE_PERSON_SHIFT, '*', shifts)
             return shifts
         }

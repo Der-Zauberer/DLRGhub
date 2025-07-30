@@ -38,7 +38,7 @@
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
             <li v-for="shift of shifts.value">
-                <RouterLink :to="{ name: 'shifts', params: { id: shift.plan.id.id.toString()} }">
+                <RouterLink :to="{ name: 'shifts', params: { id: shift.plan.id.id.toString()}, query: { shift: shift.id.id.toString() } }">
                     <div class="shift">
                         <div>
                             <div class="shift__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>     

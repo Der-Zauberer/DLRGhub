@@ -1,9 +1,9 @@
 <template>
 
-    <button class="shift" @click="dialog = true">
+    <button ref="component" class="shift" @click="dialog = true" :selected="$route.query.shift === shift.id.id.toString() ? true : undefined">
         <div class="shift__descriptor">
             <div>
-                <div class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>     
+                <div class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>
                 <div>{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }}</div>
             </div>
             <div v-if="shift.begin">
@@ -50,19 +50,28 @@
 
 <style scoped>
 
-.shift {
+.shift, .shift:active {
     display: flex;
     height: 100%;
     width: 100%;
     cursor: pointer;
     padding: initial;
     text-align: initial;
+    background: initial !important;
     border: solid var(--theme-element-primary-color) var(--theme-border-width);
     border-radius: var(--theme-border-radius);
     --theme-element-spacing: var(--theme-inner-element-spacing);
-    --theme-primary-color: initial;
-    --theme-secondary-color: var(--theme-element-primary-color);
 }
+
+.shift[selected]  {
+    --theme-element-primary-color: var(--theme-primary-color);
+    --theme-element-secondary-color: var(--theme-secondary-color);
+}
+
+.shift:hover {
+    --theme-element-primary-color: var(--theme-element-secondary-color);
+}
+
 
 .shift .shift__descriptor {
     display: flex;
@@ -109,15 +118,22 @@
 
 <script setup lang="ts">
 import type { Shift } from '@/core/types';
-import { inject, ref } from 'vue';
+import { inject, ref, useTemplateRef } from 'vue';
 import DialogComponent from './DialogComponent.vue';
 import ListInputComponent from './ListInputComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
+import { useRoute } from 'vue-router';
 
+const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
-defineProps<{ shift: Shift, roles: string[] }>()
+const props = defineProps<{ shift: Shift, roles: string[] }>()
 
+const component = useTemplateRef('component')
 const dialog = ref<boolean>(false)
+
+if (route.query.shift === props.shift.id.id.toString()) {
+    component.value?.scrollIntoView({ behavior: 'smooth' })
+}
 
 </script>
