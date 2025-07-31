@@ -104,7 +104,8 @@ const plans = data.getPlans(new Promise<void>(resolve => onBeforeUnmount(() => r
 const shifts = data.getPersonShift(profileName.value, new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 function createPlan() {
-    console.log('TODO')
+    if (!createPlanForm.name) return
+    data.createPlan(createPlanForm.name)
 }
 
 </script>

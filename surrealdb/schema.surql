@@ -3,7 +3,7 @@ DEFINE TABLE OVERWRITE plan SCHEMAFULL TYPE NORMAL
         FOR select, create, update, delete WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE plan;
 DEFINE FIELD OVERWRITE name ON TABLE plan TYPE string;
-DEFINE FIELD OVERWRITE roles ON TABLE plan TYPE array<string>;
+DEFINE FIELD OVERWRITE roles ON TABLE plan TYPE array<string> DEFAULT [];
 
 DEFINE TABLE OVERWRITE shift SCHEMAFULL TYPE NORMAL
     PERMISSIONS
@@ -13,7 +13,7 @@ DEFINE FIELD OVERWRITE name ON TABLE shift TYPE option<string>;
 DEFINE FIELD OVERWRITE date ON TABLE shift TYPE datetime;
 DEFINE FIELD OVERWRITE begin ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
 DEFINE FIELD OVERWRITE end ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
-DEFINE FIELD OVERWRITE people ON TABLE shift TYPE array<object>;
+DEFINE FIELD OVERWRITE people ON TABLE shift TYPE array<object> DEFAULT [];
 DEFINE FIELD OVERWRITE people[*].name ON TABLE shift TYPE string;
 DEFINE FIELD OVERWRITE people[*].role ON TABLE shift TYPE option<string>;
 

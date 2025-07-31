@@ -38,12 +38,12 @@ import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { RecordId } from 'surrealdb'
-import { inject, onBeforeUnmount } from 'vue'
+import { inject } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
-const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
+const plan = data.getPlan(new RecordId('plan', route.params.id))
 
 </script>

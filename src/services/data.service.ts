@@ -31,7 +31,7 @@ export class DataService {
         })
     }
 
-    getPlans(kill: Promise<void>) {
+    getPlans(kill?: Promise<void>) {
         const table = this.CACHE_PLAN
         const cached = this.cache.get<Plan[]>(table, '*')
 
@@ -51,13 +51,15 @@ export class DataService {
         })
         if (cached) plan.reload()
 
-        const live = this.surrealDbService.live(table, async () => plan.reload(await query()))
-        kill.then(() => live.then(id => this.surrealDbService.kill(id)))
+        if (kill) {
+            const live = this.surrealDbService.live(table, async () => plan.reload(await query()))
+            kill.then(() => live.then(id => this.surrealDbService.kill(id)))
+        }
 
         return plan
     }
 
-    getPlan(id: RecordId<'plan'>, kill: Promise<void>) {
+    getPlan(id: RecordId<'plan'>, kill?: Promise<void>) {
         const cached = this.cache.get<PlanScedulesShift>(this.CACHE_PLAN_SCEDULES_SHIFT, id.id.toString())
 
         const query = async (id: RecordId<'plan'>): Promise<PlanScedulesShift | undefined> => {
@@ -72,18 +74,20 @@ export class DataService {
         })
         if (this.cache) plan.reload()
         
-        const livePlans = this.surrealDbService.live('plan', async () => plan.reload(await query(id)))
-        const liveShifts = this.surrealDbService.live('shift', async () => plan.reload(await query(id)))
+        if (kill) {
+            const livePlans = this.surrealDbService.live('plan', async () => plan.reload(await query(id)))
+            const liveShifts = this.surrealDbService.live('shift', async () => plan.reload(await query(id)))
 
-        kill.then(() => {
-            livePlans.then((id) => this.surrealDbService.kill(id))
-            liveShifts.then((id) => this.surrealDbService.kill(id))
-        })
+            kill.then(() => {
+                livePlans.then((id) => this.surrealDbService.kill(id))
+                liveShifts.then((id) => this.surrealDbService.kill(id))
+            })
+        }
 
         return plan
     }
 
-    getPersonShift(name: string, kill: Promise<void>) {
+    getPersonShift(name: string, kill?: Promise<void>) {
         const cached = this.cache.get<ShiftSecduledByPlan[]>(this.CACHE_PERSON_SHIFT, '*')
 
         const query = async (name: string): Promise<ShiftSecduledByPlan[] | undefined> => {
@@ -98,10 +102,16 @@ export class DataService {
         })
         if (this.cache) shifts.reload()
         
-        const liveShifts = this.surrealDbService.live('shift', async () => shifts.reload(await query(name)))
-        kill.then(() => liveShifts.then((id) => this.surrealDbService.kill(id)))
+        if (kill) {
+             const liveShifts = this.surrealDbService.live('shift', async () => shifts.reload(await query(name)))
+            kill.then(() => liveShifts.then((id) => this.surrealDbService.kill(id)))
+        }
 
         return shifts
+    }
+
+    async createPlan(name: string): Promise<Plan> {
+        return (await this.surrealDbService.insert<Plan, { name: string }>('plan', { name }))[0]
     }
 
     async addShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
