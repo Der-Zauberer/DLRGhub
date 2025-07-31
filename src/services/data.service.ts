@@ -1,4 +1,4 @@
-import type { Plan, PlanScedulesShift, Shift, ShiftSecduledByPlan } from "@/core/types";
+import type { Plan, PlanScedulesShift, ShiftSecduledByPlan } from "@/core/types";
 import { RecordId, surql } from "surrealdb";
 import { ref, watch, type App } from "vue";
 import type { SurrealDbService } from "./surrealdb.service";

@@ -2,7 +2,9 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent :title="plan.value?.name" :status="plan.status" :back="{ name: 'plans' }"/>
+        <HeadlineComponent :title="plan.value?.name" :status="plan.status" :back="{ name: 'plans' }">
+            <RouterLink :to="{ name: 'shift-edit', params: { id: $route.params.id } }" class="button grey-color"><swd-icon class="settings-icon"></swd-icon></RouterLink>
+        </HeadlineComponent>
 
         <swd-card-outline v-if="plan.status === 'EMPTY'">TODO Empty State</swd-card-outline>
 
@@ -13,7 +15,6 @@
         <ul class="grid-cols-xl-4 grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
             <li v-for="shift of plan.value?.shifts"><ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/></li>
         </ul>
-        
 
         <DialogComponent :name="shiftEditData?.name || ''" v-model="shiftEditDialog">
 
