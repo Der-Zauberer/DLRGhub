@@ -114,6 +114,11 @@ export class DataService {
         return (await this.surrealDbService.insert<Plan, { name: string }>('plan', { name }))[0]
     }
 
+    async deletePlan(name: string) {
+        //Delete references
+        await this.surrealDbService.delete(new RecordId('plan', name))
+    }
+
     async addShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people += ${person}`)
     }
