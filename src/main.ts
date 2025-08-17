@@ -13,6 +13,7 @@ import LoginView from './views/LoginView.vue'
 import type { BeforeInstallPromptEvent } from './core/types'
 import ProfileView from './views/ProfileView.vue'
 import ShiftEditView from './views/ShiftEditView.vue'
+import weatherService from './services/weather.service'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,4 +38,5 @@ const app = createApp(App)
 app.use(router)
 app.use(surrealdbService)
 app.use(dataService)
+app.use(weatherService)
 app.mount('#app')

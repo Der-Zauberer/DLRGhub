@@ -5,9 +5,9 @@ import type { SurrealDbService } from "./surrealdb.service";
 import { resource } from "@/core/resource";
 import SuperJSON from "superjson";
 
-SuperJSON.registerCustom<RecordId, [string, any]>({
+SuperJSON.registerCustom<RecordId, [string, string]>({
     isApplicable: (value): value is RecordId => value instanceof RecordId,
-    serialize: (rid) => [rid.tb, rid.id],
+    serialize: (rid) => [rid.tb, rid.id.toString()],
     deserialize: ([tb, id]) => new RecordId(tb, id),
 }, 'RecordId')
 
@@ -187,7 +187,7 @@ class InMemoryDb {
     }
 
     clear() {
-        for (let key in this.tables) delete this.tables[key]
+        for (const key in this.tables) delete this.tables[key]
     }
 }
 
