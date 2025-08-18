@@ -8,7 +8,8 @@ import { onMounted, useTemplateRef } from 'vue';
 const props = defineProps<{ x: string[], y: number[] }>()
 const canvasRef = useTemplateRef('canvas')
 
-onMounted(() => {
+onMounted(async () => {
+
     const canvas = canvasRef.value
     if (!canvas) return
     const context = canvas.getContext('2d')
@@ -43,6 +44,26 @@ onMounted(() => {
         context.fill()
     })
 
+    /*
+    let last: { x: number, y:number } | undefined = undefined
+    for (let i = 0; i < props.y.length; i++) {
+        const point = { x: calcX(i), y: calcY(props.y[i]) }
+        console.log(point)
+        if (!last) {
+            context.moveTo(point.x, point.y)
+            last = point
+            continue
+        }
+        const firstStep = { x: (point.x - last.x) / 2 + last.x, y: last.y }
+        const secondStep = { x: ((point.x - last.x) / 2) * 1 + last.x, y: point.y }
+        context.bezierCurveTo(firstStep.x, firstStep.y, secondStep.x, secondStep.y, point.x, point.y)
+        //context.lineTo(point.x, point.y)
+        last = point
+    }
+    context.strokeStyle = accentColor
+    context.stroke()
+    */
+
     props.y.forEach((entry, index) => {
         if (index === 0 ) {
             context.moveTo(calcX(index), calcY(entry))
@@ -57,6 +78,7 @@ onMounted(() => {
     })
     context.lineTo(calcX(props.y.length - 1), calcY(props.y[props.y.length - 1]))
     context.stroke()
+
 })
 
 </script>
