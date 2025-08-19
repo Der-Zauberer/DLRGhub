@@ -37,44 +37,29 @@ onMounted(async () => {
     context.strokeStyle = elementColor
     context.stroke()
 
+    context.fillStyle = elementColor
+    const step = max - min > 5 ? Math.floor((max - min) / 5) : 1
+    for (let i = Math.floor(min); i <= Math.floor(max); i += step)  context.fillText(i.toString(), 0, calcY(i))
+    context.fillText(Math.floor(min).toString(), 0, calcY(Math.floor(min)))
+
+    /*
     props.y.forEach((entry, index) => {
         context.beginPath()
         context.arc(calcX(index), calcY(entry), 4, 0, Math.PI*2)
         context.fillStyle = accentColor
         context.fill()
     })
-
-    /*
-    let last: { x: number, y:number } | undefined = undefined
-    for (let i = 0; i < props.y.length; i++) {
-        const point = { x: calcX(i), y: calcY(props.y[i]) }
-        console.log(point)
-        if (!last) {
-            context.moveTo(point.x, point.y)
-            last = point
-            continue
-        }
-        const firstStep = { x: (point.x - last.x) / 2 + last.x, y: last.y }
-        const secondStep = { x: ((point.x - last.x) / 2) * 1 + last.x, y: point.y }
-        context.bezierCurveTo(firstStep.x, firstStep.y, secondStep.x, secondStep.y, point.x, point.y)
-        //context.lineTo(point.x, point.y)
-        last = point
-    }
-    context.strokeStyle = accentColor
-    context.stroke()
     */
 
+    context.beginPath()
+    context.strokeStyle = accentColor
     props.y.forEach((entry, index) => {
-        if (index === 0 ) {
-            context.moveTo(calcX(index), calcY(entry))
+        const [x, y] = [calcX(index), calcY(entry)]
+        if (index === 0) {
+            context.moveTo(x, y)
         } else {
-            const prevX = calcX(index - 1)
-            const prevY = calcY(props.y[index - 1])
-            const x = calcX(index)
-            const y = calcY(entry)
-            context.quadraticCurveTo(prevX, prevY, (prevX + x) / 2, (prevY + y) / 2)
+            context.lineTo(x, y)
         }
-        context.strokeStyle = accentColor
     })
     context.lineTo(calcX(props.y.length - 1), calcY(props.y[props.y.length - 1]))
     context.stroke()
