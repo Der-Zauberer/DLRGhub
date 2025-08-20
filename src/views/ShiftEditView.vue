@@ -30,7 +30,7 @@
             <h6>Schichten</h6>
             <div v-for="(shift, index) in plan.value.shifts" class="grid-cols-sm-2 grid-cols-1" :key="index">
                 <InputComponent label="Name (Optional)" v-model="shift.name"/>
-                <InputComponent label="Datum" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value)" type="date"/>
+                <InputComponent label="Datum" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date" type="date"/>
                 <InputComponent label="Uhrzeit von (Optional)" v-model="shift.begin" type="time"/>
                 <InputComponent label="Uhrzeit bis (Optional)" v-model="shift.end" type="time"/>
                 <button type="button" class="grey-color" @click.prevent="shiftsToRemove.push(plan.value.shifts[index]); plan.value.shifts.splice(index, 1)"><swd-icon class="delete-icon"></swd-icon></button>

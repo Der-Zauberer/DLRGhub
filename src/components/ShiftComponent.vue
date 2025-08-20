@@ -15,19 +15,19 @@
         <div class="shift__content">
             <h5 v-if="shift.name">{{ shift?.name }}</h5>
 
-            <div v-for="role of roles.filter(role => shift.people.filter(person => person.role === role).length !== 0)">
+            <div v-for="role of roles.filter(role => shift.people.filter(person => person.role === role).length !== 0)" :key="role">
                 <div><strong>{{ role }}</strong></div>
-                <ul><li v-for="person of shift.people.filter(person => person.role === role)">{{ person.name }}</li></ul>
+                <ul><li v-for="person of shift.people.filter(person => person.role === role)" :key="person.name">{{ person.name }}</li></ul>
             </div>
 
-            <div><ul><li v-for="person of shift.people.filter(person => !roles.includes(person.role))">{{ person.name }}</li></ul></div>
+            <div><ul><li v-for="person of shift.people.filter(person => !roles.includes(person.role))" :key="person.name">{{ person.name }}</li></ul></div>
 
         </div>
     </button>
 
     <DialogComponent :name="shift?.name || shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' })" v-model="dialog" v-if="dialog">
 
-            <div class="grid-cols-1" v-for="role of roles">
+            <div class="grid-cols-1" v-for="role of roles" :key="role">
                 <h6>{{ role }}</h6>
                 <ListInputComponent
                     :list="shift.people.filter(person => person.role === role).map(person => person.name)"
