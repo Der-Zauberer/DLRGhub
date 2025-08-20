@@ -34,11 +34,11 @@ export type Shift = {
     }[]
 }
 
-export type PlanScedulesShift = Plan & {
+export type PlanSchedulesShift = Plan & {
     shifts: Shift[]
 }
 
-export type ShiftSecduledByPlan = Shift & {
+export type ShiftScheduledByPlan = Shift & {
     plan: Plan
 }
 

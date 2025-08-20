@@ -1,4 +1,4 @@
-import type { Plan, PlanScedulesShift, ShiftSecduledByPlan } from "@/core/types";
+import type { Plan, PlanSchedulesShift, ShiftScheduledByPlan } from "@/core/types";
 import { RecordId, surql } from "surrealdb";
 import { ref, watch, type App } from "vue";
 import type { SurrealDbService } from "./surrealdb.service";
@@ -15,7 +15,7 @@ export class DataService {
 
     private readonly PROFILE_NAME = 'profile_name'
     private readonly CACHE_PLAN = 'plan'
-    private readonly CACHE_PLAN_SCEDULES_SHIFT = 'plan->scedules->shift'
+    private readonly CACHE_PLAN_Schedules_SHIFT = 'plan->schedules->shift'
     private readonly CACHE_PERSON_SHIFT = 'person_shift'
 
     private readonly cache = new InMemoryDb()
@@ -39,9 +39,9 @@ export class DataService {
             const plans = await this.surrealDbService.select<Plan>(table)
             this.cache.set(table, '*', plans)
             const set = new Set(plans.map(plan => plan.id.id.toString()))
-            this.cache.getAll<PlanScedulesShift>(this.CACHE_PLAN_SCEDULES_SHIFT)
+            this.cache.getAll<PlanSchedulesShift>(this.CACHE_PLAN_Schedules_SHIFT)
                 .filter(plan => !set.has(plan.id.id.toString()))
-                .forEach(plan => this.cache.delete(this.CACHE_PLAN_SCEDULES_SHIFT, plan.id.id.toString()))
+                .forEach(plan => this.cache.delete(this.CACHE_PLAN_Schedules_SHIFT, plan.id.id.toString()))
             return plans
         }
 
@@ -60,11 +60,11 @@ export class DataService {
     }
 
     getPlan(id: RecordId<'plan'>, kill?: Promise<void>) {
-        const cached = this.cache.get<PlanScedulesShift>(this.CACHE_PLAN_SCEDULES_SHIFT, id.id.toString())
+        const cached = this.cache.get<PlanSchedulesShift>(this.CACHE_PLAN_Schedules_SHIFT, id.id.toString())
 
-        const query = async (id: RecordId<'plan'>): Promise<PlanScedulesShift | undefined> => {
-            const [plan] = await this.surrealDbService.query<[PlanScedulesShift]>(surql`SELECT *, (SELECT * FROM id->scedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
-            if (plan) this.cache.set(this.CACHE_PLAN_SCEDULES_SHIFT, plan.id.id.toString(), plan)
+        const query = async (id: RecordId<'plan'>): Promise<PlanSchedulesShift | undefined> => {
+            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
+            if (plan) this.cache.set(this.CACHE_PLAN_Schedules_SHIFT, plan.id.id.toString(), plan)
             return plan
         }
 
@@ -88,10 +88,10 @@ export class DataService {
     }
 
     getPersonShift(name: string, kill?: Promise<void>) {
-        const cached = this.cache.get<ShiftSecduledByPlan[]>(this.CACHE_PERSON_SHIFT, '*')
+        const cached = this.cache.get<ShiftScheduledByPlan[]>(this.CACHE_PERSON_SHIFT, '*')
 
-        const query = async (name: string): Promise<ShiftSecduledByPlan[] | undefined> => {
-            const [shifts] = await this.surrealDbService.query<[ShiftSecduledByPlan[]]>(surql`SELECT *, (<-scedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) ORDER BY date;`)
+        const query = async (name: string): Promise<ShiftScheduledByPlan[] | undefined> => {
+            const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) ORDER BY date;`)
             this.cache.set(this.CACHE_PERSON_SHIFT, '*', shifts)
             return shifts
         }
@@ -189,6 +189,14 @@ class InMemoryDb {
     clear() {
         for (const key in this.tables) delete this.tables[key]
     }
+}
+
+export function dateToISODate(date?: Date): string | undefined {
+    return date ? date.toISOString().split('T')[0] : undefined
+}
+
+export function isoDateToDate(string?: string): Date | undefined {
+    return string && string.match(/\d{4}-\d{2}-\d{2}/g) ? new Date(string) : undefined
 }
 
 export const DATA_SERVICE = 'dataService'
