@@ -2,7 +2,7 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent title="Dienstpläne" :status="plans.status" type="Dienstpläne">
+        <HeadlineComponent title="Dienstpläne" :resource="plans" type="Dienstpläne">
             <button class="grey-color" @click="planCreateDialog = true">
                 <swd-icon class="add-icon"></swd-icon>
                 <span v-if="plans.status==='EMPTY'"> Neuen Dienstplan erstellen</span>
@@ -15,7 +15,7 @@
         </HeadlineComponent>
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
-            <li v-for="plan of plans.value">
+            <li v-for="plan of plans.value" :key="plan.id.id.toString()">
                 <RouterLink :to="{ name: 'shifts', params: { id: plan.id.id.toString()} }">
                     <span>{{ plan.name }}</span>
                     <swd-icon class="arrow-right-icon"></swd-icon>
@@ -23,13 +23,7 @@
             </li>
         </ul>
 
-        <ul class="button-grid grid-cols-md-2 grid-cols-1" v-if="plans.status === 'LOADING' && plans.empty">
-            <li v-for="plan of Array(2)"><a><swd-skeleton-text></swd-skeleton-text></a></li>
-        </ul>
-
-        <swd-card class="red-color" v-if="plans.error">{{ plans.error }}</swd-card>
-
-        <HeadlineComponent title="Meine Schichten" :subtitle="profileName || 'Nicht konfiguriert'" :status="profileName ? shifts.status : undefined" type="Schichten">
+        <HeadlineComponent title="Meine Schichten" :subtitle="profileName || 'Nicht konfiguriert'" :resource="shifts" type="Schichten">
             <RouterLink :to="{ name: 'profile' }" class="button grey-color">
                 <swd-icon class="settings-icon"></swd-icon>
                 <span v-if="!profileName"> Konfigurieren</span>
@@ -37,7 +31,7 @@
         </HeadlineComponent>
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
-            <li v-for="shift of shifts.value">
+            <li v-for="shift of shifts.value" :key="shift.id.id.toString()">
                 <RouterLink :to="{ name: 'shifts', params: { id: shift.plan.id.id.toString()}, query: { shift: shift.id.id.toString() } }">
                     <div class="shift">
                         <div>

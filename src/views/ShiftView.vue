@@ -2,25 +2,22 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent :title="plan.value?.name" :status="plan.status" :back="{ name: 'plans' }">
+        <HeadlineComponent :title="plan.value?.name" :resource="plan" type="Schichten" :empty="plan.value?.shifts.length === 0" :back="{ name: 'plans' }">
             <RouterLink :to="{ name: 'shift-edit', params: { id: $route.params.id } }" class="button grey-color"><swd-icon class="settings-icon"></swd-icon></RouterLink>
         </HeadlineComponent>
 
-        <swd-card-outline v-if="plan.status === 'EMPTY'">TODO Empty State</swd-card-outline>
-
-        <swd-loading-spinner v-if="plan.status === 'LOADING' && plan.empty" loading="true" class="width-100"></swd-loading-spinner>
-
-        <swd-card class="red-color" v-if="plan.error">{{ plan.error }}</swd-card>
-
         <ul class="grid-cols-xl-4 grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
-            <li v-for="shift of plan.value?.shifts"><ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/></li>
+            <li v-for="shift of plan.value?.shifts" :key="shift.id.id.toString()">
+                <ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/>
+            </li>
         </ul>
 
         <DialogComponent :name="shiftEditData?.name || ''" v-model="shiftEditDialog">
 
-            <div class="grid-cols-1" v-for="role of plan.value?.roles" v-if="shiftEditData">
+            <div class="grid-cols-1" v-for="role of plan.value?.roles" :key="role">
                 <h6>{{ role }}</h6>
                 <ListInputComponent 
+                    v-if="shiftEditData"
                     :list="shiftEditData.people.filter(person => person.role === role).map(person => person.name)"
                     @add="data.addShiftPerson(shiftEditData.id, { name: $event, role: role })"
                     @delete="data.removeShiftPerson(shiftEditData.id, { name: $event, role: role })"

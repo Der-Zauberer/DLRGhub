@@ -2,12 +2,10 @@
     
     <div class="container-xl">
 
-        <HeadlineComponent :title="plan.value?.name" :status="plan.status" :back="{ name: 'plans' }">
+        <HeadlineComponent :title="plan.value?.name" :resource="plan" :back="{ name: 'plans' }">
             <button><swd-icon class="delete-icon"></swd-icon> Delete</button>
             <button><swd-icon class="done-icon"></swd-icon> Save</button>
         </HeadlineComponent>
-
-        <swd-loading-spinner :loading="plan.loading && !plan.value" class="width-100"></swd-loading-spinner>
 
         <form v-if="plan.value" ref="form">
 
@@ -26,7 +24,7 @@
             </div>
 
             <h6>Schichten</h6>
-            <div v-for="(shift, index) in plan.value.shifts" class="grid-cols-sm-2 grid-cols-1">
+            <div v-for="(shift, index) in plan.value.shifts" :key="index" class="grid-cols-sm-2 grid-cols-1">
                 <InputComponent label="Name (Optional)" v-model="shift.name"/>
                 <InputComponent label="Datum" v-model="shift.date" type="date"/>
                 <InputComponent label="Uhrzeit von (Optional)" v-model="shift.begin" type="time"/>
