@@ -1,5 +1,5 @@
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1000" style="width: 100%; aspect-ratio: 2/1;" ref="svg" @mouseover="inspect($event)" @mouseleave="pointer = undefined">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1000" style="width: 100%; aspect-ratio: 2/1;" ref="svg" @mousemove="inspect($event)" @mouseleave="pointer = undefined">
         <path d="M10 10 H1990 V990 H10 Z" stroke-width="10" stroke="#808080" fill="none"/>
         <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="10" stroke="yellow" fill="none"/>
         <path v-if="pointer" :d="`M${pointer.x} 10 V999`" stroke-width="10" stroke="white" fill="none"/>
@@ -29,7 +29,6 @@ function inspect(event: MouseEvent) {
     const rect = svg.value?.getBoundingClientRect()
     if (!rect || !rect.left) return
     const x = Math.round((event.clientX - rect.left) * (values.value.width / rect.width) / values.value.stepX)
-    console.log(x)
     pointer.value = { x: (x * values.value.stepX).toFixed(0), y: (values.value.height - (props.y[x] - values.value.yMin) * values.value.stepY).toFixed(0), value: { x: props.x[x], y: props.y[x] }}
 }
 
