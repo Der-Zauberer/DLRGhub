@@ -1,6 +1,6 @@
 # DLRGhub
 
-An application to manage shift plans for beach lifegards and events.
+An application to manage shift plans for german beach lifeguards and events for our organization.
 
 ## Database Setup
 
@@ -11,7 +11,7 @@ surreal upgrade
 surreal start --log info --user admin --pass admin --deny-all --allow-guests --allow-scripting --allow-funcs --bind 0.0.0.0:8080 surrealkv:data
 ```
 
-Import the schmea script.
+Import the schema script.
 
 ## Vue Setup
 
