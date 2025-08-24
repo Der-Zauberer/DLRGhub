@@ -11,7 +11,7 @@
     </div>
     <swd-loading-spinner v-if="resource?.status === 'LOADING'  && !resource?.value" class="width-100" loading="true"></swd-loading-spinner>
     <div class="empty-state" v-if="resource?.status === 'EMPTY' || empty">Keine {{ (type || '') + ' ' }}gefunden!</div>
-    <div class="error-state" v-if="resource?.status === 'ERROR'">{{ resource?.status }}</div>
+    <div class="error-state" v-if="resource?.status === 'ERROR'">{{ resource?.error }}</div>
 </template>
 
 <style scoped>
@@ -40,6 +40,7 @@
 .empty-state, .error-state {
     padding: calc(round(.5em,1px) - var(--theme-border-width)) calc(round(.6em,1px) - var(--theme-border-width));
     border-radius: var(--theme-border-radius);
+    margin-bottom: var(--theme-element-spacing);
 }
 
 .empty-state {

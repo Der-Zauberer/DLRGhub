@@ -1,4 +1,8 @@
 <template>
+    <div class="flex flex-space-between">
+        <h4>{{ title }}<swd-subtitle>{{ subtitle }}</swd-subtitle></h4>
+        <span>{{ `${pointer?.value.y || current || y[y.length - 1]}°C` }}<swd-subtitle v-if="pointer">{{ pointer.value.x }}</swd-subtitle></span>
+    </div>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1000" style="width: 100%; aspect-ratio: 2/1;" ref="svg" @mousemove="inspectMouse($event)" @mouseleave="pointer = undefined" @touchmove="inspectTouch($event)" @touchend="pointer = undefined" @touchcancel="pointer = undefined">
         <path d="M10 10 H1990 V990 H10 Z" stroke-width="10" stroke="#808080" fill="none"/>
         <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="10" stroke="yellow" fill="none"/> 
@@ -9,7 +13,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
-const props = defineProps<{ x: number[] | string[], y: number[] }>()
+const props = defineProps<{ title: string, subtitle: string, current?: number, x: number[] | string[], y: number[] }>()
 const svg = useTemplateRef('svg')
 
 const pointer = ref<{ x: string, y: string, value: { x: number | string, y: number } } | undefined>(undefined)
