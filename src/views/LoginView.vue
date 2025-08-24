@@ -27,7 +27,9 @@
 
         <div class="red-text">{{ error }}</div>
 
-        <input type="submit" value="Login">
+        <swd-loading-spinner :loading="loading" class="width-100">
+            <input type="submit" value="Login" class="width-100">
+        </swd-loading-spinner>
     </form>
 
 </template>

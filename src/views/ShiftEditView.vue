@@ -8,7 +8,9 @@
                 <p>Bist du sicher den Dienstplan zu löschen?</p>
                 <code>{{ plan.value?.name }}</code>
             </DialogComponent>
-            <button v-if="plan.value" @click="savePlan()"><swd-icon class="done-icon"></swd-icon> Save</button>
+            <swd-loading-spinner :loading="savePlan.loading">
+                <button v-if="plan.value" @click="savePlan.reload()"><swd-icon class="done-icon"></swd-icon> Save</button>
+            </swd-loading-spinner>
         </HeadlineComponent>
 
         <form v-if="plan.value" ref="form">
@@ -70,38 +72,35 @@ const plan = resource({
 const shiftsToAdd: Shift[] = []
 const shiftsToRemove: Shift[] = []
 
-async function savePlan() {
-    const form = formRef.value
-    if (!form || !plan.value) return
-    if (!form.checkValidity()) {
-        form.reportValidity()
-        return
+const savePlan = resource({
+    loader: async () => {
+        const form = formRef.value
+        if (!form || !plan.value) return
+        if (!form.checkValidity()) {
+            form.reportValidity()
+            return
+        }
+        await surrealdb.query(surql`
+            BEGIN TRANSACTION;
+            UPDATE ${plan.value.id} CONTENT ${plan.value};
+            FOR $shift IN ${shiftsToAdd} {
+                LET $plan = ${plan.value.id};
+                LET $id = (INSERT INTO shift $shift).id;
+                RELATE $plan->schedules->$id;
+            };
+            FOR $shift IN ${shiftsToRemove} {
+                LET $id = $shift.id;
+                DELETE $id;
+            };
+            FOR $shift IN ${plan.value.shifts.filter(shift => !shiftsToAdd.includes(shift))} {
+                UPDATE $shift.id CONTENT $shift;
+            };
+            COMMIT TRANSACTION;
+        `);
+
+        router.push({ name: 'shifts', params: { id: route.params.id } })
     }
-    await surrealdb.query(surql`
-        BEGIN TRANSACTION;
-
-        UPDATE ${plan.value.id} CONTENT ${plan.value};
-
-        FOR $shift IN ${shiftsToAdd} {
-            LET $plan = ${plan.value.id};
-            LET $id = (INSERT INTO shift $shift).id;
-            RELATE $plan->schedules->$id;
-        };
-
-        FOR $shift IN ${shiftsToRemove} {
-            LET $id = $shift.id;
-            DELETE $id;
-        };
-
-        FOR $shift IN ${plan.value.shifts.filter(shift => !shiftsToAdd.includes(shift))} {
-            UPDATE $shift.id CONTENT $shift;
-        };
-
-        COMMIT TRANSACTION;
-    `);
-    
-    router.push({ name: 'shifts', params: { id: route.params.id } })
-}
+})
 
 async function deletePlan(id: RecordId) {
     await surrealdb.delete(id)

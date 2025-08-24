@@ -97,9 +97,9 @@ const createPlanForm = reactive<{ name?: string }>({})
 const plans = data.getPlans(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 const shifts = data.getPersonShift(profileName.value, new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
-function createPlan() {
+async function createPlan() {
     if (!createPlanForm.name) return
-    data.createPlan(createPlanForm.name)
+    await data.createPlan(createPlanForm.name)
 }
 
 </script>
