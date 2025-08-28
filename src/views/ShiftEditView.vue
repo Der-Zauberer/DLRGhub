@@ -3,13 +3,13 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="plan.value?.name" :resource="plan" :back="{ name: 'plans' }">
-            <button v-if="plan.value" @click="planDeleteDialog = true"><swd-icon class="delete-icon"></swd-icon> Delete</button>
+            <ButtonComponent v-if="plan.value" icon="delete" @click="planDeleteDialog = true">Delete</ButtonComponent>
             <DialogComponent v-if="plan.value" name="Dienstplan löschen" action="Löschen" v-model="planDeleteDialog" @success="deletePlan(plan.value.id)">
                 <p>Bist du sicher den Dienstplan zu löschen?</p>
                 <code>{{ plan.value?.name }}</code>
             </DialogComponent>
             <swd-loading-spinner :loading="savePlan.loading">
-                <button v-if="plan.value" @click="savePlan.reload()"><swd-icon class="done-icon"></swd-icon> Save</button>
+                <ButtonComponent v-if="plan.value" icon="done" @click="savePlan.reload()">Delete</ButtonComponent>
             </swd-loading-spinner>
         </HeadlineComponent>
 
@@ -35,10 +35,9 @@
                 <InputComponent label="Datum" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date" type="date"/>
                 <InputComponent label="Uhrzeit von (Optional)" v-model="shift.begin" type="time"/>
                 <InputComponent label="Uhrzeit bis (Optional)" v-model="shift.end" type="time"/>
-                <button type="button" class="grey-color" @click.prevent="shiftsToRemove.push(plan.value.shifts[index]); plan.value.shifts.splice(index, 1)"><swd-icon class="delete-icon"></swd-icon></button>
+                <ButtonComponent color="ELEMENT" icon="delete" aria-label="Löschen" @click.prevent="shiftsToRemove.push(plan.value.shifts[index]); plan.value.shifts.splice(index, 1)"/>
             </div>
-            <button type="button" class="grey-color" @click.prevent="shiftsToAdd.push(plan.value.shifts[plan.value.shifts.push({ id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }) - 1 ])"><swd-icon class="add-icon"></swd-icon> Hinzufügen</button>
-
+            <ButtonComponent color="ELEMENT" icon="add" @click.prevent="shiftsToAdd.push(plan.value.shifts[plan.value.shifts.push({ id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }) - 1 ])">Hinzufügen</ButtonComponent>
         </form>
 
     </div>
@@ -46,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import ButtonComponent from '@/components/ButtonComponent.vue';
 import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'

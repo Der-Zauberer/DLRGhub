@@ -1,7 +1,7 @@
 <template>
     <div class="headline">
-        <div class="headline__tools" >
-            <RouterLink class="button grey-color" v-if="back" :to="back"><swd-icon class="left-icon"></swd-icon></RouterLink>
+        <div class="headline__tools">
+            <ButtonComponent v-if="back" :to="back" icon="left" aria-label="Zurück" color="ELEMENT"/>
             <h5>{{title}}<swd-subtitle v-if="subtitle">{{ subtitle }}</swd-subtitle></h5>
         </div>
         <div class="headline__tools">
@@ -56,7 +56,8 @@
 
 <script setup lang="ts">
 import type { UnknownResource } from '@/core/resource';
-import { RouterLink, type RouteLocationAsRelativeGeneric } from 'vue-router';
+import { type RouteLocationAsRelativeGeneric } from 'vue-router';
+import ButtonComponent from './ButtonComponent.vue';
 
 defineProps<{ title?: string, subtitle?: string, back?: RouteLocationAsRelativeGeneric, resource?: UnknownResource, empty?: boolean, type?: string}>()
 </script>

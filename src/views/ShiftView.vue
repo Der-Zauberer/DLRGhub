@@ -3,7 +3,7 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="plan.value?.name" :resource="plan" type="Schichten" :empty="plan.value?.shifts.length === 0" :back="{ name: 'plans' }">
-            <RouterLink :to="{ name: 'shift-edit', params: { id: $route.params.id } }" class="button grey-color"><swd-icon class="settings-icon"></swd-icon></RouterLink>
+            <ButtonComponent :to="{ name: 'shift-edit', params: { id: $route.params.id } }" color="ELEMENT" icon="settings" aria-label="Schicht bearbeiten"/>
         </HeadlineComponent>
 
         <ul class="grid-cols-xl-4 grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
@@ -63,6 +63,7 @@
 </style>
 
 <script setup lang="ts">
+import ButtonComponent from '@/components/ButtonComponent.vue';
 import DialogComponent from '@/components/DialogComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import ListInputComponent from '@/components/ListInputComponent.vue';
@@ -71,7 +72,7 @@ import type { Shift } from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';
 import { inject, onBeforeUnmount, ref } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService

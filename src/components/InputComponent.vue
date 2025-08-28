@@ -1,22 +1,21 @@
 <template>
     <swd-input>
         <label v-if="label" :for="toId(id)">{{ label }}</label>
-        <input v-if="model || !value" :id="toId(id)" v-model="model" :type="type" :placeholder="placeholder" :step="step" :readonly="readonly" :required="required" :disabled="disabled" :invalid="invalid ? invalid : undefined" @input="emit('input', $event as InputEvent)">
-        <input v-if="!model && value" :value="value" :type="type" :placeholder="placeholder" :step="step" :readonly="readonly" :required="required" :disabled="disabled" :invalid="invalid ? invalid : undefined" @input="emit('input', $event as InputEvent)">
+        <input :id="toId(id)" :value="model ?? value" :type="type" :placeholder="placeholder" :step="step" :readonly="readonly" :required="required" :disabled="disabled" :invalid="invalid ? invalid : undefined" @input="emit('input', $event as InputEvent); model = ($event.target as HTMLInputElement).value">
     </swd-input>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ 
+const props = defineProps<{
     id?: string,
-    label?: string,
-    value?: string,
-    type?: string,
+    label?: string
+    value?: string
+    type?: string
     placeholder?: string
     step?: string
     readonly?: boolean
-    required?: boolean,
-    disabled?: boolean,
+    required?: boolean
+    disabled?: boolean
     invalid?: boolean
 }>()
 

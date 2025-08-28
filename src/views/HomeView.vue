@@ -11,7 +11,7 @@
       <li>Weather Widget</li>
       <li>Water Widget</li>
     </ul>
-    
+
   </div>
 
 </template>

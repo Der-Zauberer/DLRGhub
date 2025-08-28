@@ -1,13 +1,13 @@
 <template>
     <div>
-        <div v-for="entry of list">
+        <div v-for="entry of list" :key="entry">
             <span>{{ entry }}</span>
-            <button class="ghost list-button" @click="$emit('delete', entry)"><swd-icon class="delete-icon"></swd-icon></button>
+            <ButtonComponent class="list-button" apperience="GHOST" icon="delete" aria-label="Löschen" @click="$emit('delete', entry)"/>
         </div>
     </div>
     <div class="flex">
         <input class="list-input" ref="input" @keydown.enter="($refs.input as HTMLInputElement).value ? $emit('add', ($refs.input as HTMLInputElement).value) : {}">
-        <button class="grey-color" @click="($refs.input as HTMLInputElement).value ? $emit('add', ($refs.input as HTMLInputElement).value) : {}"><swd-icon class="add-icon"></swd-icon></button>
+        <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="($refs.input as HTMLInputElement).value ? $emit('add', ($refs.input as HTMLInputElement).value) : {}"/>
     </div>
 </template>
 
@@ -24,6 +24,8 @@
 </style>
 
 <script setup lang="ts">
+import ButtonComponent from './ButtonComponent.vue';
+
 
 defineProps<{ list: string[] }>()
 defineEmits<{ (e: 'add', value: string): void, (e: 'delete', value: string): void }>()

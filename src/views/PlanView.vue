@@ -3,10 +3,7 @@
     <div class="container-xl">
 
         <HeadlineComponent title="Dienstpläne" :resource="plans" type="Dienstpläne">
-            <button class="grey-color" @click="planCreateDialog = true">
-                <swd-icon class="add-icon"></swd-icon>
-                <span v-if="plans.status==='EMPTY'"> Neuen Dienstplan erstellen</span>
-            </button>
+            <ButtonComponent icon="add" color="ELEMENT" :aria-label="plans.status!=='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined" @click="planCreateDialog = true">{{  }}</ButtonComponent>
             <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" @success="createPlan()">
                 <form class="grid-cols-1">
                     <InputComponent label="Name" v-model="createPlanForm.name"/>
@@ -18,16 +15,13 @@
             <li v-for="plan of plans.value" :key="plan.id.id.toString()">
                 <RouterLink :to="{ name: 'shifts', params: { id: plan.id.id.toString()} }">
                     <span>{{ plan.name }}</span>
-                    <swd-icon class="arrow-right-icon"></swd-icon>
+                    <swd-icon class="arrow-right-icon" aria-hidden="true"></swd-icon>
                 </RouterLink>
             </li>
         </ul>
 
         <HeadlineComponent title="Meine Schichten" :subtitle="profileName || 'Nicht konfiguriert'" :resource="shifts" type="Schichten">
-            <RouterLink :to="{ name: 'profile' }" class="button grey-color">
-                <swd-icon class="settings-icon"></swd-icon>
-                <span v-if="!profileName"> Konfigurieren</span>
-            </RouterLink>
+            <ButtonComponent icon="settings" color="ELEMENT" :aria-label="profileName ? 'Konfigurieren' : undefined" :to="{ name: 'profile' }">{{ !profileName ? 'Konfigurieren' : undefined }}</ButtonComponent>
         </HeadlineComponent>
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
@@ -44,7 +38,7 @@
                             <div>{{ shift.people.find(person => person.name === profileName)?.role }}</div>
                         </div>
                     </div>
-                    <swd-icon class="arrow-right-icon"></swd-icon>
+                    <swd-icon class="arrow-right-icon" aria-hidden="true"></swd-icon>
                 </RouterLink>
             </li>
         </ul>
@@ -81,6 +75,7 @@
 </style>
 
 <script setup lang="ts">
+import ButtonComponent from '@/components/ButtonComponent.vue';
 import DialogComponent from '@/components/DialogComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue';
