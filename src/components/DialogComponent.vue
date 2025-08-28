@@ -1,7 +1,7 @@
 <template>
 
     <swd-dialog role="dialog" shown v-if="open">
-        <swd-card>
+        <swd-card ref="slot">
 
             <div class="flex flex-space-between flex-center">
                 <h4>{{ name }}</h4>
@@ -12,7 +12,7 @@
 
             <div class="grid-cols-2" v-if="action">
                 <button class="grey-color" @click="open = false">Cancel</button>
-                <button @click="open = false, $emit('success')">{{ action }}</button>
+                <button @click="success()">{{ action }}</button>
             </div>
 
         </swd-card>
@@ -21,10 +21,25 @@
 </template>
 
 <script setup lang="ts">
+import { useTemplateRef } from 'vue'
 
+const slotRef = useTemplateRef('slot')
 const open = defineModel<boolean>()
 
-defineProps<{ name: string, action?: string }>()
-defineEmits<{ ( e: 'success', value: void ): void }>()
+const props = defineProps<{ name: string, action?: string, filter?: () => boolean | Promise<boolean> }>()
+const emits = defineEmits<{ ( e: 'success', value: void ): Promise<void> }>()
 
+async function success() {
+    if (slotRef.value) {
+        const form = (slotRef.value as HTMLElement).querySelector('form') as HTMLFormElement | undefined
+        if (form && !form.checkValidity()) {
+            form.reportValidity()
+            return
+        }
+    }
+    const filter = await Promise.resolve(props.filter?.() || true)
+    if (!filter) return
+    open.value = false
+    emits('success')
+}
 </script>

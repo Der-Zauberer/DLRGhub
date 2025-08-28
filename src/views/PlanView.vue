@@ -3,10 +3,10 @@
     <div class="container-xl">
 
         <HeadlineComponent title="Dienstpläne" :resource="plans" type="Dienstpläne">
-            <ButtonComponent icon="add" color="ELEMENT" :aria-label="plans.status!=='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined" @click="planCreateDialog = true">{{  }}</ButtonComponent>
-            <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" @success="createPlan()">
+            <ButtonComponent icon="add" color="ELEMENT" :aria-label="plans.status!=='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined" @click="planCreateDialog = true">{{ plans.status==='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined }}</ButtonComponent>
+            <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" :filter="createPlan">
                 <form class="grid-cols-1">
-                    <InputComponent label="Name" v-model="createPlanForm.name"/>
+                    <InputComponent label="Name" v-model="createPlanForm.name" required/>
                 </form>
             </DialogComponent>
         </HeadlineComponent>
@@ -93,8 +93,9 @@ const plans = data.getPlans(new Promise<void>(resolve => onBeforeUnmount(() => r
 const shifts = data.getPersonShift(profileName.value, new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 async function createPlan() {
-    if (!createPlanForm.name) return
+    if (!createPlanForm.name) return false
     await data.createPlan(createPlanForm.name)
+    return true
 }
 
 </script>
