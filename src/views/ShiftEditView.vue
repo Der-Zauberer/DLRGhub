@@ -22,7 +22,7 @@
 
             <h6>Rollen</h6>
             <div class="grid-cols-sm-2 grid-cols-1">
-                <div class="flex" v-for="(role, index) in plan.value.roles" :key="index">
+                <div class="flex flex-roles" v-for="(role, index) in plan.value.roles" :key="index">
                     <InputComponent class="width-100" v-model="plan.value.roles[index]"/>
                     <button type="button" class="grey-color" @click.prevent="plan.value.roles.splice(index, 1)"><swd-icon class="delete-icon"></swd-icon></button>
                 </div>
@@ -30,11 +30,15 @@
             </div>
 
             <h6>Schichten</h6>
-            <div v-for="(shift, index) in plan.value.shifts" class="grid-cols-sm-2 grid-cols-1" :key="index">
-                <InputComponent label="Name (Optional)" v-model="shift.name"/>
-                <InputComponent label="Datum" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date" type="date"/>
-                <InputComponent label="Uhrzeit von (Optional)" v-model="shift.begin" type="time"/>
-                <InputComponent label="Uhrzeit bis (Optional)" v-model="shift.end" type="time"/>
+            <div v-for="(shift, index) in plan.value.shifts" class="grid-cols-shifts" :key="index">
+                <div class="grid-cols-md-2 grid-cols-1">
+                    <InputComponent label="Datum" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date" type="date"/>
+                    <InputComponent label="Name (Optional)" v-model="shift.name"/>
+                </div>
+                <div class="grid-cols-md-2 grid-cols-1">
+                    <InputComponent label="Uhrzeit von (Optional)" v-model="shift.begin" type="time"/>
+                    <InputComponent label="Uhrzeit bis (Optional)" v-model="shift.end" type="time"/>
+                </div>
                 <ButtonComponent color="ELEMENT" icon="delete" aria-label="Löschen" @click.prevent="shiftsToRemove.push(plan.value.shifts[index]); plan.value.shifts.splice(index, 1)"/>
             </div>
             <ButtonComponent color="ELEMENT" icon="add" @click.prevent="shiftsToAdd.push(plan.value.shifts[plan.value.shifts.push({ id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }) - 1 ])">Hinzufügen</ButtonComponent>
@@ -43,6 +47,25 @@
     </div>
 
 </template>
+
+<style scoped>
+
+.flex-roles {
+    gap: var(--theme-inner-element-spacing);
+}
+
+.grid-cols-shifts {
+    grid-template-columns: auto auto fit-content(0);
+    align-items: end;
+}
+
+@media only screen and (max-width: 767px) {
+  .grid-cols-shifts {
+    margin-bottom: calc(var(--theme-element-spacing) * 2);
+  }
+}
+
+</style>
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue';
