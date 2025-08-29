@@ -25,26 +25,24 @@
         </div>
     </button>
 
-    <DialogComponent :name="shift?.name || shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' })" v-model="dialog" v-if="dialog">
-
-            <div class="grid-cols-1" v-for="role of roles" :key="role">
-                <h6>{{ role }}</h6>
-                <ListInputComponent
-                    :list="shift.people.filter(person => person.role === role).map(person => person.name)"
-                    @add="data.addShiftPerson(shift.id, { name: $event, role: role })"
-                    @delete="data.removeShiftPerson(shift.id, { name: $event, role: role })"
-                />
-            </div>
-
-            <div class="grid-cols-1">
-                <h6>Sonstige</h6>
-                <ListInputComponent 
-                    :list="shift.people.filter(person => !roles.includes(person.role)).map(person => person.name)"
-                    @add="data.addShiftPerson(shift.id, { name: $event })"
-                    @delete="data.removeShiftPerson(shift.id, { name: $event })"
-                />
-            </div>
-        </DialogComponent>
+    <DialogComponent :name="shift?.name || shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' })" v-model="dialog" v-if="dialog">
+        <div v-for="role of roles" :key="role" class="grid-cols-1 dialog-section">
+            <h5>{{ role }}</h5>
+            <ListInputComponent
+                :list="shift.people.filter(person => person.role === role).map(person => person.name)"
+                @add="data.addShiftPerson(shift.id, { name: $event, role: role })"
+                @delete="data.removeShiftPerson(shift.id, { name: $event, role: role })"
+            />
+        </div>
+        <div class="grid-cols-1 dialog-section">
+            <h5 v-if="roles.length">Sonstige</h5>
+            <ListInputComponent 
+                :list="shift.people.filter(person => !roles.includes(person.role)).map(person => person.name)"
+                @add="data.addShiftPerson(shift.id, { name: $event })"
+                @delete="data.removeShiftPerson(shift.id, { name: $event })"
+            />
+        </div>
+    </DialogComponent>
 
 </template>
 
@@ -71,7 +69,6 @@
 .shift:hover {
     --theme-element-primary-color: var(--theme-element-secondary-color);
 }
-
 
 .shift .shift__descriptor {
     display: flex;
@@ -112,6 +109,10 @@
     padding: 0;
     margin: 0;
     font-style: italic;
+}
+
+.dialog-section {
+    margin-top: calc(2 * var(--theme-element-spacing))
 }
 
 </style>

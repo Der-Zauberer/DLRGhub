@@ -1,13 +1,13 @@
 <template>
-    <div>
+    <div v-if="list.length">
         <div v-for="entry of list" :key="entry">
             <span>{{ entry }}</span>
             <ButtonComponent class="list-button" apperience="GHOST" icon="delete" aria-label="Löschen" @click="$emit('delete', entry)"/>
         </div>
     </div>
     <div class="flex">
-        <input class="list-input" ref="input" @keydown.enter="($refs.input as HTMLInputElement).value ? $emit('add', ($refs.input as HTMLInputElement).value) : {}">
-        <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="($refs.input as HTMLInputElement).value ? $emit('add', ($refs.input as HTMLInputElement).value) : {}"/>
+        <input class="list-input" ref="input" @keydown.enter="add($refs.input as HTMLInputElement)">
+        <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="add($refs.input as HTMLInputElement)"/>
     </div>
 </template>
 
@@ -26,8 +26,13 @@
 <script setup lang="ts">
 import ButtonComponent from './ButtonComponent.vue';
 
-
 defineProps<{ list: string[] }>()
-defineEmits<{ (e: 'add', value: string): void, (e: 'delete', value: string): void }>()
+const emits = defineEmits<{ (e: 'add', value: string): void, (e: 'delete', value: string): void }>()
+
+function add(input: HTMLInputElement) {
+    if (!input.value) return
+    emits('add', input.value)
+    input.value = ''
+}
 
 </script>

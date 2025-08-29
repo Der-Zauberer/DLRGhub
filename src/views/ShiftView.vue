@@ -12,28 +12,6 @@
             </li>
         </ul>
 
-        <DialogComponent :name="shiftEditData?.name || ''" v-model="shiftEditDialog">
-
-            <div class="grid-cols-1" v-for="role of plan.value?.roles" :key="role">
-                <h6>{{ role }}</h6>
-                <ListInputComponent 
-                    v-if="shiftEditData"
-                    :list="shiftEditData.people.filter(person => person.role === role).map(person => person.name)"
-                    @add="data.addShiftPerson(shiftEditData.id, { name: $event, role: role })"
-                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event, role: role })"
-                />
-            </div>
-
-            <div class="grid-cols-1" v-if="shiftEditData">
-                <h6>Sonstige</h6>
-                <ListInputComponent 
-                    :list="shiftEditData.people.filter(person => !plan.value?.roles.includes(person.role)).map(person => person.name)"
-                    @add="data.addShiftPerson(shiftEditData.id, { name: $event })"
-                    @delete="data.removeShiftPerson(shiftEditData.id, { name: $event })"
-                />
-            </div>
-        </DialogComponent>
-
     </div>
 
 </template>
@@ -64,27 +42,16 @@
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue';
-import DialogComponent from '@/components/DialogComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import ListInputComponent from '@/components/ListInputComponent.vue';
 import ShiftComponent from '@/components/ShiftComponent.vue';
-import type { Shift } from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';
-import { inject, onBeforeUnmount, ref } from 'vue';
+import { inject, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
-const shiftEditData = ref<Shift | undefined>()
-const shiftEditDialog = ref<boolean>()
-
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
-
-function openShiftEditDialog(shift: Shift) {
-    shiftEditData.value = shift
-    shiftEditDialog.value = true
-}
 
 </script>
