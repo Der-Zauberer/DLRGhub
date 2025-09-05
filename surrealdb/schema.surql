@@ -24,6 +24,18 @@ DEFINE EVENT OVERWRITE schedules_delete ON TABLE schedules WHEN $event == 'DELET
     DELETE $before.out;
 };
 
+DEFINE TABLE OVERWRITE file SCHEMAFULL TYPE NORMAL
+    PERMISSIONS
+        FOR select, create, update, delete WHERE $auth.id != NONE;^
+DEFINE FIELD OVERWRITE id ON TABLE file;
+DEFINE FIELD OVERWRITE name ON TABLE file TYPE string;
+DEFINE FIELD OVERWRITE type ON TABLE file TYPE string;
+DEFINE FIELD OVERWRITE content ON TABLE file TYPE bytes;
+DEFINE FIELD OVERWRITE created.user ON TABLE files TYPE record<user> DEFAULT $auth.id READONLY;
+DEFINE FIELD OVERWRITE created.datetime ON TABLE files TYPE datetime DEFAULT time::now() READONLY;
+DEFINE FIELD OVERWRITE updated.user ON TABLE files TYPE record<user> VALUE $auth.id;
+DEFINE FIELD OVERWRITE updated.datetime ON TABLE files TYPE datetime VALUE time::now();
+
 DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
     PERMISSIONS FOR select WHERE $auth.id == id;
 DEFINE FIELD OVERWRITE password ON TABLE user TYPE string
