@@ -5,13 +5,10 @@
             <h5>{{title}}<swd-subtitle v-if="subtitle">{{ subtitle }}</swd-subtitle></h5>
         </div>
         <div class="headline__tools">
-            <div class="grey-text" v-if="resource?.status === 'LOADING'  && resource?.value"><swd-icon class="loading-spinner-icon"></swd-icon></div>
+            <div class="grey-text" v-if="resource?.status === 'LOADING' && resource?.value"><swd-icon class="loading-spinner-icon"></swd-icon></div>
             <slot></slot>
         </div>
     </div>
-    <swd-loading-spinner v-if="resource?.status === 'LOADING'  && !resource?.value" class="width-100" loading="true"></swd-loading-spinner>
-    <div class="empty-state" v-if="resource?.status === 'EMPTY' || empty">Keine {{ (type || '') + ' ' }}gefunden!</div>
-    <div class="error-state" v-if="resource?.status === 'ERROR'">{{ resource?.error }}</div>
 </template>
 
 <style scoped>
@@ -59,5 +56,5 @@ import type { UnknownResource } from '@/core/resource';
 import { type RouteLocationAsRelativeGeneric } from 'vue-router';
 import ButtonComponent from './ButtonComponent.vue';
 
-defineProps<{ title?: string, subtitle?: string, back?: RouteLocationAsRelativeGeneric, resource?: UnknownResource, empty?: boolean, type?: string}>()
+defineProps<{ title?: string, subtitle?: string, back?: RouteLocationAsRelativeGeneric, resource?: UnknownResource}>()
 </script>

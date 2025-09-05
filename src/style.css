@@ -13,23 +13,25 @@
 .secondary-text { color: #a5010c !important }
 .accent-text { color: #ffed00 !important }
 
-
-
 @media (display-mode: standalone) {
     html, body {
         overscroll-behavior: none;
     }
 }
 
-/** Unfixed **/
-
-ul.flex, ul[class*="grid-cols-"] {
-    padding: 0;
-    list-style: none;
+dlrg-empty {
+    display: block;
+    padding: calc(round(.5em,1px) - var(--theme-border-width)) calc(round(.6em,1px) - var(--theme-border-width));
+    border-radius: var(--theme-border-radius);
+    margin-bottom: var(--theme-element-spacing);
+    background: var(--theme-element-primary-color);
+    text-align: center;
 }
 
-@media only screen and (max-width: 575px) { swd-dialog > * {
-    width: 100%;
-    max-width: 100%;
-}}
-
+dlrg-error {
+    display: block;
+    padding: calc(round(.5em,1px) - var(--theme-border-width)) calc(round(.6em,1px) - var(--theme-border-width));
+    border-radius: var(--theme-border-radius);
+    margin-bottom: var(--theme-element-spacing);
+    background: var(--theme-error-color);
+}

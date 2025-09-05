@@ -13,6 +13,9 @@
             </swd-loading-spinner>
         </HeadlineComponent>
 
+        <dlrg-error v-if="plan?.status === 'ERROR' || savePlan?.status === 'ERROR'">{{ plan?.error || savePlan?.error }}</dlrg-error>
+        <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>
+
         <form v-if="plan.value" ref="form">
 
             <h6>Allgemein</h6>

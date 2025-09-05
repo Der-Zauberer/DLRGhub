@@ -2,9 +2,13 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent :title="plan.value?.name" :resource="plan" type="Schichten" :empty="plan.value?.shifts.length === 0" :back="{ name: 'plans' }">
+        <HeadlineComponent :title="plan.value?.name" :resource="plan" :back="{ name: 'plans' }">
             <ButtonComponent :to="{ name: 'shift-edit', params: { id: $route.params.id } }" color="ELEMENT" icon="settings" aria-label="Schicht bearbeiten"/>
         </HeadlineComponent>
+
+        <dlrg-empty v-if="plan?.status === 'EMPTY' || !plan.value?.shifts.length">Keine Schichten gefunden!</dlrg-empty>
+        <dlrg-error v-if="plan?.status === 'ERROR'">{{ plan?.error }}</dlrg-error>
+        <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <ul class="grid-cols-xl-4 grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
             <li v-for="shift of plan.value?.shifts" :key="shift.id.id.toString()">

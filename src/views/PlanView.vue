@@ -11,6 +11,10 @@
             </DialogComponent>
         </HeadlineComponent>
 
+        <dlrg-empty v-if="plans?.status === 'EMPTY'">Keine Dienstpläne gefunden!</dlrg-empty>
+        <dlrg-error v-if="plans?.status === 'ERROR'">{{ plans?.error }}</dlrg-error>
+        <swd-loading-spinner v-if="plans?.status === 'LOADING' && !plans?.value" class="width-100" loading="true"></swd-loading-spinner>
+
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
             <li v-for="plan of plans.value" :key="plan.id.id.toString()">
                 <RouterLink :to="{ name: 'shifts', params: { id: plan.id.id.toString()} }">
@@ -20,9 +24,13 @@
             </li>
         </ul>
 
-        <HeadlineComponent title="Meine Schichten" :subtitle="profileName || 'Nicht konfiguriert'" :resource="shifts" type="Schichten">
+        <HeadlineComponent title="Meine Schichten" :subtitle="profileName || 'Nicht konfiguriert'" :resource="shifts">
             <ButtonComponent icon="settings" color="ELEMENT" :aria-label="profileName ? 'Konfigurieren' : undefined" :to="{ name: 'profile' }">{{ !profileName ? 'Konfigurieren' : undefined }}</ButtonComponent>
         </HeadlineComponent>
+
+        <dlrg-empty v-if="shifts?.status === 'EMPTY'">Keine Schichten gefunden!</dlrg-empty>
+        <dlrg-error v-if="shifts?.status === 'ERROR'">{{ shifts?.error }}</dlrg-error>
+        <swd-loading-spinner v-if="shifts?.status === 'LOADING' && !shifts?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
             <li v-for="shift of shifts.value" :key="shift.id.id.toString()">
