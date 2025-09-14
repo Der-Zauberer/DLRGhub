@@ -42,7 +42,7 @@ DEFINE FIELD OVERWRITE password ON TABLE user TYPE string
     VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value });
 
 DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
-	SIGNIN (SELECT * FROM ONLY type::thing('user', 'admin') WHERE crypto::argon2::compare(password, 'admin'));
+	SIGNIN (SELECT * FROM ONLY type::thing('user', $username) WHERE crypto::argon2::compare(password, $password));
 
 INSERT IGNORE INTO user [
     {
