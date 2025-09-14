@@ -84,9 +84,9 @@ import { config, SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/su
 import { inject, reactive, ref } from 'vue';
 
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
-const profiles = surrealdb.getProfilesAsRef()
+const profiles = surrealdb.getProfile()
 
-const credentials = reactive({ profile: profiles.value.default.name, username: '', password: ''})
+const credentials = reactive({ profile: profiles.default.name, username: '', password: ''})
 const loading = ref<boolean>()
 const error = ref<string>()
 
@@ -94,7 +94,7 @@ async function login() {
     loading.value = true
     error.value = undefined
     try {
-        if (credentials.profile !== profiles.value.default.name) await surrealdb.autoConnect(profiles.value.profiles.find(profile => credentials.profile == profile.name))
+        if (credentials.profile !== profiles.default.name) await surrealdb.autoConnect(profiles.profiles.find(profile => credentials.profile == profile.name))
         await surrealdb.signin(credentials)
         await surrealdb.redirectPostLogin()
         error.value = undefined

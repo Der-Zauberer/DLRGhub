@@ -47,7 +47,7 @@ import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.servi
 import { inject } from 'vue';
 
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
-const profiles = surrealdb.getProfilesAsRef()
+const profiles = surrealdb.getProfile()
 const user = surrealdb.getUserAsRef()
 
 </script>
