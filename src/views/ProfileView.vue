@@ -28,7 +28,7 @@
 
         <p>
             <strong>Benutzer</strong><br>
-            {{ user?.id }}<br>
+            {{ user?.id || 'unauthenticated' }}<br>
         </p>
 
         

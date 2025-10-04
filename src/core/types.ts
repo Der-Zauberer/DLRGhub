@@ -42,6 +42,21 @@ export type ShiftScheduledByPlan = Shift & {
     plan: Plan
 }
 
+export type ByteFile = {
+    id: RecordId<'file'>
+    name: string
+    type: string
+    content: Uint8Array
+    created: {
+        user: RecordId<'user'>
+        timestamp: Date
+    },
+    updated: {
+        user: RecordId<'user'>
+        timestamp: Date
+    }
+}
+
 export type User = {
     id: RecordId<'user'>
     password: string

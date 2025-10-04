@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { BeforeInstallPromptEvent } from '@/core/types';
+import type { BeforeInstallPromptEvent} from '@/core/types';
 
 const pwa = (window as unknown as {pwa: BeforeInstallPromptEvent | undefined}).pwa
 

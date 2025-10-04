@@ -44,25 +44,27 @@
     background: url('/resources/gallery/rhinewatch.jpg') center center / cover no-repeat;
     z-index: 10;
     top: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
     min-width: 100vw;
-    padding: var(--theme-element-spacing);
+    padding: calc(var(--theme-element-spacing) * 2);
 }
 
 .login form {
     display: grid;
     box-sizing: border-box;
     gap: var(--theme-inner-element-spacing);
-    max-width: 400px;
+    width: 400px;
     background: var(--theme-background-color);
-    border-radius: var(--theme-border-radius);
     padding: var(--theme-element-spacing);
     margin-left: auto;
+    border: solid var(--theme-primary-color) var(--theme-border-width);
+    border-radius: calc(var(--theme-border-radius) * 2);
 }
 
-@media only screen and (max-width: 575px) { .login form {
-    width: 100%;
-}}
+@media only screen and (max-width: 575px) {
+    .login form { width: 100% }
+    .login { padding: var(--theme-element-spacing) }
+}
 
 button.link-button, button.link-button:focus, button.link-button:active {
     background: transparent;
