@@ -17,7 +17,7 @@ export class WeatherService {
 
 }
 
-type Weather = {
+export type Weather = {
   latitude: number
   longitude: number
   generationtime_ms: number
@@ -61,7 +61,7 @@ type Weather = {
   }
 }
 
-type WaterTemperature = {
+export type WaterTemperature = {
       time: string[]
       temperature: number[]
 }

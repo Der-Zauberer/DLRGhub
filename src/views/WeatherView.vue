@@ -14,7 +14,7 @@
             <swd-icon class="weather-icon weather-preview__icon"></swd-icon>
             <div>
               <div class="weather-preview__text">{{ weather.value?.current.temperature_2m.toFixed(1) }}°</div>
-              <swd-subtitle>T: {{ (weather.value?.daily.temperature_2m_min[0] || 0).toFixed(1) }}° H: {{ (weather.value?.daily.temperature_2m_max[0] || 0).toFixed(1) }}°</swd-subtitle>
+              <swd-subtitle>T: {{ Math.round(weather.value?.daily.temperature_2m_min[0] || 0) }}° H: {{ Math.round(weather.value?.daily.temperature_2m_max[0] || 0) }}°</swd-subtitle>
             </div>
           </div>
 
@@ -32,13 +32,16 @@
           7-Tage-Trend
           <swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
         </h4>
-        <div class="weather-grid">
-          <div class="contents" v-for="(value, index) in weather.value?.daily.time">
-            <div>{{ new Date(value).toLocaleString([], { weekday: 'short' }).slice(0, 2) }}:</div>
-            <div>{{ (weather.value?.daily.precipitation_probability_mean[index] || 0) + '%' }}</div>
-            <div class="weather-grid__value">{{ (weather.value?.daily.temperature_2m_min[index] || 0).toFixed(1) }}°</div>
-            <div>-</div>
-            <div class="weather-grid__value">{{ (weather.value?.daily.temperature_2m_max[index] || 0).toFixed(1)}}°</div>
+        <div class="weather-prediction-grid" v-if="weather.value">
+          <div class="contents" v-for="prediction of getSevenDayPrediction(weather.value)">
+            <div>{{ prediction.time }}:</div>
+            <div>{{ prediction.rain + '%' }}</div>
+            <div>
+              <div class="weather-prediction-grid__bar" :style="`margin-left: ${prediction.minOffset}%; width: ${100 - prediction.minOffset - prediction.maxOffset}%;`">
+                <span>{{ prediction.min }}°</span>
+                <span>{{ prediction.max}}°</span>
+              </div>
+            </div>
           </div>
         </div>
       </swd-card>
@@ -75,22 +78,33 @@
   align-self: center;
 }
 
-.weather-grid {
+.weather-prediction-grid {
   display: grid;
-  grid-template-columns: fit-content(0) fit-content(0) fit-content(0) fit-content(0) fit-content(0);
+  grid-template-columns: fit-content(0) fit-content(0) auto;
   box-sizing: border-box;
   white-space: nowrap;
-  gap: 0 0.5em;
+  gap: round(0.6em, 1px) round(0.5em, 1px);
   align-items: center;
 }
 
-.weather-grid div {
+.weather-prediction-grid > .contents > div {
+  display: flex;
+  align-items: center;
   box-sizing: border-box;
-  height: round(2.2em, 1px);
-  padding: round(0.5em, 1px) 0;
 }
 
-.weather-grid .weather-grid__value {
+.weather-prediction-grid .weather-prediction-grid__bar {
+  display: flex;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  color: black;
+  background-color: var(--theme-accent-color);
+  border-radius: var(--theme-border-radius);
+  padding: 0 round(0.3em, 1px);
+}
+
+.weather-prediction-grid .weather-grid__value {
   justify-self: end;
 }
 
@@ -99,7 +113,7 @@
 <script setup lang="ts">
 import PlotComponent from '@/components/PlotComponent.vue';
 import { resource } from '@/core/resource';
-import { WEATHER_SERVICE, WeatherService } from '@/services/weather.service';
+import { WEATHER_SERVICE, WeatherService, type Weather } from '@/services/weather.service';
 import { inject } from 'vue';
 
 const weatherService = inject(WEATHER_SERVICE) as WeatherService
@@ -114,6 +128,25 @@ const water = resource({
 
 function mapLocalDate(date: string): string {
   return new Date(date).toLocaleString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] {
+  const allMin = Math.min(...weather.daily.temperature_2m_min)
+  const allMax = Math.max(...weather.daily.temperature_2m_max)
+  const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] = []
+  for (const [index, time] of weather.daily.time.entries()) {
+    const min = Math.round(weather.daily.temperature_2m_min[index])
+    const max = Math.round(weather.daily.temperature_2m_max[index])
+    prediction.push({
+      time: new Date(time).toLocaleString([], { weekday: 'short' }).slice(0, 2),
+      rain: Math.round(weather.daily.precipitation_probability_mean[index]),
+      min,
+      max,
+      minOffset: (min - allMin) / allMax * 100,
+      maxOffset: (allMax - max) / allMax * 100,
+    })
+  }
+  return prediction
 }
 
 </script>
