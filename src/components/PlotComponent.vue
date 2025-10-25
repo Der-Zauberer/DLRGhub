@@ -1,11 +1,14 @@
 <template>
     <div class="flex flex-space-between">
         <h4>{{ title }}<swd-subtitle>{{ subtitle }}</swd-subtitle></h4>
-        <span>{{ `${pointer?.value.y || current || y[y.length - 1]}°C` }}<swd-subtitle v-if="pointer">{{ pointer.value.x }}</swd-subtitle></span>
+        <span style="text-align: right;">
+            {{ `${yOut ? yOut(pointer?.value.y || current || y[y.length - 1]) : pointer?.value.y || current || y[y.length - 1]}` }}
+            <swd-subtitle v-if="pointer">{{ xOut ? xOut(pointer.value.x) : pointer.value.x }}</swd-subtitle>
+        </span>
     </div>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1000" style="width: 100%; aspect-ratio: 2/1;" ref="svg" @mousemove="inspectMouse($event)" @mouseleave="pointer = undefined" @touchmove="inspectTouch($event)" @touchend="pointer = undefined" @touchcancel="pointer = undefined">
         <path d="M10 10 H1990 V990 H10 Z" stroke-width="10" stroke="#808080" fill="none"/>
-        <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="10" stroke="yellow" fill="none"/> 
+        <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="10" :stroke="color || 'light-dark(black, white)'" fill="none"/> 
         <path v-if="pointer" :d="`M${pointer.x} 10 V999`" stroke-width="10" stroke="white" fill="none"/>
         <circle v-if="pointer" r="20" :cx="pointer.x" :cy="pointer.y" stroke-width="2" stroke="white" fill="white"/>
     </svg>
@@ -13,7 +16,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
-const props = defineProps<{ title: string, subtitle: string, current?: number, x: number[] | string[], y: number[] }>()
+const props = defineProps<{ title: string, subtitle: string, color?: string, current?: number, x: number[] | string[], y: number[], xOut?: (x: number | string) => string, yOut?: (y: number) => string }>()
 const svg = useTemplateRef('svg')
 
 const pointer = ref<{ x: string, y: string, value: { x: number | string, y: number } } | undefined>(undefined)

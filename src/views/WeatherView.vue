@@ -47,15 +47,15 @@
       </swd-card>
 
       <swd-card>
-        <PlotComponent v-if="weather.value" title="Wetter" subtitle="Gailingen am Hochrhein" :current="weather.value.current.temperature_2m" :x="weather.value.hourly.time.map(mapLocalDate)" :y="weather.value.hourly.temperature_2m"/>
+        <PlotComponent v-if="weather.value" title="Wetter" subtitle="Gailingen am Hochrhein" color="var(--theme-accent-color)" :current="weather.value.current.temperature_2m" :x="weather.value.hourly.time" :y="weather.value.hourly.temperature_2m" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
       </swd-card>
 
       <swd-card>
-        <PlotComponent v-if="water.value" title="Wassertemperatur" subtitle="Neuhausen" :x="water.value.time.map(mapLocalDate)" :y="water.value.temperature"/>
+        <PlotComponent v-if="water.value" title="Wassertemperatur" subtitle="Neuhausen" color="var(--theme-accent-color)" :x="water.value.time" :y="water.value.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
       </swd-card>
 
       <swd-card>
-        <PlotComponent title="Testplot" subtitle="Testplot" :x="['1', '2', '3', '4', '5']" :y="[3, 3, 4, 5, 2]"/>
+        <PlotComponent title="Testplot" subtitle="Testplot" color="var(--theme-accent-color)" :x="['1', '2', '3', '4', '5']" :y="[3, 3, 4, 5, 2]"/>
       </swd-card>
 
     </div>
@@ -126,8 +126,9 @@ const water = resource({
   loader: () => weatherService.getWaterTemperature()
 })
 
-function mapLocalDate(date: string): string {
-  return new Date(date).toLocaleString([], { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+function mapLocalDate(date: string | number): string {
+  const localDate = new Date(date.toString())
+  return localDate.toLocaleString([], new Date().toDateString() === localDate.toDateString() ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
 function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] {
