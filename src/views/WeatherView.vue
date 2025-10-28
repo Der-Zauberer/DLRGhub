@@ -20,7 +20,7 @@
 
           <div class="weather-preview">
             <swd-icon class="water-icon weather-preview__icon"></swd-icon>
-            <div class="weather-preview__text">{{ water.value?.temperature[0].toFixed(1) }}°</div>
+            <div class="weather-preview__text">{{ water.value?.temperature[water.value?.temperature.length - 1 || 0].toFixed(1) }}°</div>
           </div>
 
         </div>
@@ -44,6 +44,10 @@
             </div>
           </div>
         </div>
+        <swd-subtitle class="grey-text">
+          <div>Quelle: <a :href="weather.value?.source.url" target="_blank">{{ weather.value?.source.name }}</a></div>
+          <div>Zuletzt aktualisiert: {{ mapLocalDate(weather.value?.source.updated || 0) }}</div>
+        </swd-subtitle>
       </swd-card>
 
       <swd-card>
@@ -52,6 +56,10 @@
 
       <swd-card>
         <PlotComponent v-if="water.value" title="Wassertemperatur" subtitle="Neuhausen" color="var(--theme-accent-color)" :x="water.value.time" :y="water.value.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
+        <swd-subtitle class="grey-text">
+          <div>Quelle: <a :href="water.value?.source.url" target="_blank">{{ water.value?.source.name }}</a></div>
+          <div>Zuletzt aktualisiert: {{ mapLocalDate(water.value?.source.updated || 0) }}</div>
+        </swd-subtitle>
       </swd-card>
 
       <swd-card>
@@ -85,6 +93,7 @@
   white-space: nowrap;
   gap: round(0.6em, 1px) round(0.5em, 1px);
   align-items: center;
+  margin-bottom: var(--theme-element-spacing);
 }
 
 .weather-prediction-grid > .contents > div {

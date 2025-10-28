@@ -5,6 +5,11 @@ export class WeatherService {
     async getWeather(): Promise<Weather> {
         const url = 'https://api.open-meteo.com/v1/forecast?latitude=47.666&longitude=8.9&current=temperature_2m,precipitation&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean&forecast_days=7'
         const result = await fetch(url).then(result => result.json()) as Weather
+        result.source = {
+          name: 'Open-Meteo',
+          url: 'https://open-meteo.com/',
+          updated: result.current.time
+        }
         return result
     }
 
@@ -12,7 +17,15 @@ export class WeatherService {
         const url = 'https://corsproxy.io/?https://www.hydrodaten.admin.ch/plots/temperature_7days/2288_temperature_7days_de.json'
         const result = await fetch(url).then(result => result.json())
         const data = result.plot.data[0]
-        return { time: data.x, temperature: data.y }
+        return {
+          time: data.x,
+          temperature: data.y,
+          source: {
+            name: 'Bundesamt für Umwelt BAFU, Schweizer Eidgenossenschaft',
+            url: 'https://www.hydrodaten.admin.ch/de/seen-und-fluesse/stationen-und-daten/2288',
+            updated: data.x[data.x.length - 1]
+          }
+        }
     }
 
 }
@@ -59,11 +72,21 @@ export type Weather = {
     temperature_2m_min: number[]
     precipitation_probability_mean: number[]
   }
+  source: {
+    name: string
+    url: string
+    updated: string
+  }
 }
 
 export type WaterTemperature = {
       time: string[]
       temperature: number[]
+      source: {
+        name: string
+        url: string
+        updated: string
+      }
 }
 
 export const WEATHER_SERVICE = 'weatherService'

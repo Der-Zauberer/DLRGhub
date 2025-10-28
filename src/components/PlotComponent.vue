@@ -6,7 +6,7 @@
             <swd-subtitle v-if="pointer">{{ xOut ? xOut(pointer.value.x) : pointer.value.x }}</swd-subtitle>
         </span>
     </div>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1000" style="width: 100%; aspect-ratio: 2/1;" ref="svg" @mousemove="inspectMouse($event)" @mouseleave="pointer = undefined" @touchmove="inspectTouch($event)" @touchend="pointer = undefined" @touchcancel="pointer = undefined">
+    <svg class="margin-bottom" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1000" style="width: 100%; aspect-ratio: 2/1;" ref="svg" @mousemove="inspectMouse($event)" @mouseleave="pointer = undefined" @touchmove="inspectTouch($event)" @touchend="pointer = undefined" @touchcancel="pointer = undefined">
         <path d="M10 10 H1990 V990 H10 Z" stroke-width="10" stroke="#808080" fill="none"/>
         <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="10" :stroke="color || 'light-dark(black, white)'" fill="none"/> 
         <path v-if="pointer" :d="`M${pointer.x} 10 V999`" stroke-width="10" stroke="white" fill="none"/>
