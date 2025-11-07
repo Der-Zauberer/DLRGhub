@@ -16,6 +16,7 @@ import ShiftEditView from './views/ShiftEditView.vue'
 import weatherService from './services/weather.service'
 import WeatherView from './views/WeatherView.vue'
 import FileView from './views/FileView.vue'
+import DesignView from './views/DesignView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,6 +30,7 @@ const router = createRouter({
     { path: '/file/:id', name: 'file', component: FileView, beforeEnter: auth },
     { path: '/weather', name: 'weather', component: WeatherView, beforeEnter: auth },
     { path: '/profile', name: 'profile', component: ProfileView, beforeEnter: auth },
+    { path: '/design', name: 'design', component: DesignView, beforeEnter: auth },
   ],
 })
 
