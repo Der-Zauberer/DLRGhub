@@ -24,6 +24,16 @@ DEFINE EVENT OVERWRITE schedules_delete ON TABLE schedules WHEN $event == 'DELET
     DELETE $before.out;
 };
 
+DEFINE TABLE OVERWRITE post SCHEMAFULL TYPE NORMAL
+    PERMISSIONS
+        FOR select, create, update, delete WHERE $auth.id != NONE;
+DEFINE FIELD OVERWRITE id ON TABLE post;
+DEFINE FIELD OVERWRITE title ON TABLE post TYPE string;
+DEFINE FIELD OVERWRITE author ON TABLE post TYPE string;
+DEFINE FIELD OVERWRITE message ON TABLE post TYPE string;
+DEFINE FIELD OVERWRITE created ON TABLE post TYPE datetime DEFAULT time::now() READONLY;
+DEFINE FIELD OVERWRITE updated ON TABLE post TYPE datetime VALUE time::now();
+
 DEFINE TABLE OVERWRITE file SCHEMAFULL TYPE NORMAL
     PERMISSIONS
         FOR select, create, update, delete WHERE $auth.id != NONE;

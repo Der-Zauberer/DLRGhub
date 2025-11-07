@@ -42,6 +42,15 @@ export type ShiftScheduledByPlan = Shift & {
     plan: Plan
 }
 
+export type Post = {
+    id: RecordId<'post'>
+    title: string
+    author: string
+    message: string
+    created: Date
+    updated: Date
+}
+
 export type ByteFile = {
     id: RecordId<'file'>
     name: string
