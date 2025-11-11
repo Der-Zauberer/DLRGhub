@@ -12,12 +12,14 @@
       <li>Posts</li>
     </ul>
 
+    <RouterLink :to="{ name: 'post-edit', params: { id: 'new' } }">Post</RouterLink>
     <swd-card v-for="post in posts.value">
       <h4>
         {{ post.title }}
         <swd-subtitle>{{ post.author }}</swd-subtitle>
       </h4>
       <div>{{ post.message }}</div>
+      <RouterLink :to="{ name: 'post-edit', params: { id: post.id.id.toString() } }">Edit</RouterLink>
     </swd-card>
 
   </div>
