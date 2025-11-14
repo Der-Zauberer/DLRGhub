@@ -3,13 +3,25 @@
   <div class="container-xl">
     <button v-if="pwa" @click="install()">Install</button>
 
-    <h3>TODO</h3>
+    <h3>Features TODO</h3>
     <ul>
-      <li>Edit Plan / Add Plan</li>
-      <li>Auth</li>
-      <li>Reconnect</li>
-      <li>Documents</li>
-      <li>Posts</li>
+      <li>PDF Document Handling</li>
+      <li>Rich Text Editing</li>
+      <li>Post Polls</li>
+      <li>Post Appointments</li>
+    </ul>
+
+    <h3>Improvements TODO</h3>
+    <ul>
+      <li>Form Action Bar Layout</li>
+      <li>Form Tables</li>
+      <li>Card Fontsize</li>
+      <li>Form Error Handling</li>
+      <li>Reconnect (Offline Reconnect / Database Reconnect)</li>
+      <li>Ignore Past Shifts</li>
+      <li>Shift Snippet Layout</li>
+      <li>Shift Layout</li>
+      <li>Shift Edit</li>
     </ul>
 
     <RouterLink :to="{ name: 'post-edit', params: { id: 'new' } }">Post</RouterLink>

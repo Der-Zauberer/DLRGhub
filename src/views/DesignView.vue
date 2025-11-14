@@ -47,7 +47,18 @@
                     TODO
                 </swd-card-outline>
                 <swd-card>
-                    Shift Button
+                    Shift Snippet (Button)
+                </swd-card>
+            </div>
+
+            <div>
+                <swd-card-outline>
+                   
+                    TODO
+
+                </swd-card-outline>
+                <swd-card>
+                    Shift
                 </swd-card>
             </div>
 
@@ -76,7 +87,18 @@
 
                 </swd-card-outline>
                 <swd-card>
-                    Plot
+                    Headline
+                </swd-card>
+            </div>
+
+            <div>
+                <swd-card-outline>
+                   
+                    TODO
+
+                </swd-card-outline>
+                <swd-card>
+                    Action Bar
                 </swd-card>
             </div>
 
