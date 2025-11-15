@@ -141,8 +141,9 @@ function mapLocalDate(date: string | number): string {
 }
 
 function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] {
-  const allMin = Math.min(...weather.daily.temperature_2m_min)
-  const allMax = Math.max(...weather.daily.temperature_2m_max)
+  const allMin = Math.round(Math.min(...weather.daily.temperature_2m_min))
+  const allMax = Math.round(Math.max(...weather.daily.temperature_2m_max))
+  const range = allMax - allMin
   const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] = []
   for (const [index, time] of weather.daily.time.entries()) {
     const min = Math.round(weather.daily.temperature_2m_min[index])
@@ -152,9 +153,10 @@ function getSevenDayPrediction(weather: Weather): { time: string, rain: number, 
       rain: Math.round(weather.daily.precipitation_probability_mean[index]),
       min,
       max,
-      minOffset: (min - allMin) / allMax * 100,
-      maxOffset: (allMax - max) / allMax * 100,
+      minOffset: (min - allMin) / range * 100,
+      maxOffset: (allMax - max) / range * 100,
     })
+    console.log(prediction[prediction.length - 1])
   }
   return prediction
 }
