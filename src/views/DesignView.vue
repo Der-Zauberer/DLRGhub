@@ -35,7 +35,9 @@
             </div>
             <div>
                 <swd-card-outline>
-                    TODO
+                    
+                    <ButtonLinkComponent :to="{ name: 'home' }">Test</ButtonLinkComponent>
+
                 </swd-card-outline>
                 <swd-card>
                     Button Link
@@ -44,7 +46,11 @@
 
             <div>
                 <swd-card-outline>
-                    TODO
+                    
+                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), people: [], plan: { id: new RecordId('plan', '01234'), name: 'Wachplan 2025', roles: [] } }"/>
+                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Beachbar', people: [], plan: { id: new RecordId('plan', '01234'), name: 'Beachbar', roles: [] } }"/>
+                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Aufbau', begin: '13:00', end: '19:00', people: [], plan: { id: new RecordId('plan', '01234'), name: 'Beachbar', roles: [] } }"/>
+
                 </swd-card-outline>
                 <swd-card>
                     Shift Snippet (Button)
@@ -54,7 +60,7 @@
             <div>
                 <swd-card-outline>
                    
-                    TODO
+                    <ShiftComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Aufbau', begin: '13:00', end: '19:00', people: [ { name: 'Max Mustermann', role: 'Wachleiter' }, { name: 'Erika Musterfrau', role: 'Sanitäter' }, { name: 'Heinrich Huber', role: 'Default' }, { name: 'Simone Straub', role: 'Default' } ] }" :roles="['Wachleiter', 'Sanitäter', 'Wachgänger']"/>
 
                 </swd-card-outline>
                 <swd-card>
@@ -145,7 +151,11 @@
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue';
+import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import InputComponent from '@/components/InputComponent.vue';
 import PlotComponent from '@/components/PlotComponent.vue';
+import AppointmentComponent from '@/components/AppointmentComponent.vue';
+import { RecordId } from 'surrealdb';
+import ShiftComponent from '@/components/ShiftComponent.vue';
 </script>

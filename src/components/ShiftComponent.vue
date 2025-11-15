@@ -1,6 +1,6 @@
 <template>
 
-    <button ref="component" class="shift" @click="dialog = true" :selected="$route.query.shift === shift.id.id.toString() ? true : undefined">
+    <button ref="component" class="shift dark-text" @click="dialog = true" :selected="$route.query.shift === shift.id.id.toString() ? true : undefined">
         <div class="shift__descriptor">
             <div>
                 <div class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>
