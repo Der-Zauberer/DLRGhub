@@ -19,10 +19,13 @@ export class DataService {
     private readonly CACHE_PERSON_SHIFT = 'person_shift'
 
     private readonly cache = new InMemoryDb()
-
+    public readonly online = ref<boolean>(true)
     public readonly profileName = ref<string>('')
 
+
     constructor(private surrealDbService: SurrealDbService) {
+        window.addEventListener('online',  () => this.online.value = true)
+        window.addEventListener('offline', () => this.online.value = false)
         const name = localStorage.getItem(this.PROFILE_NAME)
         if (name && name.length !== 0) this.profileName.value = name
         watch(this.profileName, () => {
@@ -103,7 +106,7 @@ export class DataService {
         if (this.cache) shifts.reload()
         
         if (kill) {
-             const liveShifts = this.surrealDbService.live('shift', async () => shifts.reload(await query(name)))
+            const liveShifts = this.surrealDbService.live('shift', async () => shifts.reload(await query(name)))
             kill.then(() => liveShifts.then((id) => this.surrealDbService.kill(id)))
         }
 

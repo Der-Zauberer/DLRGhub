@@ -22,18 +22,22 @@
         </p>
 
         <p>
-            <strong>Status</strong><br>
-            {{ surrealdb.status }}<br>
-        </p>
-
-        <p>
             <strong>Benutzer</strong><br>
             {{ user?.id || 'unauthenticated' }}<br>
         </p>
 
-        
+        <p>
+            <strong>DB Status</strong><br>
+            {{ surrealdb.status }}<br>
+        </p>
+
+        <p>
+            <strong>Service Worker Online</strong><br>
+            {{ $dataService.online }}<br>
+        </p>
 
         <div class="flex">
+            <button @click="$surrealDbService.close()">Disconnect</button>
             <button @click="$surrealDbService.autoConnect()">Reconnect</button>
             <button @click="$dataService.clearCache()">Clear Cache</button>
         </div>

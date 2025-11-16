@@ -135,23 +135,23 @@ export class SurrealDbService extends Surreal {
         super()
     }
 
-    async connect(url: string | URL, opts?: ConnectOptions, authenticate?: boolean): Promise<true> {
+    async connect(url: string | URL, opts?: ConnectOptions, ignoreAuthentication?: boolean): Promise<true> {
         stopLogoutTimeout?.()
         const tryConnect = () => super.connect(url, opts).then(async response => (await this.ready, response))
         const response = tryConnect().catch(() => tryConnect())
-        if (!authenticate) return response
+        if (ignoreAuthentication) return response
         return response.then(() => this.authenticate().catch(() => true))
     }
 
-    async autoConnect(configuration: SurrealDbProfile = profiles.default, authenticate?: boolean) {
+    async autoConnect(configuration: SurrealDbProfile = profiles.default, ignoreAuthentication?: boolean) {
         profiles.default = configuration
         if (!profiles.profiles.find(profile => profile.name === configuration.name)) profiles.profiles.push(configuration)
         cookies.set(PROFILE_COOKIE, JSON.stringify(profiles))
-        return this.connect(configuration.address, { namespace: configuration.namespace, database: configuration.database }, authenticate)
+        return this.connect(configuration.address, { namespace: configuration.namespace, database: configuration.database }, ignoreAuthentication)
     }
 
     async signin(credentials: { username: string, password: string }, configuration: SurrealDbProfile = profiles.default): Promise<Token> {
-        if (configuration !== profiles.default) await this.autoConnect(configuration)
+        if (configuration !== profiles.default) await this.autoConnect(configuration, true)
         const jwt = new JwtToken(await super.signin({
             namespace: configuration.namespace,
             database: configuration.database,
@@ -242,7 +242,7 @@ export class SurrealDbService extends Surreal {
             } else {
                 return { key: prefix, success: false }
             }
-        } else if (error?.name === 'VersionRetrievalFailure') {
+        } else if (error?.name === 'VersionRetrievalFailure' || error?.name === 'ConnectionUnavailable') {
             return { key: 'error.connection', success: true }
         }
         return { key: error.toString(), success: false }
@@ -298,7 +298,7 @@ function addSurrealInitializer(SurrealDbService: SurrealDbService): SurrealDbSer
             }
             return async <T extends (...args: unknown[]) => unknown>(...args: Parameters<T>) => {
                 if (original !== target.connect && original !== target.autoConnect && (target.status === ConnectionStatus.Disconnected || target.status === ConnectionStatus.Error)) {
-                    await target.autoConnect(undefined, true)
+                    await target.autoConnect()
                 }
                 return (original as T).apply(target, args)
             }
