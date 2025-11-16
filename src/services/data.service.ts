@@ -19,9 +19,8 @@ export class DataService {
     private readonly CACHE_PERSON_SHIFT = 'person_shift'
 
     private readonly cache = new InMemoryDb()
-    public readonly online = ref<boolean>(true)
+    public readonly online = ref<boolean>(navigator.onLine)
     public readonly profileName = ref<string>('')
-
 
     constructor(private surrealDbService: SurrealDbService) {
         window.addEventListener('online',  () => this.online.value = true)
