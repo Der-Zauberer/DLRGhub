@@ -16,35 +16,13 @@ export class DataService {
     public readonly profileName = ref<string>('')
 
     constructor(private surrealDbService: SurrealDbService) {
-        window.addEventListener(this.ONLINE_EVENT,  () => this.online.value = true)
-        window.addEventListener(this.OFFLINE_EVENT, () => this.online.value = false)
+        window.addEventListener(this.ONLINE_EVENT,  () => (this.online.value = true, surrealDbService.autoConnect()))
+        window.addEventListener(this.OFFLINE_EVENT, () => (this.online.value = false, surrealDbService.close()))
         const name = localStorage.getItem(this.PROFILE_NAME)
         if (name && name.length !== 0) this.profileName.value = name
         watch(this.profileName, () => {
-            console.log(this.profileName.value)
             localStorage.setItem(this.PROFILE_NAME, this.profileName.value)
         })
-    }
-
-    createCachedResource<T>(cache: Promise<T>, query: () => Promise<T>, kill?: Promise<void>, trackedTables?: string[]): Resource<T, unknown> {
-        const res = resource({
-            initializer: async () => {
-                const result = await cache
-                if (result) setTimeout(() => res.reload(), 0)
-                return result || query()
-            },
-            loader: () => query()
-        })
-        if (kill) {
-            const tables = trackedTables?.map(table => this.surrealDbService.live(table, () => res.reload()))
-            const onlineEvent = () => res.reload()
-            window.addEventListener(this.ONLINE_EVENT, onlineEvent)
-            kill.then(() => {
-                tables?.forEach(table => table.then((id) => this.surrealDbService.kill(id)))
-                window.removeEventListener(this.ONLINE_EVENT, onlineEvent)
-            })
-        }
-        return res
     }
 
     getPlans(kill?: Promise<void>): Resource<Plan[], unknown> {
@@ -108,6 +86,27 @@ export class DataService {
     clearCache() {
         this.cache.objectStore('readwrite', store => store.clear())
         localStorage.clear()
+    }
+
+    private createCachedResource<T>(cache: Promise<T>, query: () => Promise<T>, kill?: Promise<void>, trackedTables?: string[]): Resource<T, unknown> {
+        const res = resource({
+            initializer: async () => {
+                const result = await cache
+                if (result) setTimeout(() => res.reload(), 0)
+                return result || query()
+            },
+            loader: () => query()
+        })
+        if (kill) {
+            const tables = trackedTables?.map(table => this.surrealDbService.live(table, () => res.reload()))
+            const onlineEvent = () => res.reload()
+            window.addEventListener(this.ONLINE_EVENT, onlineEvent)
+            kill.then(() => {
+                tables?.forEach(table => table.then((id) => this.surrealDbService.kill(id)))
+                window.removeEventListener(this.ONLINE_EVENT, onlineEvent)
+            })
+        }
+        return res
     }
 
 }

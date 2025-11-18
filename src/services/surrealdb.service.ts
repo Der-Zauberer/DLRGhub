@@ -1,5 +1,5 @@
 import type { User } from '@/core/types';
-import { ConnectionStatus, ResponseError, Surreal, SurrealDbError, type ConnectOptions, type Token } from 'surrealdb';
+import { ConnectionStatus, ResponseError, Surreal, SurrealDbError, VersionRetrievalFailure, type ConnectOptions, type Token } from 'surrealdb';
 import { ref, type App, type ComputedRef, type Ref } from 'vue';
 
 import type { NavigationGuardNext, RouteLocationNormalized, Router } from 'vue-router';
@@ -289,18 +289,22 @@ function loadToken(): JwtToken | undefined {
     return jwt
 }
 
-function addSurrealInitializer(SurrealDbService: SurrealDbService): SurrealDbService {
+function addTimeOut<T>(promise: Promise<T>, time: number): Promise<T> {
+    return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new VersionRetrievalFailure(new Error("VersionRetrievalFailure: Failed to retrieve remote version. If the server is behind a proxy, make sure it's configured correctly."))), time))])
+}
+
+function addSurrealInitializer(SurrealDbService: SurrealDbService, timeout?: number): SurrealDbService {
     return new Proxy(SurrealDbService, {
         get(target, property) {
             const original = target[property as keyof SurrealDbService]
-            if (typeof original !== "function" || original.constructor.name !== "AsyncFunction") {
+            if (typeof original !== 'function' || original.constructor.name !== 'AsyncFunction') {
                 return original
             }
             return async <T extends (...args: unknown[]) => unknown>(...args: Parameters<T>) => {
                 if (original !== target.connect && original !== target.autoConnect && (target.status === ConnectionStatus.Disconnected || target.status === ConnectionStatus.Error)) {
                     await target.autoConnect()
                 }
-                return (original as T).apply(target, args)
+                return timeout ? addTimeOut((original as T).apply(target, args) as Promise<unknown>, timeout) : (original as T).apply(target, args)
             }
         },
     })
@@ -321,7 +325,7 @@ export const SURREAL_DB_SERVICE = 'surrealDbService';
 export default {
     install(app: App) {
         const router = app.config.globalProperties.$router
-        const surrealDbService = addSurrealInitializer(new SurrealDbService(router)) 
+        const surrealDbService = addSurrealInitializer(new SurrealDbService(router), 7000)
         app.config.globalProperties.$surrealDbService = surrealDbService
         app.provide('surrealDbService', surrealDbService)
     }
