@@ -38,14 +38,14 @@ export class DataService {
         })
     }
 
-    createCachedResource<T>(cache: Promise<T>, query: Promise<T>, kill?: Promise<void>, trackedTables?: string[]): Resource<T, unknown> {
+    createCachedResource<T>(cache: Promise<T>, query: () => Promise<T>, kill?: Promise<void>, trackedTables?: string[]): Resource<T, unknown> {
         const res = resource({
             initializer: async () => {
                 const result = await cache
                 if (result) setTimeout(() => res.reload(), 0)
-                return result || query
+                return result || query()
             },
-            loader: () => query
+            loader: () => query()
         })
         if (kill) {
             const tables = trackedTables?.map(table => this.surrealDbService.live(table, () => res.reload()))
@@ -87,48 +87,14 @@ export class DataService {
         return plan
     }
 
-    getPlan2(id: RecordId<'plan'>, kill?: Promise<void>): Resource<PlanSchedulesShift | undefined, unknown> {
-        const cached = this.cache2.objectStore<PlanSchedulesShift>('readonly', store => store.get([id.tb, id.id.toString()]))
-
-        const query = async (id: RecordId<'plan'>): Promise<PlanSchedulesShift | undefined> => {
-            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
-            if (plan) this.cache2.objectStore('readwrite', store => store.put(plan))
-            return plan
-        }
-
-        const plan = resource({
-            initializer: async () => {
-                const result = await cached
-                if (result) setTimeout(() => plan.reload(), 0)
-                return result || query(id)
-            },
-            loader: () => query(id)
-        })
-        
-        if (kill) {
-            const livePlans = this.surrealDbService.live('plan', () => plan.reload())
-            const liveShifts = this.surrealDbService.live('shift', () => plan.reload())
-            const onlineEvent = () => plan.reload()
-            window.addEventListener(this.ONLINE_EVENT, onlineEvent)
-
-            kill.then(() => {
-                livePlans.then((id) => this.surrealDbService.kill(id))
-                liveShifts.then((id) => this.surrealDbService.kill(id))
-                window.removeEventListener(this.ONLINE_EVENT, onlineEvent)
-            })
-        }
-
-        return plan
-    }
-
     getPlan(id: RecordId<'plan'>, kill?: Promise<void>): Resource<PlanSchedulesShift | undefined, unknown> {
         const cache = this.cache2.objectStore<PlanSchedulesShift | undefined>('readonly', store => store.get([id.tb, id.id.toString()]))
 
-        const query: Promise<PlanSchedulesShift | undefined> = (async () => {
+        const query = async (): Promise<PlanSchedulesShift | undefined> => {
             const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
             if (plan) this.cache2.objectStore('readwrite', store => store.put(plan))
             return plan
-        })()
+        }
 
         return this.createCachedResource<PlanSchedulesShift | undefined>(cache, query, kill, ['plan', 'shift'])
     }
