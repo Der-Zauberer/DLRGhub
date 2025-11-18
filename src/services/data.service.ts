@@ -3,13 +3,6 @@ import { RecordId, surql } from "surrealdb";
 import { ref, watch, type App } from "vue";
 import type { SurrealDbService } from "./surrealdb.service";
 import { resource, type Resource } from "@/core/resource";
-import SuperJSON from "superjson";
-
-SuperJSON.registerCustom<RecordId, [string, string]>({
-    isApplicable: (value): value is RecordId => value instanceof RecordId,
-    serialize: (rid) => [rid.tb, rid.id.toString()],
-    deserialize: ([tb, id]) => new RecordId(tb, id),
-}, 'RecordId')
 
 export class DataService {
 
@@ -17,13 +10,8 @@ export class DataService {
     private readonly OFFLINE_EVENT = 'offline'
 
     private readonly PROFILE_NAME = 'profile_name'
-    private readonly CACHE_PLANS = 'plans'
-    private readonly CACHE_PLAN = 'plan'
-    private readonly CACHE_PLAN_Schedules_SHIFT = 'plan->schedules->shift'
-    private readonly CACHE_PERSON_SHIFT = 'person_shift'
 
-    private readonly cache = new InMemoryDb()
-    private readonly cache2 = new CacheDB('cache')
+    private readonly cache = new CacheDB('cache')
     public readonly online = ref<boolean>(navigator.onLine)
     public readonly profileName = ref<string>('')
 
@@ -59,67 +47,45 @@ export class DataService {
         return res
     }
 
-    getPlans(kill?: Promise<void>) {
-        const table = this.CACHE_PLAN
-        const cached = this.cache.get<Plan[]>(table, '*')
+    getPlans(kill?: Promise<void>): Resource<Plan[], unknown> {
+        const cache = this.cache.objectStore<{ value: Plan[] }>('readonly', store => store.get(['plans', '*'])).then(result => result?.value || [])
 
         const query = async (): Promise<Plan[]> => {
-            const plans = await this.surrealDbService.select<Plan>(table)
-            this.cache.set(table, '*', plans)
+            const plans = await this.surrealDbService.select<Plan>('plan')
+            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('plans', '*'), value: plans }))
             const set = new Set(plans.map(plan => plan.id.id.toString()))
-            this.cache.getAll<PlanSchedulesShift>(this.CACHE_PLAN_Schedules_SHIFT)
-                .filter(plan => !set.has(plan.id.id.toString()))
-                .forEach(plan => this.cache.delete(this.CACHE_PLAN_Schedules_SHIFT, plan.id.id.toString()))
+            await this.cache.objectStore<PlanSchedulesShift[]>('readonly', store => store.index('table').getAll('plan')).then(result => 
+                result.filter(plan => !set.has(plan.id.id.toString()))
+                .forEach(plan => this.cache.objectStore('readwrite', store => store.delete([plan.id.tb, plan.id.id.toString()])))
+            )
             return plans
         }
 
-        const plan = resource({
-            initializer: () => cached || query(),
-            loader: () => query()
-        })
-        if (cached) plan.reload()
-
-        if (kill) {
-            const live = this.surrealDbService.live(table, async () => plan.reload(await query()))
-            kill.then(() => live.then(id => this.surrealDbService.kill(id)))
-        }
-
-        return plan
+        return this.createCachedResource<Plan[]>(cache, query, kill, ['plan'])
     }
 
     getPlan(id: RecordId<'plan'>, kill?: Promise<void>): Resource<PlanSchedulesShift | undefined, unknown> {
-        const cache = this.cache2.objectStore<PlanSchedulesShift | undefined>('readonly', store => store.get([id.tb, id.id.toString()]))
+        const cache = this.cache.objectStore<PlanSchedulesShift | undefined>('readonly', store => store.get([id.tb, id.id.toString()]))
 
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
             const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
-            if (plan) this.cache2.objectStore('readwrite', store => store.put(plan))
+            if (plan) this.cache.objectStore('readwrite', store => store.put(plan))
             return plan
         }
 
         return this.createCachedResource<PlanSchedulesShift | undefined>(cache, query, kill, ['plan', 'shift'])
     }
 
-    getPersonShift(name: string, kill?: Promise<void>) {
-        const cached = this.cache.get<ShiftScheduledByPlan[]>(this.CACHE_PERSON_SHIFT, '*')
+    getPersonShift(name: string, kill?: Promise<void>): Resource<ShiftScheduledByPlan[], unknown> {
+        const cache = this.cache.objectStore<{ value: ShiftScheduledByPlan[] }>('readonly', store => store.get(['shifts', '*'])).then(result => result?.value || [])
 
-        const query = async (name: string): Promise<ShiftScheduledByPlan[] | undefined> => {
+        const query = async (): Promise<ShiftScheduledByPlan[]> => {
             const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) ORDER BY date;`)
-            this.cache.set(this.CACHE_PERSON_SHIFT, '*', shifts)
+            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('shifts', '*'), value: shifts }))
             return shifts
         }
 
-        const shifts = resource({
-            initializer: () => cached || query(name),
-            loader: () => query(name)
-        })
-        if (this.cache) shifts.reload()
-        
-        if (kill) {
-            const liveShifts = this.surrealDbService.live('shift', async () => shifts.reload(await query(name)))
-            kill.then(() => liveShifts.then((id) => this.surrealDbService.kill(id)))
-        }
-
-        return shifts
+        return this.createCachedResource<ShiftScheduledByPlan[]>(cache, query, kill, ['shift'])
     }
 
     async createPlan(name: string): Promise<Plan> {
@@ -127,7 +93,7 @@ export class DataService {
     }
 
     async deletePlan(name: string) {
-        //Delete references
+        //TODO Delete references
         await this.surrealDbService.delete(new RecordId('plan', name))
     }
 
@@ -140,72 +106,13 @@ export class DataService {
     }
 
     clearCache() {
-        this.cache.clear()
+        this.cache.objectStore('readwrite', store => store.clear())
         localStorage.clear()
     }
 
 }
 
-class InMemoryDb {
-
-    private readonly tables: Record<string, Map<string, object> | undefined> = {}
-
-    constructor() {
-        for (let index = 0; index < localStorage.length; index++) {
-            const name = localStorage.key(index)
-            if (!name) continue
-            const split = name.split(':')
-            if (split.length !== 2) continue
-            const [table, id] = split
-             try {
-                const string = localStorage.getItem(name)
-                if (!string) continue
-                const value = SuperJSON.deserialize(JSON.parse(string)) as object
-                this.set(table, id, value)
-            } catch {
-                continue
-            }
-        }
-    }
-
-    set<T extends object>(table: string, id: string, value: T): T {
-        if (!this.tables[table]) this.tables[table] = new Map()
-        this.tables[table].set(id, value)
-        localStorage.setItem(`${table}:${id}`, JSON.stringify(SuperJSON.serialize(value)))
-        return value
-    }
-
-    delete<T>(table: string, id: string): T | undefined {
-        if (!this.tables[table]) return undefined
-        const entry = this.tables[table].get(id)
-        const result = entry ? this.tables[table].delete(id) as T : undefined
-        if (this.tables[table].size === 0) delete this.tables[table]
-        localStorage.removeItem(`${table}:${id}`)
-        return result
-    }
-
-    deleteAll(table: string) {
-        delete this.tables[table]
-    }
-
-    get<T>(table: string, id: string): T | undefined {
-        if (!this.tables[table]) return undefined
-        return this.tables[table].get(id) as T | undefined
-    }
-
-    getAll<T>(table: string): T[] {
-        if (!this.tables[table]) return []
-        return Array.from(this.tables[table].values() as MapIterator<T>)
-    }
-
-    clear() {
-        for (const key in this.tables) delete this.tables[key]
-    }
-}
-
 export class CacheDB {
-
-    private readonly STORE = 'records'
 
     private db: Promise<IDBDatabase> | undefined
 
@@ -217,7 +124,7 @@ export class CacheDB {
         this.db = new Promise((resolve, reject) => {
             const request = indexedDB.open(name, 1)
             request.onupgradeneeded = () => {
-                const store = request.result.createObjectStore(this.STORE, { keyPath: ['id.tb', 'id.id'] })
+                const store = request.result.createObjectStore('records', { keyPath: ['id.tb', 'id.id'] })
                 store.createIndex('table', 'id.tb')
             }
             request.onsuccess = () => resolve(request.result)
@@ -233,7 +140,7 @@ export class CacheDB {
     async objectStore<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest): Promise<T> {
         if (!this.db) throw new DOMException("IDBDatabase.transaction: Can't start a transaction on a closed database", "InvalidStateError")
         const db = await this.db
-        const transaction = db.transaction(this.STORE, mode).objectStore(this.STORE)
+        const transaction = db.transaction('records', mode).objectStore('records')
         return new Promise((resolve, reject) => {
             const request = action(transaction)
             request.onsuccess = () => resolve(request.result as T)
