@@ -5,14 +5,14 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
-import ShiftView from './views/ShiftView.vue'
-import dataService from './services/data.service'
 import PlanView from './views/PlanView.vue'
+import dataService from './services/data.service'
+import PlanListView from './views/PlanListView.vue'
 import surrealdbService, { auth } from './services/surrealdb.service'
 import LoginView from './views/LoginView.vue'
 import type { BeforeInstallPromptEvent } from './core/types'
 import ProfileView from './views/ProfileView.vue'
-import ShiftEditView from './views/ShiftEditView.vue'
+import PlanEditView from './views/PlanEditView.vue'
 import weatherService from './services/weather.service'
 import WeatherView from './views/WeatherView.vue'
 import FileView from './views/FileView.vue'
@@ -24,9 +24,9 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView, beforeEnter: auth},
     { path: '/login', name: 'login', component: LoginView },
-    { path: '/shift', name: 'plans', component: PlanView, beforeEnter: auth },
-    { path: '/shift/:id', name: 'shifts', component: ShiftView, beforeEnter: auth },
-    { path: '/shift/edit/:id', name: 'shift-edit', component: ShiftEditView, beforeEnter: auth },
+    { path: '/plan', name: 'plans', component: PlanListView, beforeEnter: auth },
+    { path: '/plan/:id', name: 'plan', component: PlanView, beforeEnter: auth },
+    { path: '/plan/edit/:id', name: 'plan-edit', component: PlanEditView, beforeEnter: auth },
     { path: '/file', name: 'files', component: FileView, beforeEnter: auth },
     { path: '/file/:id', name: 'file', component: FileView, beforeEnter: auth },
     { path: '/post/:id', name: 'post-edit', component: PostEditView, beforeEnter: auth },

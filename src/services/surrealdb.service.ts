@@ -5,29 +5,29 @@ import { ref, type App, type ComputedRef, type Ref } from 'vue';
 import type { NavigationGuardNext, RouteLocationNormalized, Router } from 'vue-router';
 
 export const config: SurrealDbConfig = {
-  default: {
-    name: 'production',
-    address: 'wss://derzauberer-06c3cc37l9t95bs5baeq4gtut8.aws-euw1.surreal.cloud',
-    namespace: 'dlrg.derzauberer.eu',
-    database: 'main',
-    access: 'user'
-  },
-  profiles: [
-    {
+    default: {
         name: 'production',
         address: 'wss://derzauberer-06c3cc37l9t95bs5baeq4gtut8.aws-euw1.surreal.cloud',
         namespace: 'dlrg.derzauberer.eu',
         database: 'main',
         access: 'user'
     },
-    {
-        name: 'local',
-        address: 'ws://localhost:8080/rpc',
-        namespace: 'dlrg.derzauberer.eu',
-        database: 'develop',
-        access: 'user'
-    }
-  ]
+    profiles: [
+        {
+            name: 'production',
+            address: 'wss://derzauberer-06c3cc37l9t95bs5baeq4gtut8.aws-euw1.surreal.cloud',
+            namespace: 'dlrg.derzauberer.eu',
+            database: 'main',
+            access: 'user'
+        },
+        {
+            name: 'local',
+            address: 'ws://localhost:8080/rpc',
+            namespace: 'dlrg.derzauberer.eu',
+            database: 'develop',
+            access: 'user'
+        }
+    ]
 }
 
 export type SurrealDbProfile = {
