@@ -22,6 +22,26 @@
             </div>
             <div>
                 <swd-card-outline>
+                    
+                    <dlrg-error class="width-100">Ein Fehler ist aufgetreten!</dlrg-error>
+
+                </swd-card-outline>
+                <swd-card>
+                    Error Message
+                </swd-card>
+            </div>
+            <div>
+                <swd-card-outline>
+                    
+                    <dlrg-empty class="width-100">Keine Dienstpläne gefunden!</dlrg-empty> 
+
+                </swd-card-outline>
+                <swd-card>
+                    Empty Message
+                </swd-card>
+            </div>
+            <div>
+                <swd-card-outline>
 
                     <ButtonComponent apperience="OUTLINE" color="ELEMENT">Send</ButtonComponent>
                     <ButtonComponent icon="done" color="ELEMENT"/>
