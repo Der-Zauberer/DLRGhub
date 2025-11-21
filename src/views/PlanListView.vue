@@ -17,10 +17,7 @@
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
             <li v-for="plan of plans.value" :key="plan.id.id.toString()">
-                <RouterLink :to="{ name: 'plan', params: { id: plan.id.id.toString()} }">
-                    <span>{{ plan.name }}</span>
-                    <swd-icon class="arrow-right-icon" aria-hidden="true"></swd-icon>
-                </RouterLink>
+                <ButtonLinkComponent :to="{ name: 'plan', params: { id: plan.id.id.toString() } }">{{ plan.name }}</ButtonLinkComponent>
             </li>
         </ul>
 
@@ -32,22 +29,9 @@
         <dlrg-error v-if="shifts?.status === 'ERROR'">{{ shifts?.error }}</dlrg-error>
         <swd-loading-spinner v-if="shifts?.status === 'LOADING' && !shifts?.value" class="width-100" loading="true"></swd-loading-spinner>
 
-        <ul class="button-grid grid-cols-md-2 grid-cols-1">
+        <ul class="grid-cols-md-2 grid-cols-1">
             <li v-for="shift of shifts.value" :key="shift.id.id.toString()">
-                <RouterLink :to="{ name: 'plan', params: { id: shift.plan.id.id.toString()}, query: { shift: shift.id.id.toString() } }">
-                    <div class="shift">
-                        <div>
-                            <div class="shift__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>     
-                            <div>{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }}</div>
-                        </div>
-                        <div>
-                            <div>{{ shift.name }}<swd-subtitle>{{ shift.plan.name }}</swd-subtitle></div>
-                            <div></div>
-                            <div>{{ shift.people.find(person => person.name === profileName)?.role }}</div>
-                        </div>
-                    </div>
-                    <swd-icon class="arrow-right-icon" aria-hidden="true"></swd-icon>
-                </RouterLink>
+                <AppointmentComponent :shift="shift"/>
             </li>
         </ul>
 
@@ -55,35 +39,10 @@
 
 </template>
 
-<style scoped>
-
-.button-grid a {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    text-decoration: none;
-    padding: var(--theme-inner-element-spacing);
-    color: var(--theme-text-color);
-    background-color: var(--theme-element-primary-color);
-    border-radius: var(--theme-border-radius);
-}
-
-.button-grid a:hover, .button-grid a:focus, .button-grid a:active, .button-grid a[selected] { background-color: var(--theme-element-secondary-color) } 
-
-.shift {
-    display: flex;
-    gap: var(--theme-element-spacing)
-}
-
-.shift .shift__day {
-    font-size: 2em;
-    transform: translateY(5%);
-}
-
-</style>
-
 <script setup lang="ts">
+import AppointmentComponent from '@/components/AppointmentComponent.vue';
 import ButtonComponent from '@/components/ButtonComponent.vue';
+import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue';
 import DialogComponent from '@/components/DialogComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue';

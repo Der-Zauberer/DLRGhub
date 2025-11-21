@@ -10,7 +10,7 @@
         <dlrg-error v-if="plan?.status === 'ERROR'">{{ plan?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>
 
-        <ul class="grid-cols-xl-4 grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
+        <ul class="grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
             <li v-for="shift of plan.value?.shifts" :key="shift.id.id.toString()">
                 <ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/>
             </li>

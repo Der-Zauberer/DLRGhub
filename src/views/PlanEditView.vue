@@ -33,18 +33,36 @@
             </div>
 
             <h6>Schichten</h6>
-            <div v-for="(shift, index) in plan.value.shifts" class="grid-cols-shifts" :key="index">
-                <div class="grid-cols-md-2 grid-cols-1">
-                    <InputComponent label="Datum" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date" type="date"/>
-                    <InputComponent label="Name (Optional)" v-model="shift.name"/>
+            <div class="input-table">
+                <div class="input-table__header">
+                    <div>Datum</div>
+                    <div>Name (Optional)</div>
+                    <div>Uhrzeit von (Optional)</div>
+                    <div>Uhrzeit bis (Optional)</div>
+                    <div></div>
                 </div>
-                <div class="grid-cols-md-2 grid-cols-1">
-                    <InputComponent label="Uhrzeit von (Optional)" v-model="shift.begin" type="time"/>
-                    <InputComponent label="Uhrzeit bis (Optional)" v-model="shift.end" type="time"/>
+                <div v-for="(shift, index) in plan.value.shifts" :key="index" class="input-table__row">
+                    <swd-input class="ghost">
+                        <label :label="`date-${index}`">Datum</label>
+                        <input :id="`date-${index}`" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date" type="date">    
+                    </swd-input>
+                    <swd-input class="ghost">
+                        <label :label="`name-${index}`">Name (Optional)</label>
+                        <input :id="`name-${index}`" v-model="shift.name">    
+                    </swd-input>
+                    <swd-input class="ghost">
+                        <label :label="`time-from-${index}`">Uhrzeit von (Optional)</label>
+                        <input :id="`time-from-${index}`" v-model="shift.begin" type="time">    
+                    </swd-input>
+                    <swd-input class="ghost">
+                        <label :label="`time-to-${index}`">Uhrzeit bis (Optional)</label>
+                        <input :id="`time-to-${index}`" v-model="shift.end" type="time">    
+                    </swd-input>
+                    <ButtonComponent color="ELEMENT" icon="delete" aria-label="Löschen" @click.prevent="shiftsToRemove.push(plan.value.shifts[index]); plan.value.shifts.splice(index, 1)"/>
                 </div>
-                <ButtonComponent color="ELEMENT" icon="delete" aria-label="Löschen" @click.prevent="shiftsToRemove.push(plan.value.shifts[index]); plan.value.shifts.splice(index, 1)"/>
             </div>
-            <ButtonComponent color="ELEMENT" icon="add" @click.prevent="shiftsToAdd.push(plan.value.shifts[plan.value.shifts.push({ id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }) - 1 ])">Hinzufügen</ButtonComponent>
+            <div class="flex flex-space-between"><div></div><ButtonComponent color="ELEMENT" icon="add" @click.prevent="shiftsToAdd.push(plan.value.shifts[plan.value.shifts.push({ id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }) - 1 ])">Hinzufügen</ButtonComponent></div>
+        
         </form>
 
     </div>
@@ -57,15 +75,72 @@
     gap: var(--theme-inner-element-spacing);
 }
 
-.grid-cols-shifts {
-    grid-template-columns: auto auto fit-content(0);
-    align-items: end;
+.input-table {
+    display: grid;
+    grid-template-columns: auto auto auto auto fit-content(0);
+    gap: var(--theme-border-width);
+    background: var(--theme-element-primary-color);
+    padding: var(--theme-border-width);
+    border-radius: var(--theme-border-radius);
+    margin-bottom: var(--theme-element-spacing);
+
+    & .input-table__header {
+        display: contents;
+        background: var(--theme-element-primary-color);
+
+        & > div {
+            padding: calc(round(.5em,1px) - var(--theme-border-width));
+        }
+    }
+
+    & .input-table__row {
+        display: contents;
+
+        & swd-input {
+            background: var(--theme-background-color);
+            padding: round(.5em,1px) round(.6em,1px);
+            border: none;
+            outline: var(--theme-border-width) solid transparent !important;
+
+            & label {
+                display: none;
+            }
+
+            &:hover {
+                outline-color: var(--theme-element-secondary-color) !important;
+            }
+
+            &:focus, &:active, &:has(input:focus) {
+                outline-color: var(--theme-primary-color) !important;
+            }
+        }
+    }
 }
 
 @media only screen and (max-width: 767px) {
-  .grid-cols-shifts {
-    margin-bottom: calc(var(--theme-element-spacing) * 2);
-  }
+    .input-table {
+        display: block;
+        background: transparent;
+        margin-bottom: none;
+
+        & .input-table__header {
+            display: none;
+        }
+
+        & .input-table__row {
+            display: grid;
+            grid-template-columns: auto;
+            gap: var(--theme-border-width);
+            background: var(--theme-element-primary-color);
+            padding: var(--theme-border-width);
+            border-radius: var(--theme-border-radius);
+            margin-bottom: var(--theme-element-spacing);
+
+            & swd-input label {
+                display: initial;
+            }
+        }
+    }
 }
 
 </style>
@@ -123,8 +198,10 @@ const savePlan = resource({
             };
             COMMIT TRANSACTION;
         `);
+        //TODO Check if element did already exists on delete!
+        //TODO AutoSort Table
 
-        router.push({ name: 'shifts', params: { id: route.params.id } })
+        router.push({ name: 'plan', params: { id: route.params.id } })
     }
 })
 

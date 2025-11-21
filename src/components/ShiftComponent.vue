@@ -3,7 +3,7 @@
     <button ref="component" class="shift dark-text" @click="dialog = true" :selected="$route.query.shift === shift.id.id.toString() ? true : undefined">
         <div class="shift__descriptor">
             <div>
-                <div class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</div>
+                <b class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</b>
                 <div>{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }}</div>
             </div>
             <div v-if="shift.begin">
@@ -76,19 +76,20 @@
     box-sizing: border-box;
     gap: var(--theme-element-spacing);
     height: 100%;
+    text-align: center;
     font-size: 0.8em;
     background: var(--theme-element-primary-color);
     padding: calc(var(--theme-inner-element-spacing) - var(--theme-border-width));
 }
 
 .shift .shift__descriptor .shift__descriptor__day {
-    font-size: 2em;
+    font-size: 1.5em;
 }
 
 .shift__descriptor__marked {
     display: block;
     margin: auto auto 0 auto;
-    color: var(--theme-accent-color);
+    color: var(--theme-accent-color) !important;
     font-size: 2em;
 }
 

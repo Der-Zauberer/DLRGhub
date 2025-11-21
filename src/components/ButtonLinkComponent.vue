@@ -14,6 +14,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: calc(round(1em,1px) - var(--theme-border-width));
 }
 
 </style>
