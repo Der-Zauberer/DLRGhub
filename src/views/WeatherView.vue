@@ -3,10 +3,10 @@
     <div class="container-xxl grid-cols-sm-2 grid-cols-1">
 
       <swd-card>
-        <h4>
+        <h3>
           Wetter
           <swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
-        </h4>
+        </h3>
 
         <div class="flex flex-wrap flex-space-between">
 
@@ -28,10 +28,10 @@
       </swd-card>
 
       <swd-card>
-        <h4>
+        <h3>
           7-Tage-Trend
           <swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
-        </h4>
+        </h3>
         <div class="weather-prediction-grid" v-if="weather.value">
           <div class="contents" v-for="prediction of getSevenDayPrediction(weather.value)">
             <div>{{ prediction.time }}:</div>

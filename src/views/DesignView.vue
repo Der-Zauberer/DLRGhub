@@ -11,7 +11,7 @@
                 <swd-card-outline>
                     
                     <swd-card class="width-100">
-                        <h4>Title<swd-subtitle>Subtitle</swd-subtitle></h4>
+                        <h3>Title<swd-subtitle>Subtitle</swd-subtitle></h3>
                         <p>Lorem Ipsum dolar shit amet.</p>
                     </swd-card>
 

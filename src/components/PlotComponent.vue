@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-space-between">
-        <h4>{{ title }}<swd-subtitle>{{ subtitle }}</swd-subtitle></h4>
+        <h3>{{ title }}<swd-subtitle>{{ subtitle }}</swd-subtitle></h3>
         <span style="text-align: right;">
             {{ `${yOut ? yOut(pointer?.value.y || current || y[y.length - 1]) : pointer?.value.y || current || y[y.length - 1]}` }}
             <swd-subtitle v-if="pointer">{{ xOut ? xOut(pointer.value.x) : pointer.value.x }}</swd-subtitle>

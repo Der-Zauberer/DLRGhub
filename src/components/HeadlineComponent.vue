@@ -2,7 +2,7 @@
     <div class="headline">
         <div class="headline__tools">
             <ButtonComponent v-if="back" :to="back" icon="left" aria-label="Zurück" color="ELEMENT"/>
-            <h5>{{title}}<swd-subtitle v-if="subtitle">{{ subtitle }}</swd-subtitle></h5>
+            <h2>{{title}}<swd-subtitle v-if="subtitle">{{ subtitle }}</swd-subtitle></h2>
         </div>
         <div class="headline__tools">
             <div class="grey-text" v-if="resource?.status === 'LOADING' && resource?.value"><swd-icon class="loading-spinner-icon"></swd-icon></div>
@@ -20,8 +20,8 @@
     align-items: end;
 }
 
-.headline h5 {
-    font-weight: initial;
+.headline h2 {
+    font-size: 1.2em;
     margin: 0;
 }
 

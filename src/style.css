@@ -3,7 +3,14 @@
     --theme-primary-color: #e30613;
     --theme-secondary-color: #a5010c;
     --theme-accent-color: #ffed00;
+    font-size: 16px;
 }
+
+a.button, .menu a, button, input, select, textarea {
+    font-size: 18px;
+}
+
+swd-card h3, swd-card-outline h3 { font-size: 1.2em; }
 
 .primary-color { background: #e30613 !important }
 .secondary-color { background: #a5010c !important }
@@ -37,4 +44,5 @@ dlrg-error {
     border-radius: var(--theme-border-radius);
     margin-bottom: var(--theme-element-spacing);
     background: var(--theme-error-color);
+    color: white;
 }

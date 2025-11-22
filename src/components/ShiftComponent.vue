@@ -1,6 +1,6 @@
 <template>
 
-    <button ref="component" class="shift dark-text" @click="dialog = true" :selected="$route.query.shift === shift.id.id.toString() ? true : undefined">
+    <button ref="component" class="shift" @click="dialog = true" :selected="$route.query.shift === shift.id.id.toString() ? true : undefined">
         <div class="shift__descriptor">
             <div>
                 <b class="shift__descriptor__day">{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</b>
@@ -52,10 +52,12 @@
     display: flex;
     height: 100%;
     width: 100%;
+    font-size: 16px;
     cursor: pointer;
     padding: initial;
     text-align: initial;
     background: initial !important;
+    color: var(--theme-text-color);
     border: solid var(--theme-element-primary-color) var(--theme-border-width);
     border-radius: var(--theme-border-radius);
     --theme-element-spacing: var(--theme-inner-element-spacing);
@@ -77,7 +79,6 @@
     gap: var(--theme-element-spacing);
     height: 100%;
     text-align: center;
-    font-size: 0.8em;
     background: var(--theme-element-primary-color);
     padding: calc(var(--theme-inner-element-spacing) - var(--theme-border-width));
 }
@@ -97,7 +98,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--theme-element-spacing);
-    font-size: 0.8em;
     padding: calc(var(--theme-element-spacing) - var(--theme-border-width));
 }
 

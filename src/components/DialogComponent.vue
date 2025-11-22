@@ -4,8 +4,8 @@
         <swd-card ref="slot">
 
             <div class="flex flex-space-between flex-center">
-                <h4>{{ name }}</h4>
-                <button class="ghost" @click="open = false"><swd-icon class="close-icon" aria-label="close"></swd-icon></button>
+                <h3>{{ name }}</h3>
+                <ButtonComponent icon="close" apperience="GHOST" @click="open = false"/>
             </div>
 
             <slot></slot>
@@ -22,6 +22,8 @@
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue'
+import HeadlineComponent from './HeadlineComponent.vue';
+import ButtonComponent from './ButtonComponent.vue';
 
 const slotRef = useTemplateRef('slot')
 const open = defineModel<boolean>()
