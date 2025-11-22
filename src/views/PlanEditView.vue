@@ -44,7 +44,7 @@
                 <div v-for="(shift, index) in plan.value.shifts" :key="index" class="input-table__row">
                     <swd-input class="ghost">
                         <label :label="`date-${index}`">Datum</label>
-                        <input :id="`date-${index}`" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date; plan.value.shifts.sort((a, b) => a.date.getTime() - b.date.getTime())" type="date">    
+                        <input :id="`date-${index}`" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date;" type="date">    
                     </swd-input>
                     <swd-input class="ghost">
                         <label :label="`name-${index}`">Name (Optional)</label>

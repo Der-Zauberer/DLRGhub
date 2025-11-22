@@ -9,19 +9,18 @@
       <li>Rich Text Editing</li>
       <li>Post Polls</li>
       <li>Post Appointments</li>
+      <li>Push Notification</li>
     </ul>
 
     <h3>Improvements TODO</h3>
     <ul>
       <li>Form Action Bar Layout</li>
-      <li>Form Tables</li>
       <li>Card Fontsize</li>
-      <li>Form Error Handling</li>
       <li>Reconnect (Offline Reconnect / Database Reconnect)</li>
-      <li>Ignore Past Shifts</li>
-      <li>Shift Snippet Layout</li>
       <li>Shift Layout</li>
       <li>Shift Edit</li>
+      <li>Plot Graph</li>
+      <li>Home Screen</li>
     </ul>
 
     <RouterLink :to="{ name: 'post-edit', params: { id: 'new' } }">Post</RouterLink>

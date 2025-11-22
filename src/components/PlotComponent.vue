@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
+import HeadlineComponent from './HeadlineComponent.vue';
 const props = defineProps<{ title: string, subtitle: string, color?: string, current?: number, x: number[] | string[], y: number[], xOut?: (x: number | string) => string, yOut?: (y: number) => string }>()
 const svg = useTemplateRef('svg')
 

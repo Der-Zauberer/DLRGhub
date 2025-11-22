@@ -10,8 +10,15 @@
         <dlrg-error v-if="plan?.status === 'ERROR'">{{ plan?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>
 
-        <ul class="grid-cols-lg-3 grid-cols-md-2 grid-cols-sm-1 grid-cols-1">
-            <li v-for="shift of plan.value?.shifts" :key="shift.id.id.toString()">
+        <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="currentShifts?.length">
+            <li v-for="shift of currentShifts">
+                <ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/>
+            </li>
+        </ul>
+
+        <HeadlineComponent title="Vergangene Wachen" v-if="previousShifts?.length && currentShifts?.length"/>
+        <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="previousShifts?.length">
+            <li v-for="shift of previousShifts">
                 <ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/>
             </li>
         </ul>
@@ -50,12 +57,14 @@ import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import ShiftComponent from '@/components/ShiftComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';
-import { inject, onBeforeUnmount } from 'vue';
+import { computed, inject, onBeforeUnmount, type Reactive } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
+const currentShifts = computed(() => plan.value?.shifts.filter(shift => shift.date >= new Date()))
+const previousShifts = computed(() => plan.value?.shifts.filter(shift => shift.date < new Date()))
 
 </script>

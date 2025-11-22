@@ -156,7 +156,6 @@ function getSevenDayPrediction(weather: Weather): { time: string, rain: number, 
       minOffset: (min - allMin) / range * 100,
       maxOffset: (allMax - max) / range * 100,
     })
-    console.log(prediction[prediction.length - 1])
   }
   return prediction
 }
