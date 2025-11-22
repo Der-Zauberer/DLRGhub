@@ -44,7 +44,7 @@
                 <div v-for="(shift, index) in plan.value.shifts" :key="index" class="input-table__row">
                     <swd-input class="ghost">
                         <label :label="`date-${index}`">Datum</label>
-                        <input :id="`date-${index}`" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date" type="date">    
+                        <input :id="`date-${index}`" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date; plan.value.shifts.sort((a, b) => a.date.getTime() - b.date.getTime())" type="date">    
                     </swd-input>
                     <swd-input class="ghost">
                         <label :label="`name-${index}`">Name (Optional)</label>
@@ -58,10 +58,10 @@
                         <label :label="`time-to-${index}`">Uhrzeit bis (Optional)</label>
                         <input :id="`time-to-${index}`" v-model="shift.end" type="time">    
                     </swd-input>
-                    <ButtonComponent color="ELEMENT" icon="delete" aria-label="Löschen" @click.prevent="shiftsToRemove.push(plan.value.shifts[index]); plan.value.shifts.splice(index, 1)"/>
+                    <ButtonComponent color="ELEMENT" icon="delete" aria-label="Löschen" @click.prevent="deleteShiftRow(plan.value, index)"/>
                 </div>
             </div>
-            <div class="flex flex-space-between"><div></div><ButtonComponent color="ELEMENT" icon="add" @click.prevent="shiftsToAdd.push(plan.value.shifts[plan.value.shifts.push({ id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }) - 1 ])">Hinzufügen</ButtonComponent></div>
+            <div class="flex flex-space-between"><div></div><ButtonComponent color="ELEMENT" icon="add" @click.prevent="addShiftRow(plan.value)">Hinzufügen</ButtonComponent></div>
         
         </form>
 
@@ -151,11 +151,11 @@ import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import { resource } from '@/core/resource'
-import type { PlanSchedulesShift, Shift } from '@/core/types'
+import type { Plan, PlanSchedulesShift, Shift } from '@/core/types'
 import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { dateToISODate, isoDateToDate } from '@/services/data.service'
 import { RecordId, surql } from 'surrealdb'
-import { inject, ref, useTemplateRef } from 'vue'
+import { inject, ref, toRaw, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -172,6 +172,23 @@ const plan = resource({
 
 const shiftsToAdd: Shift[] = []
 const shiftsToRemove: Shift[] = []
+
+function addShiftRow(plan: PlanSchedulesShift) {
+    const shift: Shift = { id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }
+    plan.shifts.push(shift)
+    shiftsToAdd.push(shift)
+}
+
+function deleteShiftRow(plan: PlanSchedulesShift, index: number) {
+    const shift = toRaw(plan.shifts[index])
+    plan.shifts.splice(index, 1)
+    const position = shiftsToAdd.indexOf(shift)
+    if (position !== -1) {
+        shiftsToAdd.splice(position, 1)
+    } else {
+        shiftsToRemove.push(shift)
+    }
+}
 
 const savePlan = resource({
     loader: async () => {
@@ -193,13 +210,11 @@ const savePlan = resource({
                 LET $id = $shift.id;
                 DELETE $id;
             };
-            FOR $shift IN ${plan.value.shifts.filter(shift => !shiftsToAdd.includes(shift))} {
+            FOR $shift IN ${plan.value.shifts.filter(shift => shift.id)} {
                 UPDATE $shift.id CONTENT $shift;
             };
             COMMIT TRANSACTION;
         `);
-        //TODO Check if element did already exists on delete!
-        //TODO AutoSort Table
 
         router.push({ name: 'plan', params: { id: route.params.id } })
     }
