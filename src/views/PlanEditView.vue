@@ -151,15 +151,16 @@ import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import { resource } from '@/core/resource'
-import type { Plan, PlanSchedulesShift, Shift } from '@/core/types'
+import type { PlanSchedulesShift, Shift } from '@/core/types'
 import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { dateToISODate, isoDateToDate } from '@/services/data.service'
+import { DATA_SERVICE, DataService, dateToISODate, isoDateToDate } from '@/services/data.service'
 import { RecordId, surql } from 'surrealdb'
 import { inject, ref, toRaw, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const dataService = inject(DATA_SERVICE) as DataService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const formRef = useTemplateRef('form')
@@ -220,8 +221,8 @@ const savePlan = resource({
     }
 })
 
-async function deletePlan(id: RecordId) {
-    await surrealdb.delete(id)
+async function deletePlan(id: RecordId<'plan'>) {
+    await dataService.deletePlan(id)
     router.push({ name: 'plans' })
 }
 

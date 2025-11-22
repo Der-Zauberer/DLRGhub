@@ -20,7 +20,7 @@
 
             <swd-input>
                 <label for="message">Message</label>
-                <textarea id="message" v-model="post.value.message" required></textarea>
+                <textarea id="message" rows="15" style="height: initial;" v-model="post.value.message" required></textarea>
             </swd-input>
 
         </form>

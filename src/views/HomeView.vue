@@ -3,31 +3,12 @@
 	<div class="container-xl">
 		<button v-if="pwa" @click="install()">Install</button>
 
-		<h3>Features TODO</h3>
-		<ul>
-			<li>PDF Document Handling</li>
-			<li>Rich Text Editing</li>
-			<li>Post Polls</li>
-			<li>Post Appointments</li>
-			<li>Push Notification</li>
-		</ul>
-
-		<h3>Improvements TODO</h3>
-		<ul>
-			<li>Form Action Bar Layout</li>
-			<li>Reconnect (Offline Reconnect / Database Reconnect)</li>
-			<li>Shift Layout</li>
-			<li>Shift Edit</li>
-			<li>Plot Graph</li>
-			<li>Home Screen</li>
-		</ul>
-
 		<RouterLink :to="{ name: 'post-edit', params: { id: 'new' } }">Post</RouterLink>
 		<swd-card v-for="post in posts.value">
 			<HeadlineComponent :title="post.title" :subtitle="post.author">
 				<RouterLink :to="{ name: 'post-edit', params: { id: post.id.id.toString() } }">Edit</RouterLink>
 			</HeadlineComponent>
-			<div>{{ post.message }}</div>
+			<div style="white-space: pre-wrap;">{{ post.message }}</div>
 		</swd-card>
 
 	</div>
