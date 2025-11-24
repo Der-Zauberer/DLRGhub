@@ -87,7 +87,7 @@ export class DataService {
     getWeather(): Resource<Weather, unknown> {
         const cache = this.cache.objectStore<Weather>('readonly', store => store.get(['weather', '*']))
         const query = async (): Promise<Weather> => {
-            const weather = this.weatherService.getWeather()
+            const weather = await this.weatherService.getWeather()
             this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('weather', '*'), ...weather }))
             return weather
         }
@@ -97,7 +97,7 @@ export class DataService {
     getWaterTemperature(): Resource<WaterTemperature, unknown> {
         const cache = this.cache.objectStore<WaterTemperature>('readonly', store => store.get(['water', '*']))
         const query = async (): Promise<WaterTemperature> => {
-            const water = this.weatherService.getWaterTemperature()
+            const water = await this.weatherService.getWaterTemperature()
             this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('water', '*'), ...water }))
             return water
         }

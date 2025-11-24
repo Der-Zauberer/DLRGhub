@@ -57,14 +57,13 @@
 </template>
 
 <script setup lang="ts">
-import AppointmentComponent from '@/components/AppointmentComponent.vue';
 import ButtonComponent from '@/components/ButtonComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import { resource } from '@/core/resource';
 import type { BeforeInstallPromptEvent, Post} from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service';
-import { inject, onBeforeUnmount } from 'vue';
+import { inject, toRaw } from 'vue';
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const dataService = inject(DATA_SERVICE) as DataService
@@ -83,6 +82,5 @@ const posts = resource({
 
 const weather = dataService.getWeather()
 const water = dataService.getWaterTemperature()
-const shifts = dataService.getPersonShift(dataService.profileName.value, new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 </script>

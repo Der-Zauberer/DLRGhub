@@ -1,8 +1,8 @@
 <template>
 
-	<div class="container-xxl grid-cols-sm-2 grid-cols-1">
+	<div class="container-xxl grid-cols-md-2 grid-cols-1">
 
-		<swd-card class="grid-span-2">
+		<swd-card class="grid-span-md-2 grid-1">
 			<h3>
 				Wetter
 				<swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
