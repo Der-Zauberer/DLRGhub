@@ -1,9 +1,9 @@
 <template>
-    <button :class="toClass(color, apperience)" :selected="selected !== false ? true : undefined" :aria-selected="selected ? true : undefined" :disabled="disabled ? true : undefined" @click="$emit('click', $event); to && $router.push(to)">
+    <component :is="to ? 'RouterLink' : 'button'" :class="toClass(color, apperience, to)" :selected="selected !== false ? true : undefined" :aria-selected="selected ? true : undefined" :disabled="disabled ? true : undefined" @click="$emit('click', $event)" :to="to">
         <swd-icon v-if="icon" :class="`${icon}-icon`" aria-hidden="true"></swd-icon>
         <span v-if="icon && $slots.default && $slots.default?.().find(element => element.children?.toString().length)" aria-hidden="true">&nbsp;</span>
         <slot></slot>
-    </button>
+    </component>
 </template>
 
 <script setup lang="ts">
@@ -14,8 +14,8 @@ export type ButtonApperience = 'DEFAULT' | 'OUTLINE' | 'GHOST'
 defineProps<{ to?: RouteLocationRaw, icon?:string, color?: ButtonColor, apperience?: ButtonApperience, selected?: boolean, disabled?: boolean }>()
 defineEmits<{ (e: 'click', event: MouseEvent): void }>()
 
-function toClass(color?: ButtonColor, apperience?: ButtonApperience): string {
-    const classes = []
+function toClass(color?: ButtonColor, apperience?: ButtonApperience, to?: RouteLocationRaw): string {
+    const classes = to ? ['button'] : []
     if (color) {
         classes.push(color === 'ELEMENT' ? 'grey-color' : `${color.toLowerCase()}-color`)
     }

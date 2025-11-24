@@ -1,163 +1,136 @@
 <template>
 
-    <div class="container-xxl grid-cols-sm-2 grid-cols-1">
+	<div class="container-xxl grid-cols-sm-2 grid-cols-1">
 
-      <swd-card>
-        <h3>
-          Wetter
-          <swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
-        </h3>
+		<swd-card class="grid-span-2">
+			<h3>
+				Wetter
+				<swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
+			</h3>
 
-        <div class="flex flex-wrap flex-space-between">
+			<div class="flex flex-wrap flex-space-between">
 
-          <div class="weather-preview">
-            <swd-icon class="weather-icon weather-preview__icon"></swd-icon>
-            <div>
-              <div class="weather-preview__text">{{ weather.value?.current.temperature_2m.toFixed(1) }}°</div>
-              <swd-subtitle>T: {{ Math.round(weather.value?.daily.temperature_2m_min[0] || 0) }}° H: {{ Math.round(weather.value?.daily.temperature_2m_max[0] || 0) }}°</swd-subtitle>
-            </div>
-          </div>
+				<div class="weather-preview">
+					<swd-icon class="weather-icon weather-preview__icon"></swd-icon>
+					<div>
+						<div class="weather-preview__text">{{ weather.value?.current.temperature_2m.toFixed(1) }}°</div>
+						<swd-subtitle>T: {{ Math.round(weather.value?.daily.temperature_2m_min[0] || 0) }}° H: {{ Math.round(weather.value?.daily.temperature_2m_max[0] || 0) }}°</swd-subtitle>
+					</div>
+				</div>
 
-          <div class="weather-preview">
-            <swd-icon class="water-icon weather-preview__icon"></swd-icon>
-            <div class="weather-preview__text">{{ water.value?.temperature[water.value?.temperature.length - 1 || 0].toFixed(1) }}°</div>
-          </div>
+				<div class="weather-preview">
+					<swd-icon class="water-icon weather-preview__icon"></swd-icon>
+					<div class="weather-preview__text">{{ water.value?.temperature[water.value?.temperature.length - 1 || 0].toFixed(1) }}°</div>
+				</div>
 
-        </div>
+			</div>
 
-      </swd-card>
+		</swd-card>
 
-      <swd-card>
-        <h3>
-          7-Tage-Trend
-          <swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
-        </h3>
-        <div class="weather-prediction-grid" v-if="weather.value">
-          <div class="contents" v-for="prediction of getSevenDayPrediction(weather.value)">
-            <div>{{ prediction.time }}:</div>
-            <div>{{ prediction.rain + '%' }}</div>
-            <div>
-              <div class="weather-prediction-grid__bar" :style="`margin-left: ${prediction.minOffset}%; width: ${100 - prediction.minOffset - prediction.maxOffset}%;`">
-                <span>{{ prediction.min }}°</span>
-                <span>{{ prediction.max}}°</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <swd-subtitle class="grey-text">
-          <div>Quelle: <a :href="weather.value?.source.url" target="_blank">{{ weather.value?.source.name }}</a></div>
-          <div>Zuletzt aktualisiert: {{ mapLocalDate(weather.value?.source.updated || 0) }}</div>
-        </swd-subtitle>
-      </swd-card>
+		<swd-card>
+			<h3>
+				7-Tage-Trend
+				<swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
+			</h3>
+			<div class="weather-prediction-grid" v-if="weather.value">
+				<div class="contents" v-for="prediction of getSevenDayPrediction(weather.value)">
+					<div>{{ prediction.time }}:</div>
+					<div>{{ prediction.rain + '%' }}</div>
+					<div>
+						<div class="weather-prediction-grid__bar" :style="`margin-left: ${prediction.minOffset}%; width: ${100 - prediction.minOffset - prediction.maxOffset}%;`">
+							<span>{{ prediction.min }}°</span>
+							<span>{{ prediction.max}}°</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<swd-subtitle class="grey-text">
+				<div>Quelle: <a :href="weather.value?.source.url" target="_blank">{{ weather.value?.source.name }}</a></div>
+				<div>Zuletzt aktualisiert: {{ mapLocalDate(weather.value?.source.updated || 0) }}</div>
+			</swd-subtitle>
+		</swd-card>
 
-      <swd-card>
-        <PlotComponent v-if="weather.value" title="Wetter" subtitle="Gailingen am Hochrhein" color="var(--theme-accent-color)" :current="weather.value.current.temperature_2m" :x="weather.value.hourly.time" :y="weather.value.hourly.temperature_2m" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
-      </swd-card>
+		<swd-card>
+			<PlotComponent v-if="water.value" title="Wassertemperatur" subtitle="Neuhausen Flurlingerbrücke" color="var(--theme-accent-color)" :x="water.value.time" :y="water.value.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
+			<swd-subtitle class="grey-text">
+				<div>Quelle: <a :href="water.value?.source.url" target="_blank">{{ water.value?.source.name }}</a></div>
+				<div>Zuletzt aktualisiert: {{ mapLocalDate(water.value?.source.updated || 0) }}</div>
+			</swd-subtitle>
+		</swd-card>
 
-      <swd-card>
-        <PlotComponent v-if="water.value" title="Wassertemperatur" subtitle="Neuhausen" color="var(--theme-accent-color)" :x="water.value.time" :y="water.value.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
-        <swd-subtitle class="grey-text">
-          <div>Quelle: <a :href="water.value?.source.url" target="_blank">{{ water.value?.source.name }}</a></div>
-          <div>Zuletzt aktualisiert: {{ mapLocalDate(water.value?.source.updated || 0) }}</div>
-        </swd-subtitle>
-      </swd-card>
-
-      <swd-card>
-        <PlotComponent title="Testplot" subtitle="Testplot" color="var(--theme-accent-color)" :x="['1', '2', '3', '4', '5']" :y="[3, 3, 4, 5, 2]"/>
-      </swd-card>
-
-    </div>
+	</div>
 
 </template>
 
-<style>
-
-.weather-preview {
-  display: flex;
-  gap: 0.6em;
-}
-
-.weather-preview .weather-preview__icon {
-  font-size: 2.2em;
-}
-
-.weather-preview .weather-preview__text {
-  font-size: 1.4em;
-  align-self: center;
-}
+<style scoped>
 
 .weather-prediction-grid {
-  display: grid;
-  grid-template-columns: fit-content(0) fit-content(0) auto;
-  box-sizing: border-box;
-  white-space: nowrap;
-  gap: round(0.6em, 1px) round(0.5em, 1px);
-  align-items: center;
-  margin-bottom: var(--theme-element-spacing);
+	display: grid;
+	grid-template-columns: fit-content(0) fit-content(0) auto;
+	box-sizing: border-box;
+	white-space: nowrap;
+	gap: round(0.6em, 1px) round(0.5em, 1px);
+	align-items: center;
+	margin-bottom: var(--theme-element-spacing);
 }
 
 .weather-prediction-grid > .contents > div {
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
 }
 
 .weather-prediction-grid .weather-prediction-grid__bar {
-  display: flex;
-  justify-content: space-between;
-  box-sizing: border-box;
-  width: 100%;
-  color: black;
-  background-color: var(--theme-accent-color);
-  border-radius: var(--theme-border-radius);
-  padding: 0 round(0.3em, 1px);
+	display: flex;
+	justify-content: space-between;
+	box-sizing: border-box;
+	width: 100%;
+	color: black;
+	background-color: var(--theme-accent-color);
+	border-radius: var(--theme-border-radius);
+	padding: 0 round(0.3em, 1px);
 }
 
 .weather-prediction-grid .weather-grid__value {
-  justify-self: end;
+	justify-self: end;
 }
 
 </style>
 
 <script setup lang="ts">
 import PlotComponent from '@/components/PlotComponent.vue';
-import { resource } from '@/core/resource';
-import { WEATHER_SERVICE, WeatherService, type Weather } from '@/services/weather.service';
+import { DATA_SERVICE, DataService } from '@/services/data.service';
+import { type Weather } from '@/services/weather.service';
 import { inject } from 'vue';
 
-const weatherService = inject(WEATHER_SERVICE) as WeatherService
+const dataService = inject(DATA_SERVICE) as DataService
 
-const weather = resource({
-  loader: () => weatherService.getWeather()
-})
-
-const water = resource({
-  loader: () => weatherService.getWaterTemperature()
-})
+const weather = dataService.getWeather()
+const water = dataService.getWaterTemperature()
 
 function mapLocalDate(date: string | number): string {
-  const localDate = new Date(date.toString())
-  return localDate.toLocaleString([], new Date().toDateString() === localDate.toDateString() ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+	const localDate = new Date(date.toString())
+	return localDate.toLocaleString([], new Date().toDateString() === localDate.toDateString() ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
 function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] {
-  const allMin = Math.round(Math.min(...weather.daily.temperature_2m_min))
-  const allMax = Math.round(Math.max(...weather.daily.temperature_2m_max))
-  const range = allMax - allMin
-  const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] = []
-  for (const [index, time] of weather.daily.time.entries()) {
-    const min = Math.round(weather.daily.temperature_2m_min[index])
-    const max = Math.round(weather.daily.temperature_2m_max[index])
-    prediction.push({
-      time: new Date(time).toLocaleString([], { weekday: 'short' }).slice(0, 2),
-      rain: Math.round(weather.daily.precipitation_probability_mean[index]),
-      min,
-      max,
-      minOffset: (min - allMin) / range * 100,
-      maxOffset: (allMax - max) / range * 100,
-    })
-  }
-  return prediction
+	const allMin = Math.round(Math.min(...weather.daily.temperature_2m_min))
+	const allMax = Math.round(Math.max(...weather.daily.temperature_2m_max))
+	const range = allMax - allMin
+	const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number }[] = []
+	for (const [index, time] of weather.daily.time.entries()) {
+		const min = Math.round(weather.daily.temperature_2m_min[index])
+		const max = Math.round(weather.daily.temperature_2m_max[index])
+		prediction.push({
+			time: new Date(time).toLocaleString([], { weekday: 'short' }).slice(0, 2),
+			rain: Math.round(weather.daily.precipitation_probability_mean[index]),
+			min,
+			max,
+			minOffset: (min - allMin) / range * 100,
+			maxOffset: (allMax - max) / range * 100,
+		})
+	}
+	return prediction
 }
 
 </script>

@@ -3,6 +3,7 @@ import { RecordId, surql } from "surrealdb";
 import { ref, watch, type App } from "vue";
 import type { SurrealDbService } from "./surrealdb.service";
 import { resource, type Resource } from "@/core/resource";
+import type { WaterTemperature, Weather, WeatherService } from "./weather.service";
 
 export class DataService {
 
@@ -11,11 +12,11 @@ export class DataService {
 
     private readonly PROFILE_NAME = 'profile_name'
 
-    private readonly cache = new CacheDB('cache')
     public readonly online = ref<boolean>(navigator.onLine)
+    private readonly cache = new CacheDB('cache')
     public readonly profileName = ref<string>('')
 
-    constructor(private surrealDbService: SurrealDbService) {
+    constructor(private surrealDbService: SurrealDbService, private weatherService: WeatherService) {
         window.addEventListener(this.ONLINE_EVENT,  () => (this.online.value = true, surrealDbService.autoConnect()))
         window.addEventListener(this.OFFLINE_EVENT, () => (this.online.value = false, surrealDbService.close()))
         const name = localStorage.getItem(this.PROFILE_NAME)
@@ -81,6 +82,26 @@ export class DataService {
 
     async removeShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people -= ${person}`)
+    }
+
+    getWeather(): Resource<Weather, unknown> {
+        const cache = this.cache.objectStore<Weather>('readonly', store => store.get(['weather', '*']))
+        const query = async (): Promise<Weather> => {
+            const weather = this.weatherService.getWeather()
+            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('weather', '*'), ...weather }))
+            return weather
+        }
+        return this.createCachedResource<Weather>(cache, query)
+    }
+
+    getWaterTemperature(): Resource<WaterTemperature, unknown> {
+        const cache = this.cache.objectStore<WaterTemperature>('readonly', store => store.get(['water', '*']))
+        const query = async (): Promise<WaterTemperature> => {
+            const water = this.weatherService.getWaterTemperature()
+            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('water', '*'), ...water }))
+            return water
+        }
+        return this.createCachedResource<WaterTemperature>(cache, query)
     }
 
     clearCache() {
@@ -162,7 +183,8 @@ export const DATA_SERVICE = 'dataService'
 export default {
     install(app: App) {
         const surrealDbService = app.config.globalProperties.$surrealDbService
-        const dataService = new DataService(surrealDbService)
+        const weatherService = app.config.globalProperties.$weatherService
+        const dataService = new DataService(surrealDbService, weatherService)
         app.config.globalProperties.$dataService = dataService
         app.provide(DATA_SERVICE, dataService)
     }

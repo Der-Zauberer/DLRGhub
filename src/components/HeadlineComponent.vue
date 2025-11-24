@@ -21,7 +21,7 @@
 }
 
 .headline h2 {
-    font-size: 1.2em;
+    font-size: 1.3em;
     margin: 0;
 }
 

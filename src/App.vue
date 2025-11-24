@@ -1,14 +1,14 @@
 <template>
 
     <swd-menu role="navigation">
-      <div class="logo">
+      <RouterLink class="logo" :to="{ name: 'home' }">
         <img src="@/assets/logo.svg" height="25px">
         <div class="logo__seperator"></div>
         <div class="logo__client">
           <span class="accent-text">Gruppe</span>
           <span class="accent-text">Gailingen e.V.</span>
         </div>
-      </div>
+      </RouterLink>
       <div class="menu">
         <RouterLink :to="{ name: 'home' }" :exact="false"><swd-icon class="home-icon"></swd-icon><span>Home</span></RouterLink>
         <RouterLink :to="{ name: 'plans' }" :class="{ 'router-link-active': $route.path.startsWith($router.resolve({ name: 'plans' }).path) }" :exact="false"><swd-icon class="calendar-icon"></swd-icon><span>Dienstpläne</span></RouterLink>

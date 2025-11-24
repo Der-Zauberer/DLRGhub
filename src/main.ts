@@ -46,6 +46,6 @@ window.addEventListener('beforeinstallprompt', event => {
 const app = createApp(App)
 app.use(router)
 app.use(surrealdbService)
-app.use(dataService)
 app.use(weatherService)
+app.use(dataService)
 app.mount('#app')

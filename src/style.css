@@ -10,7 +10,7 @@ a.button, .menu a, button, input, select, textarea {
     font-size: 18px;
 }
 
-swd-card h3, swd-card-outline h3 { font-size: 1.2em; }
+swd-card h3, swd-card-outline h3 { font-size: 1.3em; }
 
 .primary-color { background: #e30613 !important }
 .secondary-color { background: #a5010c !important }
@@ -45,4 +45,18 @@ dlrg-error {
     margin-bottom: var(--theme-element-spacing);
     background: var(--theme-error-color);
     color: white;
+}
+
+.weather-preview {
+	display: flex;
+	gap: 0.6em;
+
+	& .weather-preview__icon {
+		font-size: 2.2em;
+	}
+
+	& .weather-preview__text {
+		font-size: 1.4em;
+		align-self: center;
+	}
 }
