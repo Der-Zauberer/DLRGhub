@@ -47,16 +47,46 @@ DEFINE FIELD OVERWRITE updated.user ON TABLE file TYPE record<user> VALUE $auth.
 DEFINE FIELD OVERWRITE updated.timestamp ON TABLE file TYPE datetime VALUE time::now();
 
 DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
-    PERMISSIONS FOR select WHERE $auth.id == id;
-DEFINE FIELD OVERWRITE password ON TABLE user TYPE string
-    VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value });
+	PERMISSIONS
+		FOR select, update WHERE id = $auth.id || $auth.admin,
+        FOR create, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE name ON TABLE user TYPE string;
+DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is::email($value);
+DEFINE FIELD OVERWRITE password ON TABLE user TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value })
+    PERMISSIONS
+        FOR select NONE,
+        FOR create, update, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE admin ON TABLE user TYPE bool DEFAULT false
+    PERMISSIONS
+        FOR select WHERE id = $auth.id || $auth.admin,
+        FOR create, update, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE account ON TABLE user TYPE object DEFAULT {}
+    PERMISSIONS
+        FOR select WHERE id = $auth.id || $auth.admin,
+        FOR create, update, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE account.enabled ON TABLE user TYPE bool DEFAULT true;
+DEFINE FIELD OVERWRITE account.expiry ON TABLE user TYPE option<datetime>;
+
+DEFINE INDEX OVERWRITE email ON user FIELDS email UNIQUE;
 
 DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
-	SIGNIN (SELECT * FROM ONLY type::thing('user', $username) WHERE crypto::argon2::compare(password, $password));
-
-INSERT IGNORE INTO user [
-    {
-        id: user:admin,
-        password: 'admin',
+	SIGNIN {
+		LET $user = SELECT * FROM ONLY type::thing("user", <string>$username) WHERE crypto::argon2::compare(password, $password);
+        IF !$user {
+            THROW 'error.user.password.invalid: Your credentials are invalid!';
+        } ELSE IF $user.account.enabled == false || (type::is::datetime($user.account.expiry) && $user.account.expiry < time::now()) {
+            THROW 'error.user.deactivated: Your account is deactivated!';
+        };
+        RETURN $user;
     }
-];
+	SIGNUP (
+		CREATE user CONTENT {
+            id: $username,
+			name: $name,
+			email: $email,
+			password: crypto::argon2::generate($password),
+            accoount: {
+                enabled = false
+            }
+		}
+	) DURATION FOR TOKEN 1h, FOR SESSION 1h;

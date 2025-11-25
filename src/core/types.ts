@@ -68,7 +68,14 @@ export type ByteFile = {
 
 export type User = {
     id: RecordId<'user'>
-    password: string
+    name: string,
+    email: string
+    password?: string,
+    admin: boolean,
+    account: {
+        enabled: boolean
+        expiry?: Date
+    }
 }
 
 export type BeforeInstallPromptEvent = Event & {

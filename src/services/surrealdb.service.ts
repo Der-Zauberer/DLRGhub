@@ -69,8 +69,8 @@ export class JwtToken {
 
     constructor(token: string) {
         const [header, payload, signature] = token.split('.')
-        this.header = JSON.parse(atob(header))
-        this.payload = JSON.parse(atob(payload))
+        this.header = JSON.parse(atob(header.replace(/-/g, '+').replace(/_/g, '/')))
+        this.payload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
         this.signature = signature
         this.raw = token
     }
