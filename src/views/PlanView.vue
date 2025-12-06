@@ -57,7 +57,7 @@ import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import ShiftComponent from '@/components/ShiftComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { RecordId } from 'surrealdb';
-import { computed, inject, onBeforeUnmount, type Reactive } from 'vue';
+import { computed, inject, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute()

@@ -1,6 +1,6 @@
 <template>
 
-    <RouterLink :to="{ name: 'plan', params: { id: shift.id.id.toString() } }" class="shift">
+    <RouterLink :to="{ name: 'plan', params: { id: shift.plan.id.id.toString()}, query: { shift: shift.id.id.toString() } }" class="shift">
         <swd-card class="shift__date">
             <div><b>{{ shift.date.toLocaleString([], { weekday: 'short' }).slice(0, 2).toUpperCase() }}</b></div>
             <div>{{ shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }}</div>
