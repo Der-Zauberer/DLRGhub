@@ -17,7 +17,7 @@
                     </div>
                 </div>
 
-                <div class="weather-preview" v-if="water.value">
+                <div class="weather-preview">
                     <swd-icon class="water-icon weather-preview__icon"></swd-icon>
                     <div class="weather-preview__text" v-if="water.value">{{ water.value?.temperature[water.value?.temperature.length - 1 || 0].toFixed(1) }}°</div>
                     <swd-skeleton-text class="weather-preview__text" v-if="!water.value">&#160;&#160;&#160;&#160;&#160;&#160;</swd-skeleton-text>

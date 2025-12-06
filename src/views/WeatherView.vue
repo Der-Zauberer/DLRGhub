@@ -30,7 +30,7 @@
 		</swd-card>
 
 		<swd-card>
-			<PlotComponent v-if="water.value" title="Wassertemperatur" subtitle="Neuhausen Flurlingerbrücke" color="var(--theme-accent-color)" :x="water.value.time" :y="water.value.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
+			<PlotComponent title="Wassertemperatur" subtitle="Neuhausen Flurlingerbrücke" color="var(--theme-accent-color)" :x="water.value?.time" :y="water.value?.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
 			<swd-subtitle class="grey-text">
 				<div>Quelle: <a :href="water.value?.source.url" target="_blank">{{ water.value?.source.name }}</a></div>
 				<div>Zuletzt aktualisiert: {{ mapLocalDate(water.value?.source.updated || 0) }}</div>
@@ -81,18 +81,14 @@
 <script setup lang="ts">
 import PlotComponent from '@/components/PlotComponent.vue';
 import WeatherComponent from '@/components/WeatherComponent.vue';
-import type { Resource } from '@/core/resource';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { type WaterTemperature, type Weather } from '@/services/weather.service';
+import { type Weather } from '@/services/weather.service';
 import { inject } from 'vue';
 
 const dataService = inject(DATA_SERVICE) as DataService
 
 const weather = dataService.getWeather()
 const water = dataService.getWaterTemperature()
-
-//const weather: Resource<Weather, unknown> = { empty: true, loading: true, status: 'LOADING', reload: (weather) => Promise.resolve({} as Weather)}
-//const water: Resource<WaterTemperature, unknown> = { empty: true, loading: true, status: 'LOADING', reload: (weather) => Promise.resolve({} as WaterTemperature)}
 
 function mapLocalDate(date: string | number): string {
 	const localDate = new Date(date.toString())
