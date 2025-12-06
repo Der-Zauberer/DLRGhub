@@ -2,30 +2,7 @@
 
 	<div class="container-xxl grid-cols-md-2 grid-cols-1">
 
-		<swd-card class="grid-span-md-2 grid-1">
-			<h3>
-				Wetter
-				<swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
-			</h3>
-
-			<div class="flex flex-wrap flex-space-between">
-
-				<div class="weather-preview">
-					<swd-icon class="weather-icon weather-preview__icon"></swd-icon>
-					<div>
-						<div class="weather-preview__text">{{ weather.value?.current.temperature_2m.toFixed(1) }}°</div>
-						<swd-subtitle>T: {{ Math.round(weather.value?.daily.temperature_2m_min[0] || 0) }}° H: {{ Math.round(weather.value?.daily.temperature_2m_max[0] || 0) }}°</swd-subtitle>
-					</div>
-				</div>
-
-				<div class="weather-preview">
-					<swd-icon class="water-icon weather-preview__icon"></swd-icon>
-					<div class="weather-preview__text">{{ water.value?.temperature[water.value?.temperature.length - 1 || 0].toFixed(1) }}°</div>
-				</div>
-
-			</div>
-
-		</swd-card>
+		<WeatherComponent :weather="weather" :water="water" />
 
 		<swd-card>
 			<h3>
@@ -44,10 +21,12 @@
 					</div>
 				</div>
 			</div>
-			<swd-subtitle class="grey-text">
+			<swd-subtitle class="grey-text" v-if="weather.value">
 				<div>Quelle: <a :href="weather.value?.source.url" target="_blank">{{ weather.value?.source.name }}</a></div>
 				<div>Zuletzt aktualisiert: {{ mapLocalDate(weather.value?.source.updated || 0) }}</div>
 			</swd-subtitle>
+			<swd-skeleton-shape class="weather-prediction-grid" v-if="!weather.value"></swd-skeleton-shape>
+			<swd-subtitle class="width-100" v-if="!weather.value"><swd-skeleton-text></swd-skeleton-text><swd-skeleton-text></swd-skeleton-text></swd-subtitle>
 		</swd-card>
 
 		<swd-card>
@@ -68,45 +47,52 @@
 	display: grid;
 	grid-template-columns: fit-content(0) fit-content(0) auto;
 	box-sizing: border-box;
-	white-space: nowrap;
 	gap: round(0.6em, 1px) round(0.5em, 1px);
+	height: calc(7 * round(1.6em, 1px) + 6 * round(0.6em, 1px));
+	white-space: nowrap;
 	align-items: center;
 	margin-bottom: var(--theme-element-spacing);
-}
 
-.weather-prediction-grid > .contents > div {
-	display: flex;
-	align-items: center;
-	box-sizing: border-box;
-}
+	& .weather-prediction-grid__bar {
+		display: flex;
+		justify-content: space-between;
+		box-sizing: border-box;
+		width: 100%;
+		color: black;
+		background-color: var(--theme-accent-color);
+		border-radius: var(--theme-border-radius);
+		padding: 0 round(0.3em, 1px);
+	}
 
-.weather-prediction-grid .weather-prediction-grid__bar {
-	display: flex;
-	justify-content: space-between;
-	box-sizing: border-box;
-	width: 100%;
-	color: black;
-	background-color: var(--theme-accent-color);
-	border-radius: var(--theme-border-radius);
-	padding: 0 round(0.3em, 1px);
-}
+	& .weather-grid__value {
+		justify-self: end;
+	}
 
-.weather-prediction-grid .weather-grid__value {
-	justify-self: end;
+	& > .contents > div {
+		display: flex;
+		align-items: center;
+		box-sizing: border-box;
+	}
+
 }
 
 </style>
 
 <script setup lang="ts">
 import PlotComponent from '@/components/PlotComponent.vue';
+import WeatherComponent from '@/components/WeatherComponent.vue';
+import type { Resource } from '@/core/resource';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { type Weather } from '@/services/weather.service';
+import { type WaterTemperature, type Weather } from '@/services/weather.service';
 import { inject } from 'vue';
 
 const dataService = inject(DATA_SERVICE) as DataService
 
 const weather = dataService.getWeather()
 const water = dataService.getWaterTemperature()
+
+//const weather: Resource<Weather, unknown> = { empty: true, loading: true, status: 'LOADING', reload: (weather) => Promise.resolve({} as Weather)}
+//const water: Resource<WaterTemperature, unknown> = { empty: true, loading: true, status: 'LOADING', reload: (weather) => Promise.resolve({} as WaterTemperature)}
 
 function mapLocalDate(date: string | number): string {
 	const localDate = new Date(date.toString())

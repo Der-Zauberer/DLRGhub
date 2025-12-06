@@ -6,26 +6,7 @@
 			<div class="grid-cols-1">
 
 				<RouterLink :to="{ name: 'weather' }" style="text-decoration: none;">
-					<swd-card class="swd-card-hover margin-bottom-0">
-						<HeadlineComponent title="Wetter" subtitle="Gailingen am Hochrhein"><swd-icon class="right-icon"></swd-icon></HeadlineComponent>
-
-						<div class="flex flex-wrap flex-space-between">
-
-							<div class="weather-preview">
-								<swd-icon class="weather-icon weather-preview__icon"></swd-icon>
-								<div>
-									<div class="weather-preview__text">{{ weather.value?.current.temperature_2m.toFixed(1) }}°</div>
-									<swd-subtitle>T: {{ Math.round(weather.value?.daily.temperature_2m_min[0] || 0) }}° H: {{ Math.round(weather.value?.daily.temperature_2m_max[0] || 0) }}°</swd-subtitle>
-								</div>
-							</div>
-
-							<div class="weather-preview">
-								<swd-icon class="water-icon weather-preview__icon"></swd-icon>
-								<div class="weather-preview__text">{{ water.value?.temperature[water.value?.temperature.length - 1 || 0].toFixed(1) }}°</div>
-							</div>
-
-						</div>
-					</swd-card>
+					<WeatherComponent :weather="weather" :water="water" :link="true"/>
 				</RouterLink>
 
 				<swd-card v-if="pwa">
@@ -59,11 +40,12 @@
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue';
+import WeatherComponent from '@/components/WeatherComponent.vue';
 import { resource } from '@/core/resource';
 import type { BeforeInstallPromptEvent, Post} from '@/core/types';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service';
-import { inject, toRaw } from 'vue';
+import { inject } from 'vue';
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const dataService = inject(DATA_SERVICE) as DataService

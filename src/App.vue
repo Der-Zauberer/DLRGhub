@@ -42,22 +42,23 @@ swd-menu a {
   display: flex;
   align-items: center;
   margin-right: auto;
-}
+  gap: 0 8px;
 
-.logo .logo__seperator {
-  width: 2px;
-  height: 30px;
-  margin: 0 8px;
-  background: var(--theme-accent-color);
-}
+  & .logo__seperator {
+    width: 2px;
+    height: 30px;
+    background: var(--theme-accent-color);
+  }
 
-.logo .logo__client {
-  display: flex;
-  flex-direction: column;
-  line-height: 15px;
-  font-size: 12px;
-  color: var(--theme-accent-color) !important;
-  font-weight: bold;
+  & .logo__client {
+    display: flex;
+    flex-direction: column;
+    line-height: 15px;
+    font-size: 12px;
+    color: var(--theme-accent-color) !important;
+    font-weight: bold;
+  }
+
 }
 
 .menu {

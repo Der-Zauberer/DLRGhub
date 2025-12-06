@@ -46,17 +46,3 @@ dlrg-error {
     background: var(--theme-error-color);
     color: white;
 }
-
-.weather-preview {
-	display: flex;
-	gap: 0.6em;
-
-	& .weather-preview__icon {
-		font-size: 2.2em;
-	}
-
-	& .weather-preview__text {
-		font-size: 1.4em;
-		align-self: center;
-	}
-}
