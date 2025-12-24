@@ -76,6 +76,10 @@ export type User = {
         enabled: boolean
         expiry?: Date
     }
+    credentials: {
+        change: boolean
+        expiry?: Date
+    }
 }
 
 export type BeforeInstallPromptEvent = Event & {

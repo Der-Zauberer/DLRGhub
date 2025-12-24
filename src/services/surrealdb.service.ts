@@ -2,7 +2,7 @@ import type { User } from '@/core/types';
 import { ConnectionStatus, ResponseError, Surreal, SurrealDbError, VersionRetrievalFailure, type ConnectOptions, type Token } from 'surrealdb';
 import { ref, type App, type ComputedRef, type Ref } from 'vue';
 
-import type { NavigationGuardNext, RouteLocationNormalized, Router } from 'vue-router';
+import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router';
 
 export const config: SurrealDbConfig = {
     default: {
@@ -123,13 +123,12 @@ const PROFILE_COOKIE = 'surreal_db_profiles'
 const TOKEN_COOKIE = 'surreal_db_token'
 const cookies = new Cookies()
 const profiles = loadProfiles()
+const user: Ref<User | undefined> = ref()
 let globalToken = loadToken()
 let stopLogoutTimeout: () => void
 let loginRedirect: RouteLocationNormalized | undefined
 
 export class SurrealDbService extends Surreal {
-
-    private user: Ref<User | undefined> = ref()
 
     constructor(private router: Router) {
         super()
@@ -158,7 +157,7 @@ export class SurrealDbService extends Surreal {
             access: configuration.access,
             variables: credentials
         }))
-        this.user.value = await super.info<User>()
+        user.value = await super.info<User>()
         globalToken = jwt
         const expiration = globalToken.getExpirationAsDate()
         if (expiration) cookies.set(`${TOKEN_COOKIE}_${configuration.name}`, globalToken.raw, expiration)
@@ -196,7 +195,7 @@ export class SurrealDbService extends Surreal {
                 globalToken = jwt
                 cookies.set(`${TOKEN_COOKIE}_${profiles.default.name}`, jwt.raw, jwt.getExpirationAsDate())
                 this.setLogoutTimeout()
-                this.user.value = await super.info<User>()
+                user.value = await super.info<User>()
                 return result
             })
             .catch(error => {
@@ -209,7 +208,7 @@ export class SurrealDbService extends Surreal {
     }
 
     async invalidate(): Promise<true> {
-        this.user.value = undefined
+        user.value = undefined
         globalToken = undefined
         cookies.delete(`${TOKEN_COOKIE}_${profiles.default.name}`)
         stopLogoutTimeout?.()
@@ -221,11 +220,11 @@ export class SurrealDbService extends Surreal {
     }
 
     getUser(): User | undefined {
-        return this.user.value ? Object.assign(this.user.value) : undefined
+        return user.value ? Object.assign(user.value) : undefined
     }
     
     getUserAsRef(): ComputedRef<User | undefined> {
-        return this.user as ComputedRef<User | undefined>
+        return user as ComputedRef<User | undefined>
     }
 
     getProfile(): SurrealDbConfig {
@@ -267,7 +266,8 @@ export class SurrealDbService extends Surreal {
             if (location && (typeof location === 'string' || typeof location === 'object')) router.push(location)
         }
         (Array.isArray(route.matched[0].beforeEnter) ? route.matched[0].beforeEnter : [route.matched[0].beforeEnter])
-            .find(guard => guard === auth)?.call(undefined, route, route, next)
+            .filter(guard => !!guard)
+            .forEach(guard => guard.call(undefined, route, route, next))
     }
 
 }
@@ -310,13 +310,17 @@ function addSurrealInitializer(SurrealDbService: SurrealDbService, timeout?: num
     })
 }
 
-export function auth(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) {
-    if (globalToken?.isExpired()) globalToken = undefined
-    if (!globalToken && to.path !== '/login') {
-        loginRedirect = to
-        next('/login')
-    } else {
-        next()
+export function auth(condition: (user: User) => boolean = () => true): NavigationGuardWithThis<undefined> {
+    return (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+        if (globalToken?.isExpired()) globalToken = undefined
+        if (!globalToken && to.path !== '/login') {
+            loginRedirect = to
+            next('/login')
+        } else if (user.value && !condition(user.value)) {
+            next(false)
+        } else {
+            next()
+        }
     }
 }
 

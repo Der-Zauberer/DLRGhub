@@ -2,7 +2,6 @@
     <RouterLink :to="to">
         <slot></slot>
         <div>
-            <span>&nbsp;</span>
             <swd-icon class="arrow-right-icon"></swd-icon>
         </div>
     </RouterLink>
@@ -13,7 +12,7 @@
 a {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 1ch;
     text-decoration: none;
     cursor: pointer;
     background: var(--theme-element-primary-color);
@@ -25,6 +24,10 @@ a {
 
     &:hover, &:active, &:focus {
         background: var(--theme-element-secondary-color);
+    }
+
+    & :last-child {
+        margin-left: auto;
     }
 }
 

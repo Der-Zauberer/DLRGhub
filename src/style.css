@@ -29,6 +29,11 @@ swd-card h3, swd-card-outline h3 { font-size: 1.3em; }
 swd-icon.weather-icon { mask-image: url('data:image/svg+xml;utf8,<svg width="18" height="18" stroke="white" xmlns="http://www.w3.org/2000/svg"><path d="M4 17 H12 Q16.7 16.7 17 12 Q16.7 7.3 12 7 Q7.3 7.3 7 12 V14 Q6.8 11.2 4 11 Q1.2 11.2 1 14 Q1.2 16.8 4 17 Z M4 11 Q2 11 2 8 Q2.2 4.2 6 4 Q9.8 4.2 10 8" stroke-width="2" stroke="black" fill="none"/></svg>') }
 swd-icon.water-icon { mask-image: url('data:image/svg+xml,<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M1 4 Q4 1 7 4 T13 4 T19 4 M1 9 Q4 6 7 9 T13 9 T19 9 M1 14 Q4 11 7 14 T13 14 T19 14" stroke-width="2" stroke="black" fill="none"/></svg>') }
 
+samp.id {
+    color: var(--theme-primary-color);
+    background-color: color-mix(in srgb, var(--theme-primary-color) 30%, transparent);
+}
+
 dlrg-empty {
     display: block;
     padding: calc(round(.5em,1px) - var(--theme-border-width)) calc(round(.6em,1px) - var(--theme-border-width));

@@ -1,3 +1,21 @@
+------------
+--- post ---
+------------
+
+DEFINE TABLE OVERWRITE post SCHEMAFULL TYPE NORMAL
+    PERMISSIONS
+        FOR select, create, update, delete WHERE $auth.id != NONE;
+DEFINE FIELD OVERWRITE id ON TABLE post;
+DEFINE FIELD OVERWRITE title ON TABLE post TYPE string;
+DEFINE FIELD OVERWRITE author ON TABLE post TYPE string;
+DEFINE FIELD OVERWRITE message ON TABLE post TYPE string;
+DEFINE FIELD OVERWRITE created ON TABLE post TYPE option<datetime> DEFAULT time::now() READONLY;
+DEFINE FIELD OVERWRITE updated ON TABLE post TYPE option<datetime> VALUE time::now();
+
+------------
+--- plan ---
+------------
+
 DEFINE TABLE OVERWRITE plan SCHEMAFULL TYPE NORMAL
     PERMISSIONS
         FOR select, create, update, delete WHERE $auth.id != NONE;
@@ -24,15 +42,9 @@ DEFINE EVENT OVERWRITE schedules_delete ON TABLE schedules WHEN $event == 'DELET
     DELETE $before.out;
 };
 
-DEFINE TABLE OVERWRITE post SCHEMAFULL TYPE NORMAL
-    PERMISSIONS
-        FOR select, create, update, delete WHERE $auth.id != NONE;
-DEFINE FIELD OVERWRITE id ON TABLE post;
-DEFINE FIELD OVERWRITE title ON TABLE post TYPE string;
-DEFINE FIELD OVERWRITE author ON TABLE post TYPE string;
-DEFINE FIELD OVERWRITE message ON TABLE post TYPE string;
-DEFINE FIELD OVERWRITE created ON TABLE post TYPE option<datetime> DEFAULT time::now() READONLY;
-DEFINE FIELD OVERWRITE updated ON TABLE post TYPE option<datetime> VALUE time::now();
+------------
+--- file ---
+------------
 
 DEFINE TABLE OVERWRITE file SCHEMAFULL TYPE NORMAL
     PERMISSIONS
@@ -45,6 +57,10 @@ DEFINE FIELD OVERWRITE created.user ON TABLE file TYPE record<user> DEFAULT $aut
 DEFINE FIELD OVERWRITE created.timestamp ON TABLE file TYPE datetime DEFAULT time::now() READONLY;
 DEFINE FIELD OVERWRITE updated.user ON TABLE file TYPE record<user> VALUE $auth.id;
 DEFINE FIELD OVERWRITE updated.timestamp ON TABLE file TYPE datetime VALUE time::now();
+
+------------
+--- user ---
+------------
 
 DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
 	PERMISSIONS
@@ -64,8 +80,14 @@ DEFINE FIELD OVERWRITE account ON TABLE user TYPE object DEFAULT {}
     PERMISSIONS
         FOR select WHERE id = $auth.id || $auth.admin,
         FOR create, update, delete WHERE $auth.admin;
-DEFINE FIELD OVERWRITE account.enabled ON TABLE user TYPE bool DEFAULT true;
+DEFINE FIELD OVERWRITE account.enabled ON TABLE user TYPE bool DEFAULT false;
 DEFINE FIELD OVERWRITE account.expiry ON TABLE user TYPE option<datetime>;
+DEFINE FIELD OVERWRITE credentials ON TABLE user TYPE object DEFAULT {}
+    PERMISSIONS
+        FOR select WHERE id = $auth.id || $auth.admin,
+        FOR create, update, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE credentials.change ON TABLE user TYPE bool DEFAULT false;
+DEFINE FIELD OVERWRITE credentials.expiry ON TABLE user TYPE option<datetime>;
 
 DEFINE INDEX OVERWRITE email ON user FIELDS email UNIQUE;
 
@@ -76,6 +98,8 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
             THROW 'error.user.password.invalid: Your credentials are invalid!';
         } ELSE IF $user.account.enabled == false || (type::is::datetime($user.account.expiry) && $user.account.expiry < time::now()) {
             THROW 'error.user.deactivated: Your account is deactivated!';
+        } ELSE IF $user.credentials.change == true || (type::is::datetime($user.credentials.expiry) && $user.credentials.expiry < time::now()) {
+            THROW 'error.user.password.change.required: Your password have to be changed!';
         };
         RETURN $user;
     }
@@ -85,8 +109,8 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
 			name: $name,
 			email: $email,
 			password: crypto::argon2::generate($password),
-            accoount: {
+            account: {
                 enabled = false
             }
 		}
-	) DURATION FOR TOKEN 1h, FOR SESSION 1h;
+	) DURATION FOR TOKEN 8h, FOR SESSION 8h;
