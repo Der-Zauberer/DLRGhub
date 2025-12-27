@@ -1,15 +1,15 @@
 <template>
-    <RouterLink :to="to">
+    <component :is="to ? 'RouterLink' : 'button'" :to="to" @click="$emit('click', $event)">
         <slot></slot>
         <div>
             <swd-icon class="arrow-right-icon"></swd-icon>
         </div>
-    </RouterLink>
+    </component>
 </template>
 
 <style scoped>
 
-a {
+a, button {
     display: flex;
     align-items: center;
     gap: 1ch;
@@ -19,6 +19,7 @@ a {
     color: var(--theme-text-color);
     user-select: none;
     -webkit-user-select: none;
+    font-size: inherit;
     padding: calc(round(1em,1px) - var(--theme-border-width));
     border-radius: var(--theme-border-radius);
 
@@ -36,6 +37,7 @@ a {
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router';
 
-defineProps<{ to: RouteLocationRaw }>()
+defineProps<{ to?: RouteLocationRaw }>()
+defineEmits<{ (e: 'click', event: MouseEvent): void }>()
 
 </script>

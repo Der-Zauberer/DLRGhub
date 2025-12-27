@@ -51,11 +51,11 @@ export type Post = {
     updated: Date
 }
 
-export type ByteFile = {
+export type BinaryFile = {
     id: RecordId<'file'>
     name: string
     type: string
-    content: Uint8Array
+    content: ArrayBuffer
     created: {
         user: RecordId<'user'>
         timestamp: Date
