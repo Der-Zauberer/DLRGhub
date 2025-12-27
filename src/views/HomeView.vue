@@ -3,7 +3,7 @@
 	<div class="container-xl">
 
 		<div class="grid-cols-md-3 grid-cols-1">
-			<div class="grid-cols-1">
+			<div class="grid-cols-1 margin-bottom">
 
 				<RouterLink :to="{ name: 'weather' }" style="text-decoration: none;">
 					<WeatherComponent :weather="weather" :water="water" :link="true"/>
@@ -16,6 +16,7 @@
 				</swd-card>
 
 				<ButtonComponent :to="{ name: 'post-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" class="width-100">Posten</ButtonComponent>
+				<ButtonComponent :to="{ name: 'user' }" color="ELEMENT" icon="user" class="width-100" v-if="user?.admin">Benutzerverwaltung</ButtonComponent>
 
 			</div>
 			<div class="grid-span-md-2 grid-span-1">
@@ -49,6 +50,7 @@ import { inject } from 'vue';
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const dataService = inject(DATA_SERVICE) as DataService
+const user = surreal.getUserAsRef()
 const pwa = (window as unknown as {pwa: BeforeInstallPromptEvent | undefined}).pwa
 
 function install() {

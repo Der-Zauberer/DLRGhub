@@ -2,7 +2,7 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent :title="user.value?.name" :resource="user" :back="{ name: 'user' }">
+        <HeadlineComponent :title="user.value?.name || 'Unbenannt'" :resource="user" :back="{ name: 'user' }">
             <ButtonComponent v-if="user.value && route.params.id !== 'new'" icon="delete" @click="userDeleteDialog = true">Löschen</ButtonComponent>
             <DialogComponent v-if="user.value" name="Dienstplan löschen" action="Löschen" v-model="userDeleteDialog" @success="deleteUser(user.value.id!)">
                 <p>Bist du sicher den Benutzer zu löschen?</p>
@@ -20,7 +20,7 @@
 
             <h6>Allgemein</h6>
             <div class="grid-cols-sm-2 grid-cols-1">
-                <InputComponent label="Id" :disabled="$route.params.id !== 'new'" v-model="user.value.id!.id" required/>
+                <InputComponent label="Id" :disabled="$route.params.id !== 'new'" v-model="user.value.id!.id"/>
                 <InputComponent label="Name" v-model="user.value.name" required/>
                 <InputComponent label="Email" type="email" v-model="user.value.email" required/>
                 <InputComponent label="Admin" type="checkbox" v-model="user.value.admin"/>

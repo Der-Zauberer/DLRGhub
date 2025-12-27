@@ -2,7 +2,7 @@
 
 	<div class="container-xxl grid-cols-md-2 grid-cols-1">
 
-		<WeatherComponent :weather="weather" :water="water" />
+		<WeatherComponent :weather="weather" :water="water" class="grid-span-md-2 grid-span-1" />
 
 		<swd-card>
 			<h3>
