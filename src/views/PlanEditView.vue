@@ -25,9 +25,9 @@
 
             <h6>Rollen</h6>
             <div class="grid-cols-sm-2 grid-cols-1">
-                <div class="flex flex-roles" v-for="(role, index) in plan.value.roles" :key="index">
-                    <InputComponent class="width-100" v-model="plan.value.roles[index]"/>
-                    <button type="button" class="grey-color" @click.prevent="plan.value.roles.splice(index, 1)"><swd-icon class="delete-icon"></swd-icon></button>
+                <div class="flex no-gap action-input" v-for="(role, index) in plan.value.roles" :key="index">
+                    <InputComponent class="width-100 left-item" v-model="plan.value.roles[index]"/>
+                    <button type="button" class="grey-color right-item" @click.prevent="plan.value.roles.splice(index, 1)"><swd-icon class="delete-icon"></swd-icon></button>
                 </div>
                 <button type="button" class="grey-color" @click.prevent="plan.value.roles.push('')"><swd-icon class="add-icon"></swd-icon> Hinzufügen</button>
             </div>
@@ -71,8 +71,17 @@
 
 <style scoped>
 
-.flex-roles {
-    gap: var(--theme-inner-element-spacing);
+.action-input {
+    font-size: 18px;
+    & .grey-color {
+        --theme-element-primary-color: var(--theme-secondary-grey-color); 
+        --theme-element-secondary-color: var(--theme-tertiary-grey-color);
+    }
+}
+
+.secondary-grey-color {
+    --theme-element-primary-color: var(--theme-secondary-grey-color); 
+    --theme-element-secondary-color: var(--theme-tertiary-grey-color);
 }
 
 .input-table {
