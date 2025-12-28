@@ -68,10 +68,11 @@ export type BinaryFile = {
 
 export type User = {
     id: RecordId<'user'>
-    name: string,
     email: string
-    password?: string,
-    admin: boolean,
+    name: string
+    displayname: string
+    password?: string
+    admin: boolean
     account: {
         enabled: boolean
         expiry?: Date

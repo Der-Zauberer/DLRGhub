@@ -12,8 +12,12 @@
 
         <div class="grid-cols-1">
             <ButtonLinkComponent v-for="account in user.value" :to="{ name: 'user-edit', params: { id: account.id.id.toString() } }">
-                <samp class="id">{{ account.id.id }}</samp>
-                {{ account.name }}
+                <span>
+                    {{ account.displayname }}
+                    <swd-subtitle>{{ account.name }}</swd-subtitle>
+                    <swd-subtitle>{{ account.email }}</swd-subtitle>
+                </span>
+                <swd-chip class="red-color" v-if="account.admin">Admin</swd-chip>
                 <swd-chip class="red-color" v-if="!account.account.enabled">Disabled</swd-chip>
                 <swd-chip class="red-color" v-if="account.account.enabled && account.account.expiry && account.account.expiry < new Date()">Expired</swd-chip>
             </ButtonLinkComponent>

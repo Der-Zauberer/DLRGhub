@@ -66,8 +66,9 @@ DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
 	PERMISSIONS
 		FOR select, update WHERE id = $auth.id || $auth.admin,
         FOR create, delete WHERE $auth.admin;
-DEFINE FIELD OVERWRITE name ON TABLE user TYPE string;
 DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is::email($value);
+DEFINE FIELD OVERWRITE name ON TABLE user TYPE string;
+DEFINE FIELD OVERWRITE displayname ON TABLE user TYPE string;
 DEFINE FIELD OVERWRITE password ON TABLE user TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value })
     PERMISSIONS
         FOR select NONE,
@@ -88,12 +89,17 @@ DEFINE FIELD OVERWRITE credentials ON TABLE user TYPE object DEFAULT {}
         FOR create, update, delete WHERE $auth.admin;
 DEFINE FIELD OVERWRITE credentials.change ON TABLE user TYPE bool DEFAULT false;
 DEFINE FIELD OVERWRITE credentials.expiry ON TABLE user TYPE option<datetime>;
+DEFINE FIELD OVERWRITE login ON TABLE user TYPE option<datetime>    
+    PERMISSIONS
+        FOR select WHERE id = $auth.id || $auth.admin,
+        FOR create, update, delete NONE;
 
 DEFINE INDEX OVERWRITE email ON user FIELDS email UNIQUE;
+DEFINE INDEX OVERWRITE name ON user FIELDS name UNIQUE;
 
 DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
 	SIGNIN {
-		LET $user = SELECT * FROM ONLY type::thing("user", <string>$username) WHERE crypto::argon2::compare(password, $password);
+		LET $user = SELECT * FROM user WHERE (email = $username OR name = $username) AND crypto::argon2::compare(password, $password);
         IF !$user {
             THROW 'error.user.password.invalid: Your credentials are invalid!';
         } ELSE IF $user.account.enabled == false || (type::is::datetime($user.account.expiry) && $user.account.expiry < time::now()) {
@@ -101,6 +107,7 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
         } ELSE IF $user.credentials.change == true || (type::is::datetime($user.credentials.expiry) && $user.credentials.expiry < time::now()) {
             THROW 'error.user.password.change.required: Your password have to be changed!';
         };
+        UPDATE $user.id SET login = time::now();
         RETURN $user;
     }
 	SIGNUP (

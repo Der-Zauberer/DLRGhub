@@ -2,11 +2,15 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent :title="user.value?.name || 'Unbenannt'" :resource="user" :back="{ name: 'user' }">
+        <HeadlineComponent :title="user.value?.displayname || 'Unbenannt'" :resource="user" :back="{ name: 'user' }">
             <ButtonComponent v-if="user.value && route.params.id !== 'new'" icon="delete" @click="userDeleteDialog = true">Löschen</ButtonComponent>
-            <DialogComponent v-if="user.value" name="Dienstplan löschen" action="Löschen" v-model="userDeleteDialog" @success="deleteUser(user.value.id!)">
+            <DialogComponent v-if="user.value" name="Benutzer löschen" action="Löschen" v-model="userDeleteDialog" @success="deleteUser(user.value.id!)">
                 <p>Bist du sicher den Benutzer zu löschen?</p>
-                <code><samp class="id">{{ user.value?.id?.id }}</samp>&nbsp;{{ user.value?.name }}</code>
+                <swd-card>
+                    {{ user.value.displayname }}
+                    <swd-subtitle>{{ user.value.name }}</swd-subtitle>
+                    <swd-subtitle>{{ user.value.email }}</swd-subtitle>
+                </swd-card>
             </DialogComponent>
             <swd-loading-spinner :loading="saveUser.loading">
                 <ButtonComponent v-if="user.value" icon="done" @click="saveUser.reload()">Speichern</ButtonComponent>
@@ -21,11 +25,16 @@
             <h6>Allgemein</h6>
             <div class="grid-cols-sm-2 grid-cols-1">
                 <InputComponent label="Id" :disabled="$route.params.id !== 'new'" v-model="user.value.id!.id"/>
-                <InputComponent label="Name" v-model="user.value.name" required/>
                 <InputComponent label="Email" type="email" v-model="user.value.email" required/>
-                <InputComponent label="Admin" type="checkbox" v-model="user.value.admin"/>
+                <InputComponent label="Name" v-model="user.value.name" required/>
+                <InputComponent label="Anzeigename" v-model="user.value.displayname" required/>
                 <InputComponent label="Aktiviert" type="checkbox" v-model="user.value.account!.enabled"/>
                 <InputComponent label="Ablauf" type="date" :value="dateToIsoDate(user.value.account!.expiry)" @input="user.value.account!.expiry = isoDateToDate(($event.target as HTMLInputElement).value)"/>
+            </div>
+            
+            <h6>Rolle</h6>
+            <div class="grid-cols-sm-2 grid-cols-1">
+                <InputComponent label="Admin" type="checkbox" v-model="user.value.admin"/>
             </div>
 
             <h6>Zugangsdaten</h6>
