@@ -3,13 +3,13 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="post.value?.title" :resource="post" :back="{ name: 'home' }">
-            <ButtonComponent v-if="post.value" icon="delete" @click="postDeleteDialog = true">Löschen</ButtonComponent>
+            <ButtonComponent v-if="post.value" icon="delete" @click="postDeleteDialog = true"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
             <DialogComponent v-if="post.value" name="Dienstplan löschen" action="Löschen" v-model="postDeleteDialog" @success="deletePost(post.value.id)">
                     <p>Bist du sicher den Post zu löschen?</p>
                     <code>{{ post.value?.title }}</code>
             </DialogComponent>
             <swd-loading-spinner :loading="savePost.loading">
-                <ButtonComponent v-if="post.value" icon="done" @click="savePost.reload()">Speichern</ButtonComponent>
+                <ButtonComponent v-if="post.value" icon="done" @click="savePost.reload()"><span class="only-bigger-sm">Speichern</span></ButtonComponent>
             </swd-loading-spinner>
         </HeadlineComponent>
 

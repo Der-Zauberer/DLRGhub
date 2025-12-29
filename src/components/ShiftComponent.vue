@@ -26,21 +26,17 @@
     </button>
 
     <DialogComponent :name="shift?.name || shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' })" v-model="dialog" v-if="dialog">
-        <div v-for="role of roles" :key="role" class="grid-cols-1 dialog-section">
-            <h5>{{ role }}</h5>
-            <ListInputComponent
-                :list="shift.people.filter(person => person.role === role).map(person => person.name)"
-                @add="data.addShiftPerson(shift.id, { name: $event, role: role })"
-                @delete="data.removeShiftPerson(shift.id, { name: $event, role: role })"
-            />
-        </div>
-        <div class="grid-cols-1 dialog-section">
-            <h5 v-if="roles.length">Sonstige</h5>
-            <ListInputComponent 
-                :list="shift.people.filter(person => !roles.includes(person.role)).map(person => person.name)"
-                @add="data.addShiftPerson(shift.id, { name: $event })"
-                @delete="data.removeShiftPerson(shift.id, { name: $event })"
-            />
+        <div v-for="[index, role] of [ ...roles, undefined ].entries()" :key="role" class="grid-cols-1 dialog-section">
+            <h5>{{ role || 'Sonstige' }}</h5>
+
+            <div class="person-entry" v-for="person of shift.people.filter(person => person.role === role).map(person => person.name)">
+                <button disabled>{{ person }}</button>
+                <ButtonComponent class="right-item" color="ELEMENT" icon="delete" aria-label="Löschen" @click="data.removeShiftPerson(shift.id, role ? { name: person, role: role } : { name: person })"/>
+            </div>
+            <div class="person-input">
+                <input ref="input" @keydown.enter="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))">
+                <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))"/>
+            </div>
         </div>
     </DialogComponent>
 
@@ -61,59 +57,98 @@
     border: solid var(--theme-element-primary-color) var(--theme-border-width);
     border-radius: var(--theme-border-radius);
     --theme-element-spacing: var(--theme-inner-element-spacing);
-}
 
-.shift[selected]  {
-    --theme-element-primary-color: var(--theme-primary-color);
-    --theme-element-secondary-color: var(--theme-secondary-color);
-}
+    &[selected]  {
+        --theme-element-primary-color: var(--theme-primary-color);
+        --theme-element-secondary-color: var(--theme-secondary-color);
+    }
 
-.shift:hover {
-    --theme-element-primary-color: var(--theme-element-secondary-color);
-}
+    &:hover {
+        --theme-element-primary-color: var(--theme-element-secondary-color);
+    }
 
-.shift .shift__descriptor {
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    gap: var(--theme-element-spacing);
-    height: 100%;
-    text-align: center;
-    background: var(--theme-element-primary-color);
-    padding: calc(var(--theme-inner-element-spacing) - var(--theme-border-width));
-}
+    & .shift__descriptor {
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        gap: var(--theme-element-spacing);
+        height: 100%;
+        text-align: center;
+        background: var(--theme-element-primary-color);
+        padding: calc(var(--theme-inner-element-spacing) - var(--theme-border-width));
 
-.shift .shift__descriptor .shift__descriptor__day {
-    font-size: 1.5em;
-}
+        & .shift__descriptor__day {
+            font-size: 1.5em;
+        }
 
-.shift__descriptor__marked {
-    display: block;
-    margin: auto auto 0 auto;
-    color: var(--theme-accent-color) !important;
-    font-size: 2em;
-}
+        & .shift__descriptor__marked {
+            display: block;
+            margin: auto auto 0 auto;
+            color: var(--theme-accent-color) !important;
+            font-size: 2em;
+        }
+    }
 
-.shift .shift__content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--theme-element-spacing);
-    padding: calc(var(--theme-element-spacing) - var(--theme-border-width));
-}
+    & .shift__content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--theme-element-spacing);
+        padding: calc(var(--theme-element-spacing) - var(--theme-border-width));
 
-.shift .shift__content h5 {
-    margin: 0;
-}
+        & h5 {
+            margin: 0;
+        }
 
-.shift .shift__content ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-style: italic;
+        & ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-style: italic;
+        }
+    }
 }
 
 .dialog-section {
-    margin-top: calc(2 * var(--theme-element-spacing))
+    margin-top: calc(2 * var(--theme-element-spacing));
+
+    & .person-entry {
+        display: flex;
+
+        & button:first-child {
+            --theme-primary-color: var(--theme-element-primary-color);
+            --theme-secondary-color: var(--theme-element-primary-color);
+            cursor: pointer;
+            color: white !important;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        & button:last-child {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    }
+
+    & .person-input {
+        display: flex;
+
+        & input {
+            width: 100%;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        & button {
+            --theme-primary-color: var(--theme-element-secondary-color);
+            --theme-secondary-color: inherit;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        &:has(input:focus) button {
+            --theme-primary-color: inherit;
+        }
+    }
 }
 
 </style>
@@ -122,9 +157,9 @@
 import type { Shift } from '@/core/types';
 import { inject, ref, useTemplateRef } from 'vue';
 import DialogComponent from './DialogComponent.vue';
-import ListInputComponent from './ListInputComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { useRoute } from 'vue-router';
+import ButtonComponent from './ButtonComponent.vue';
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
@@ -136,6 +171,12 @@ const dialog = ref<boolean>(false)
 
 if (route.query.shift === props.shift.id.id.toString()) {
     component.value?.scrollIntoView({ behavior: 'smooth' })
+}
+
+function proccessInput(input: HTMLInputElement, callback: (input: string) => unknown) {
+    if (!input.value) return
+    callback(input.value)
+    input.value = ''
 }
 
 </script>

@@ -3,13 +3,13 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="plan.value?.name" :resource="plan" :back="{ name: 'plan', params: { id: $route.params.id } }">
-            <ButtonComponent v-if="plan.value" icon="delete" @click="planDeleteDialog = true">Löschen</ButtonComponent>
+            <ButtonComponent v-if="plan.value" icon="delete" @click="planDeleteDialog = true"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
             <DialogComponent v-if="plan.value" name="Dienstplan löschen" action="Löschen" v-model="planDeleteDialog" @success="deletePlan(plan.value.id)">
                 <p>Bist du sicher den Dienstplan zu löschen?</p>
                 <code>{{ plan.value?.name }}</code>
             </DialogComponent>
             <swd-loading-spinner :loading="savePlan.loading">
-                <ButtonComponent v-if="plan.value" icon="done" @click="savePlan.reload()">Speichern</ButtonComponent>
+                <ButtonComponent v-if="plan.value" icon="done" @click="savePlan.reload()"><span class="only-bigger-sm">Speichern</span></ButtonComponent>
             </swd-loading-spinner>
         </HeadlineComponent>
 
@@ -72,7 +72,6 @@
 <style scoped>
 
 .action-input {
-    font-size: 18px;
     & .grey-color {
         --theme-element-primary-color: var(--theme-secondary-grey-color); 
         --theme-element-secondary-color: var(--theme-tertiary-grey-color);

@@ -18,21 +18,21 @@
     gap: var(--theme-inner-element-spacing);
     justify-content: space-between;
     align-items: end;
-}
 
-.headline h2 {
-    font-size: 1.3em;
-    margin: 0;
-}
+    & h2 {
+        font-size: 1.3em;
+        margin: 0;
+    }
 
-.headline, .headline .headline__tools {
-    display: flex;
-    gap: var(--theme-inner-element-spacing);
-    align-items: center;
-}
+    & .headline__tools {
+        display: flex;
+        gap: var(--theme-inner-element-spacing);
+        align-items: center;
+    }
 
-.headline:not(:first-child) { margin-top: calc(var(--theme-element-spacing) * 2) }
-.headline:not(:last-child) { margin-bottom: var(--theme-element-spacing) }
+    &:not(:first-child) { margin-top: calc(var(--theme-element-spacing) * 2) }
+    &:not(:last-child) { margin-bottom: var(--theme-element-spacing) }
+}
 
 .empty-state, .error-state {
     padding: calc(round(.5em,1px) - var(--theme-border-width)) calc(round(.6em,1px) - var(--theme-border-width));
@@ -45,7 +45,7 @@
     text-align: center;
 }
 
-.error-state{
+.error-state {
     background: var(--theme-error-color);
 }
 
@@ -56,5 +56,5 @@ import type { UnknownResource } from '@/core/resource';
 import { type RouteLocationAsRelativeGeneric } from 'vue-router';
 import ButtonComponent from './ButtonComponent.vue';
 
-defineProps<{ title?: string, subtitle?: string, back?: RouteLocationAsRelativeGeneric, resource?: UnknownResource}>()
+defineProps<{ title?: string, subtitle?: string, back?: RouteLocationAsRelativeGeneric, resource?: UnknownResource, mobile?: 'true' | 'false' | boolean}>()
 </script>

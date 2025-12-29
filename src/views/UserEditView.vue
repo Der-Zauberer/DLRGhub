@@ -3,7 +3,7 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="user.value?.displayname || 'Unbenannt'" :resource="user" :back="{ name: 'user' }">
-            <ButtonComponent v-if="user.value && route.params.id !== 'new'" icon="delete" @click="userDeleteDialog = true">Löschen</ButtonComponent>
+            <ButtonComponent v-if="user.value && route.params.id !== 'new'" icon="delete" @click="userDeleteDialog = true"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
             <DialogComponent v-if="user.value" name="Benutzer löschen" action="Löschen" v-model="userDeleteDialog" @success="deleteUser(user.value.id!)">
                 <p>Bist du sicher den Benutzer zu löschen?</p>
                 <swd-card>
@@ -13,7 +13,7 @@
                 </swd-card>
             </DialogComponent>
             <swd-loading-spinner :loading="saveUser.loading">
-                <ButtonComponent v-if="user.value" icon="done" @click="saveUser.reload()">Speichern</ButtonComponent>
+                <ButtonComponent v-if="user.value" icon="done" @click="saveUser.reload()"><span class="only-bigger-sm">Speichern</span></ButtonComponent>
             </swd-loading-spinner>
         </HeadlineComponent>
 

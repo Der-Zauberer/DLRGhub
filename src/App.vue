@@ -80,17 +80,17 @@ swd-menu a {
     width: 100%;
     padding-bottom: env(safe-area-inset-bottom, 0);
     --theme-menu-height: 50px + env(safe-area-inset-bottom, 0);
-  }
 
-  swd-menu a {
-    align-items: center;
-    text-align: center;
-    flex-direction: column;
-  }
+    & a {
+      align-items: center;
+      text-align: center;
+      flex-direction: column;
 
-  swd-menu a span {
-    line-height: 0.5em;
-    font-size: 0.5em;
+      & span {
+        line-height: 0.5em;
+        font-size: 0.5em;
+      }
+    }
   }
 
   .logo {
