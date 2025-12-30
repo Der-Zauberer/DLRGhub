@@ -8,8 +8,12 @@
     </div>
     <swd-skeleton-shape class="margin-bottom" style="width: 100%; aspect-ratio: 2/1;" v-if="!props.x || !props.y"></swd-skeleton-shape>
     <svg class="margin-bottom" style="width: 100%; aspect-ratio: 2/1;" v-if="props.x && props.y" xmlns="http://www.w3.org/2000/svg" :viewBox="`0 0 400 200`" ref="svg" @mousemove="inspectMouse($event)" @mouseleave="pointer = undefined" @touchmove="inspectTouch($event)" @touchend="pointer = undefined" @touchcancel="pointer = undefined">
-        <path d="M0.5 0.5 H399.5 V199.5 H1 Z" stroke-width="2" stroke="#808080" fill="none"/>
-        <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="2" :stroke="color || 'light-dark(black, white)'" fill="none"/> 
+        <path d="M1 1 H399 V199 H1 Z" stroke-width="2" stroke="#808080" fill="none"/>
+        <template v-for="step of values.ySteps">
+            <text x="5" :y="step.y - 5" font-size="15" fill="#808080">{{ step.label }}</text>
+            <path :d="`M1 ${step.y} H400`" stroke-width="2" stroke="#808080" fill="none"/>
+        </template>
+        <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="2" :stroke="color || 'light-dark(black, white)'" fill="none" stroke-linecap="round" stroke-linejoin="round"/> 
         <path v-if="pointer" :d="`M${pointer.x} 1 V200`" stroke-width="2" stroke="white" fill="none"/>
         <circle v-if="pointer" r="4" :cx="pointer.x" :cy="pointer.y" stroke-width="0" stroke="white" fill="white"/>
     </svg>
@@ -24,13 +28,13 @@ const svg = useTemplateRef('svg')
 const pointer = ref<{ x: string, y: string, value: { x: number | string, y: number } } | undefined>(undefined)
 
 const values = computed(() => {
-    if (!props.x || !props.y) return { height: 0, width: 0, xMin: 0, xMax: 0, yMin: 0, yMax: 0, stepX: 0, stepY: 0, points: [] }
+    if (!props.x || !props.y) return { height: 0, width: 0, xMin: 0, xMax: 0, yMin: 0, yMax: 0, stepX: 0, stepY: 0, points: [], ySteps: [] }
     const [height, width] = [200, 400]
     //const xValues = props.x.map(entry => typeof entry === 'number' ? entry : new Date(entry).valueOf())
     const [xMin, xMax] = /*[Math.min(...xValues), Math.max(...xValues)]*/ [0, props.x.length - 1]
     const [yMin, yMax] = [Math.min(...props.y), Math.max(...props.y)]
     const [stepX, stepY] = [width / (xMax - xMin), height / (yMax - yMin)]
-    let lastX = 0
+    let lastX = undefined
     const points = []
     for (let i = 0; i < props.y.length; i++) {
         const point = { x: Math.floor(i * stepX), y: Math.floor(height - (props.y[i] - yMin) * stepY) }
@@ -39,7 +43,17 @@ const values = computed(() => {
             lastX = point.x
         }
     }
-    return { height, width, xMin, xMax, yMin, yMax, stepX, stepY, points }
+    const STEPS = [2, 2, 5, 1, 1, 1, 2, 2, 4, 4]
+    const difference = yMax - yMin
+    let exponent = yMin === 0 ? 0 : Math.floor(Math.log10(Math.abs(yMin)))
+    const mostSignificantDigit = Math.round(difference / Math.pow(10, exponent))
+    if (mostSignificantDigit <= 2) exponent--;
+    const ySteps = []
+    for (let i = Math.round(yMin / Math.pow(10, exponent) / STEPS[mostSignificantDigit]) / (1 / STEPS[mostSignificantDigit]); i < Math.round(yMax / Math.pow(10, exponent)); i += STEPS[mostSignificantDigit]) {
+        const y = i * Math.pow(10, exponent)
+        ySteps.push({ y: Math.floor(height - (y - yMin) * stepY), label: (props.yOut || (value => `${value}`))(y) })
+    }
+    return { height, width, xMin, xMax, yMin, yMax, stepX, stepY, points, ySteps }
 })
 
 function inspectMouse(event: MouseEvent) {
