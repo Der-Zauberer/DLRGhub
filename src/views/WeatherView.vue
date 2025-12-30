@@ -30,7 +30,7 @@
 		</swd-card>
 
 		<swd-card>
-			<PlotComponent title="Wassertemperatur" subtitle="Neuhausen Flurlingerbrücke" color="var(--theme-accent-color)" :x="water.value?.time" :y="water.value?.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
+			<PlotComponent title="Wassertemperatur" subtitle="Neuhausen Flurlingerbrücke" color="light-dark(var(--theme-primary-color), var(--theme-accent-color))" :x="water.value?.time" :y="water.value?.temperature" :x-out="mapLocalDate" :y-out="(value) => value.toFixed(1) + '°'"/>
 			<swd-subtitle class="grey-text">
 				<div>Quelle: <a :href="water.value?.source.url" target="_blank">{{ water.value?.source.name }}</a></div>
 				<div>Zuletzt aktualisiert: {{ mapLocalDate(water.value?.source.updated || 0) }}</div>
@@ -58,8 +58,8 @@
 		justify-content: space-between;
 		box-sizing: border-box;
 		width: 100%;
-		color: black;
-		background-color: var(--theme-accent-color);
+		color: light-dark(white, black);
+		background-color: light-dark(var(--theme-primary-color), var(--theme-accent-color));
 		border-radius: var(--theme-border-radius);
 		padding: 0 round(0.3em, 1px);
 	}

@@ -15,6 +15,7 @@ swd-card h3, swd-card-outline h3 { font-size: 1.3em; }
 .primary-color { background: #e30613 !important }
 .secondary-color { background: #a5010c !important }
 .accent-color { background: #ffed00 !important }
+.grey-color { color: var(--theme-text-color) !important }
 
 .primary-text { color: #e30613 !important }
 .secondary-text { color: #a5010c !important }
