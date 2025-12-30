@@ -84,7 +84,7 @@
         & .shift__descriptor__marked {
             display: block;
             margin: auto auto 0 auto;
-            color: var(--theme-accent-color) !important;
+            color: light-dark(var(--theme-primary-color), var(--theme-accent-color)) !important;
             font-size: 2em;
         }
     }
