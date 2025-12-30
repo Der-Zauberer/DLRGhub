@@ -10,8 +10,8 @@
     <svg class="margin-bottom" style="width: 100%; aspect-ratio: 2/1;" v-if="props.x && props.y" xmlns="http://www.w3.org/2000/svg" :viewBox="`0 0 400 200`" ref="svg" @mousemove="inspectMouse($event)" @mouseleave="pointer = undefined" @touchmove="inspectTouch($event)" @touchend="pointer = undefined" @touchcancel="pointer = undefined">
         <path d="M1 1 H399 V199 H1 Z" stroke-width="2" stroke="#808080" fill="none"/>
         <template v-for="step of values.ySteps">
-            <text x="5" :y="step.y - 5" font-size="15" fill="#808080">{{ step.label }}</text>
-            <path :d="`M1 ${step.y} H400`" stroke-width="2" stroke="#808080" fill="none"/>
+            <text x="5" :y="step.y - 5" font-size="14" fill="#808080">{{ step.label }}</text>
+            <path :d="`M1 ${step.y} H400`" stroke-width="1" stroke="#808080" fill="none"/>
         </template>
         <path :d="`M${values.points[0].x} ${values.points[0].y} ${values.points.map(element => `L${element.x} ${element.y}`).join(' ')}`" stroke-width="2" :stroke="color || 'light-dark(black, white)'" fill="none" stroke-linecap="round" stroke-linejoin="round"/> 
         <path v-if="pointer" :d="`M${pointer.x} 1 V200`" stroke-width="2" stroke="white" fill="none"/>
