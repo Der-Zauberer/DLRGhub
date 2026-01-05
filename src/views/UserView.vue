@@ -6,8 +6,9 @@
             <ButtonComponent :to="{ name: 'user-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" aria-label="add"/>
         </HeadlineComponent>
 
+        <OfflineComponent v-if="parseCustomSurrealDbError(user.error).key === 'error.connection'" :loading="user.loading" @reload="user.reload()"/>
         <dlrg-empty v-if="user?.status === 'EMPTY'">Keine Benutzer gefunden!</dlrg-empty>
-        <dlrg-error v-if="user?.status === 'ERROR'">{{ user?.error }}</dlrg-error>
+        <dlrg-error v-if="(user?.status === 'ERROR' && parseCustomSurrealDbError(user.error).key !== 'error.connection')">{{ user?.error }}</dlrg-error>
         <swd-loading-spinner v-if="user?.status === 'LOADING' && !user?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <div class="grid-cols-1">
@@ -28,13 +29,14 @@
 </template>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue';
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import { resource } from '@/core/resource';
-import type { User } from '@/core/types';
-import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service';
-import { inject } from 'vue';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
+import { resource } from '@/core/resource'
+import type { User } from '@/core/types'
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { inject } from 'vue'
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 

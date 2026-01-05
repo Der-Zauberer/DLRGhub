@@ -13,8 +13,11 @@
             </swd-loading-spinner>
         </HeadlineComponent>
 
-        <form v-if="post.value" ref="form" class="grid-cols-1">
+        <OfflineComponent v-if="parseCustomSurrealDbError(post.error).key === 'error.connection'" :loading="post.loading" @reload="post.reload()"/>
+        <dlrg-error v-if="(post?.status === 'ERROR' && parseCustomSurrealDbError(post.error).key !== 'error.connection') || savePost?.status === 'ERROR'">{{ post?.error || savePost?.error }}</dlrg-error>
+        <swd-loading-spinner v-if="post?.status === 'LOADING' && !post?.value" class="width-100" loading="true"></swd-loading-spinner>
 
+        <form v-if="post.value" ref="form" class="grid-cols-1">
             <InputComponent label="Title" v-model="post.value.title" required/>
             <InputComponent label="Author" v-model="post.value.author" required/>
 
@@ -22,7 +25,6 @@
                 <label for="message">Message</label>
                 <textarea id="message" rows="15" style="height: initial;" v-model="post.value.message" required></textarea>
             </swd-input>
-
         </form>
 
     </div>
@@ -30,16 +32,17 @@
 </template>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import DialogComponent from '@/components/DialogComponent.vue';
-import InputComponent from '@/components/InputComponent.vue';
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import DialogComponent from '@/components/DialogComponent.vue'
+import InputComponent from '@/components/InputComponent.vue'
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource';
 import type { Post } from '@/core/types';
-import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { RecordId } from 'surrealdb';
-import { inject, ref, useTemplateRef } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { RecordId } from 'surrealdb'
+import { inject, ref, useTemplateRef } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()

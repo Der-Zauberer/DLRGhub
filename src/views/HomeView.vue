@@ -21,9 +21,9 @@
 			</div>
 			<div class="grid-span-md-2 grid-span-1">
 
+				<OfflineComponent v-if="parseCustomSurrealDbError(posts.error).key === 'error.connection'" :loading="posts.loading" @reload="posts.reload()"/>
 				<dlrg-empty v-if="posts?.status === 'EMPTY'">Keine Posts gefunden!</dlrg-empty>
-				<dlrg-empty v-if="posts?.status === 'ERROR' && surreal.parseCustomSurrealDbError('error.connection')"><swd-icon class="offline-icon"></swd-icon> Du bist aktuell offline!</dlrg-empty>
-				<dlrg-error v-if="posts?.status === 'ERROR' && !surreal.parseCustomSurrealDbError('error.connection')">{{ posts?.error }}</dlrg-error>				
+				<dlrg-error v-if="posts?.status === 'ERROR' && parseCustomSurrealDbError(posts.error).key !== 'error.connection'">{{ posts?.error }}</dlrg-error>				
 				<swd-loading-spinner v-if="posts?.status === 'LOADING' && !posts?.value" class="width-100" loading="true"></swd-loading-spinner>
 
 				<swd-card v-for="post in posts.value">
@@ -41,13 +41,14 @@
 </template>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import WeatherComponent from '@/components/WeatherComponent.vue';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
+import WeatherComponent from '@/components/WeatherComponent.vue'
 import { resource } from '@/core/resource';
-import type { BeforeInstallPromptEvent, Post} from '@/core/types';
-import { DATA_SERVICE, DataService } from '@/services/data.service';
-import surrealdbService, { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service';
+import type { BeforeInstallPromptEvent, Post} from '@/core/types'
+import { DATA_SERVICE, DataService } from '@/services/data.service'
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { inject } from 'vue';
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService

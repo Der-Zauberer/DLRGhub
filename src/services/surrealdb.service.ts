@@ -1,8 +1,7 @@
-import type { User } from '@/core/types';
-import { ConnectionStatus, ResponseError, Surreal, SurrealDbError, VersionRetrievalFailure, type ConnectOptions, type Token } from 'surrealdb';
-import { ref, type App, type ComputedRef, type Ref } from 'vue';
-
-import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router';
+import type { User } from '@/core/types'
+import { ConnectionStatus, ResponseError, Surreal, SurrealDbError, VersionRetrievalFailure, type ConnectOptions, type Token } from 'surrealdb'
+import { ref, type App, type ComputedRef, type Ref } from 'vue'
+import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 
 export const config: SurrealDbConfig = {
     default: {
@@ -142,7 +141,7 @@ export class SurrealDbService extends Surreal {
         return response.then(() => this.authenticate().catch(() => true))
     }
 
-    async autoConnect(configuration: SurrealDbProfile = profiles.default, ignoreAuthentication?: boolean) {
+    async autoConnect(configuration: SurrealDbProfile = profiles.default, ignoreAuthentication?: boolean): Promise<true> {
         profiles.default = configuration
         if (!profiles.profiles.find(profile => profile.name === configuration.name)) profiles.profiles.push(configuration)
         cookies.set(PROFILE_COOKIE, JSON.stringify(profiles))
@@ -231,29 +230,6 @@ export class SurrealDbService extends Surreal {
         return Object.assign(profiles)
     }
 
-    parseCustomSurrealDbError(exception: unknown): { key: string, success: boolean } {
-        const error = exception as SurrealDbError
-        if (error?.name === 'ResponseError' && error.message) {
-            const [prefix, message] = error.message.split('There was a problem with the database: An error occurred: ')
-            const key = message ? message.split(':')[0] : undefined
-            if (key) {
-                return { key, success: true }
-            } else {
-                return { key: prefix, success: false }
-            }
-        } else if (error?.name === 'VersionRetrievalFailure' || error?.name === 'ConnectionUnavailable') {
-            return { key: 'error.connection', success: true }
-        }
-        return { key: error.toString(), success: false }
-    }
-
-    generateGUID(timebased?: boolean) {
-        const chars = '0123456789abcdefghijklmnopqrstuvwxyz'
-        let guid = timebased ? Math.floor(Date.now() / 1000).toString(36) : ''
-        for (let i = guid.length; i < 20; i++) guid += chars[Math.floor(Math.random() * chars.length)]
-        return guid
-    }
-
     private setLogoutTimeout() {
         if (!globalToken || !globalToken.payload?.exp) return
         const timeout = setTimeout(() => this.invalidate(), Math.max((globalToken?.payload?.exp || 0) * 1000 - Date.now(), 0))
@@ -322,6 +298,26 @@ export function auth(condition: (user: User) => boolean = () => true): Navigatio
             next()
         }
     }
+}
+
+export function parseCustomSurrealDbError(exception: Error | undefined): { key: string, success: boolean } {
+    if (!exception) return { key: '', success: false }
+    const error = exception as SurrealDbError
+    if (error?.name === 'ResponseError' && error.message) {
+        const [prefix, message] = error.message.split('There was a problem with the database: An error occurred: ')
+        const key = message ? message.split(':')[0] : undefined
+        return key ? { key, success: true } : { key: prefix, success: false }
+    } else if (error?.name === 'VersionRetrievalFailure' || error?.name === 'ConnectionUnavailable') {
+        return { key: 'error.connection', success: true }
+    }
+    return { key: error.toString(), success: false }
+}
+
+export function generateGUID(timebased?: boolean) {
+    const chars = '0123456789abcdefghijklmnopqrstuvwxyz'
+    let guid = timebased ? Math.floor(Date.now() / 1000).toString(36) : ''
+    for (let i = guid.length; i < 20; i++) guid += chars[Math.floor(Math.random() * chars.length)]
+    return guid
 }
 
 export const SURREAL_DB_SERVICE = 'surrealDbService';

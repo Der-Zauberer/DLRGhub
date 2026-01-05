@@ -2,6 +2,8 @@
 
     <div class="container-xl">
 
+        <OfflineComponent v-if="parseCustomSurrealDbError(plans.error || shifts.error).key === 'error.connection'" :loading="plans.loading || shifts.loading" @reload="(plans.reload(), shifts.reload())"/>
+
         <HeadlineComponent title="Dienstpläne" :resource="plans" type="Dienstpläne">
             <ButtonComponent icon="add" color="ELEMENT" :aria-label="plans.status!=='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined" @click="planCreateDialog = true">{{ plans.status==='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined }}</ButtonComponent>
             <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" :filter="createPlan">
@@ -12,7 +14,7 @@
         </HeadlineComponent>
 
         <dlrg-empty v-if="plans?.status === 'EMPTY'">Keine Dienstpläne gefunden!</dlrg-empty>
-        <dlrg-error v-if="plans?.status === 'ERROR'">{{ plans?.error }}</dlrg-error>
+        <dlrg-error v-if="plans?.status === 'ERROR' && parseCustomSurrealDbError(plans.error).key !== 'error.connection'">{{ plans?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plans?.status === 'LOADING' && !plans?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <ul class="button-grid grid-cols-md-2 grid-cols-1">
@@ -26,7 +28,7 @@
         </HeadlineComponent>
 
         <dlrg-empty v-if="shifts?.status === 'EMPTY'">Keine Schichten gefunden!</dlrg-empty>
-        <dlrg-error v-if="shifts?.status === 'ERROR'">{{ shifts?.error }}</dlrg-error>
+        <dlrg-error v-if="shifts?.status === 'ERROR' && parseCustomSurrealDbError(plans.error).key !== 'error.connection'">{{ shifts?.error }}</dlrg-error>
         <swd-loading-spinner v-if="shifts?.status === 'LOADING' && !shifts?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <ul class="grid-cols-md-2 grid-cols-1">
@@ -40,14 +42,16 @@
 </template>
 
 <script setup lang="ts">
-import AppointmentComponent from '@/components/AppointmentComponent.vue';
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue';
-import DialogComponent from '@/components/DialogComponent.vue';
+import AppointmentComponent from '@/components/AppointmentComponent.vue'
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
+import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
-import InputComponent from '@/components/InputComponent.vue';
-import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { inject, onBeforeUnmount, reactive, ref } from 'vue';
+import InputComponent from '@/components/InputComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
+import { DATA_SERVICE, DataService } from '@/services/data.service'
+import { parseCustomSurrealDbError } from '@/services/surrealdb.service'
+import { inject, onBeforeUnmount, reactive, ref } from 'vue'
 
 const data = inject(DATA_SERVICE) as DataService
 

@@ -1,9 +1,9 @@
-import type { Plan, PlanSchedulesShift, ShiftScheduledByPlan } from "@/core/types";
-import { RecordId, surql } from "surrealdb";
-import { ref, watch, type App } from "vue";
-import type { SurrealDbService } from "./surrealdb.service";
-import { resource, type Resource } from "@/core/resource";
-import type { WaterTemperature, Weather, WeatherService } from "./weather.service";
+import type { Plan, PlanSchedulesShift, ShiftScheduledByPlan } from "@/core/types"
+import { RecordId, surql, Uuid } from "surrealdb"
+import { ref, watch, type App } from "vue"
+import type { SurrealDbService } from "./surrealdb.service"
+import { resource, type Resource } from "@/core/resource"
+import type { WaterTemperature, Weather, WeatherService } from "./weather.service"
 
 export class DataService {
 
@@ -13,16 +13,24 @@ export class DataService {
     private readonly PROFILE_NAME = 'profile_name'
 
     public readonly online = ref<boolean>(navigator.onLine)
+    private readonly onlineEvents = new Set<() => unknown>()
     private readonly cache = new CacheDB('cache')
     public readonly profileName = ref<string>('')
 
     constructor(private surrealDbService: SurrealDbService, private weatherService: WeatherService) {
-        window.addEventListener(this.ONLINE_EVENT,  () => (this.online.value = true, surrealDbService.autoConnect()))
+        window.addEventListener(this.ONLINE_EVENT,  () => (this.online.value = true, this.reconnect()))
         window.addEventListener(this.OFFLINE_EVENT, () => (this.online.value = false, surrealDbService.close()))
         const name = localStorage.getItem(this.PROFILE_NAME)
         if (name && name.length !== 0) this.profileName.value = name
         watch(this.profileName, () => {
             localStorage.setItem(this.PROFILE_NAME, this.profileName.value)
+        })
+    }
+
+    async reconnect(): Promise<true> {
+        return this.surrealDbService.autoConnect().then((result) => {
+            this.onlineEvents.forEach(event => event())
+            return result
         })
     }
 
@@ -110,21 +118,34 @@ export class DataService {
     }
 
     private createCachedResource<T>(cache: Promise<T>, query: () => Promise<T>, kill?: Promise<void>, trackedTables?: string[]): Resource<T, unknown> {
+        let offline = true
+        const tables: Promise<Uuid>[] = []
         const res = resource({
             initializer: async () => {
                 const result = await cache
                 if (result) setTimeout(() => res.reload(), 0)
                 return result || query()
             },
-            loader: () => query()
+            loader: () => query().then((result) => (setupLiveTables(), result))
         })
+        const setupLiveTables = () => {
+            if (offline && kill && trackedTables) {
+                console.log('Table Init')
+                tables.length = 0
+                tables.push(...trackedTables?.map(table => this.surrealDbService.live(table, (action, _) => {
+                    if (action === 'CLOSE') offline = true
+                    res.reload()
+                })))
+                offline = false
+            }
+        }
         if (kill) {
-            const tables = trackedTables?.map(table => this.surrealDbService.live(table, () => res.reload()))
+            setupLiveTables()
             const onlineEvent = () => res.reload()
-            window.addEventListener(this.ONLINE_EVENT, onlineEvent)
+            this.onlineEvents.add(onlineEvent)
             kill.then(() => {
-                tables?.forEach(table => table.then((id) => this.surrealDbService.kill(id)))
-                window.removeEventListener(this.ONLINE_EVENT, onlineEvent)
+                tables.forEach(table => table.then((id) => this.surrealDbService.kill(id)))
+                this.onlineEvents.delete(onlineEvent)
             })
         }
         return res

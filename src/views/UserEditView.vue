@@ -17,7 +17,8 @@
             </swd-loading-spinner>
         </HeadlineComponent>
 
-        <dlrg-error v-if="user?.status === 'ERROR' || saveUser?.status === 'ERROR'">{{ user?.error || saveUser?.error }}</dlrg-error>
+        <OfflineComponent v-if="parseCustomSurrealDbError(user.error).key === 'error.connection'" :loading="user.loading" @reload="user.reload()"/>
+        <dlrg-error v-if="(user?.status === 'ERROR' && parseCustomSurrealDbError(user.error).key !== 'error.connection') || saveUser?.status === 'ERROR'">{{ user?.error || saveUser?.error }}</dlrg-error>
         <swd-loading-spinner v-if="user?.status === 'LOADING' && !user?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <form v-if="user.value" ref="form">
@@ -51,16 +52,17 @@
 </template>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import DialogComponent from '@/components/DialogComponent.vue';
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import InputComponent from '@/components/InputComponent.vue';
-import { resource } from '@/core/resource';
-import type { User } from '@/core/types';
-import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service';
-import { RecordId, surql, Table } from 'surrealdb';
-import { inject, ref, useTemplateRef } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import DialogComponent from '@/components/DialogComponent.vue'
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import InputComponent from '@/components/InputComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
+import { resource } from '@/core/resource'
+import type { User } from '@/core/types'
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { RecordId, surql, Table } from 'surrealdb'
+import { inject, ref, useTemplateRef } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()

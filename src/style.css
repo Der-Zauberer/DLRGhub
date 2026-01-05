@@ -27,6 +27,7 @@ swd-card h3, swd-card-outline h3 { font-size: 1.3em; }
     }
 }
 
+swd-icon.reload-icon { mask-image: url('data:image/svg+xml,<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M17 9 Q16.5 16.5 9 17 Q1.5 16.5 1 9 Q1.5 1.5 9 1 Q14 1 16.6 5 M17 0 V5 H12" stroke-width="2" stroke="black" fill="none"/></svg>') }
 swd-icon.offline-icon { mask-image: url('data:image/svg+xml;utf8,<svg width="18" height="18" stroke="white" xmlns="http://www.w3.org/2000/svg"><path d="M14 15 H6 Q1.3 14.7 1 10 Q1.3 5.3 6 5 Q10.7 5.3 11 10 V12 Q11.2 9.2 14 9 Q16.8 9.2 17 12 Q16.8 14.8 14 15 Z M1 17 L17 1" stroke-width="2" stroke="black" fill="none"/></svg>') }
 swd-icon.weather-icon { mask-image: url('data:image/svg+xml;utf8,<svg width="18" height="18" stroke="white" xmlns="http://www.w3.org/2000/svg"><path d="M14 15 H6 Q1.3 14.7 1 10 Q1.3 5.3 6 5 Q10.7 5.3 11 10 V12 Q11.2 9.2 14 9 Q16.8 9.2 17 12 Q16.8 14.8 14 15 Z M14 9 Q16 9 16 6 Q15.8 2.2 12 2 Q8.2 2.2 8 6" stroke-width="2" stroke="black" fill="none"/></svg>') }
 swd-icon.water-icon { mask-image: url('data:image/svg+xml,<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M1 4 Q4 1 7 4 T13 4 T19 4 M1 9 Q4 6 7 9 T13 9 T19 9 M1 14 Q4 11 7 14 T13 14 T19 14" stroke-width="2" stroke="black" fill="none"/></svg>') }

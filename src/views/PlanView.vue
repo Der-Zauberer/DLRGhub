@@ -6,8 +6,9 @@
             <ButtonComponent :to="{ name: 'plan-edit', params: { id: $route.params.id } }" color="ELEMENT" icon="settings" aria-label="Schicht bearbeiten"/>
         </HeadlineComponent>
 
+        <OfflineComponent v-if="parseCustomSurrealDbError(plan.error).key === 'error.connection'" :loading="plan.loading" @reload="plan.reload()"/>
         <dlrg-empty v-if="plan?.status === 'EMPTY' || !plan.value?.shifts.length">Keine Schichten gefunden!</dlrg-empty>
-        <dlrg-error v-if="plan?.status === 'ERROR'">{{ plan?.error }}</dlrg-error>
+        <dlrg-error v-if="plan?.status === 'ERROR' && parseCustomSurrealDbError(plan.error).key !== 'error.connection'">{{ plan?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="currentShifts?.length">
@@ -52,13 +53,15 @@
 </style>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import ShiftComponent from '@/components/ShiftComponent.vue';
-import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { RecordId } from 'surrealdb';
-import { computed, inject, onBeforeUnmount } from 'vue';
-import { useRoute } from 'vue-router';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
+import ShiftComponent from '@/components/ShiftComponent.vue'
+import { DATA_SERVICE, DataService } from '@/services/data.service'
+import { parseCustomSurrealDbError } from '@/services/surrealdb.service'
+import { RecordId } from 'surrealdb'
+import { computed, inject, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService

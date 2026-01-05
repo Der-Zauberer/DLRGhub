@@ -13,7 +13,8 @@
             </swd-loading-spinner>
         </HeadlineComponent>
 
-        <dlrg-error v-if="plan?.status === 'ERROR' || savePlan?.status === 'ERROR'">{{ plan?.error || savePlan?.error }}</dlrg-error>
+        <OfflineComponent v-if="parseCustomSurrealDbError(plan.error).key === 'error.connection'" :loading="plan.loading" @reload="plan.reload()"/>
+        <dlrg-error v-if="(plan?.status === 'ERROR' && parseCustomSurrealDbError(plan.error).key !== 'error.connection') || savePlan?.status === 'ERROR'">{{ plan?.error || savePlan?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <form v-if="plan.value" ref="form">
@@ -154,13 +155,14 @@
 </style>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
+import ButtonComponent from '@/components/ButtonComponent.vue'
 import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { PlanSchedulesShift, Shift } from '@/core/types'
-import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { DATA_SERVICE, DataService, dateToISODate, isoDateToDate } from '@/services/data.service'
 import { RecordId, surql } from 'surrealdb'
 import { inject, ref, toRaw, useTemplateRef } from 'vue'
