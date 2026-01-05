@@ -10,6 +10,8 @@
 
             <slot></slot>
 
+            <p v-if="error" class="red-text">{{ error }}</p>
+
             <div class="grid-cols-2" v-if="action">
                 <button class="grey-color" @click="open = false">Cancel</button>
                 <button @click="success()">{{ action }}</button>
@@ -21,17 +23,18 @@
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef } from 'vue'
-import HeadlineComponent from './HeadlineComponent.vue';
-import ButtonComponent from './ButtonComponent.vue';
+import { ref, useTemplateRef } from 'vue'
+import ButtonComponent from './ButtonComponent.vue'
 
 const slotRef = useTemplateRef('slot')
 const open = defineModel<boolean>()
+const error = ref<Error | undefined>()
 
 const props = defineProps<{ name: string, action?: string, filter?: () => boolean | Promise<boolean> }>()
 const emits = defineEmits<{ ( e: 'success', value: void ): Promise<void> }>()
 
 async function success() {
+    error.value = undefined
     if (slotRef.value) {
         const form = (slotRef.value as HTMLElement).querySelector('form') as HTMLFormElement | undefined
         if (form && !form.checkValidity()) {
@@ -39,9 +42,14 @@ async function success() {
             return
         }
     }
-    const filter = await Promise.resolve(props.filter?.() || true)
-    if (!filter) return
-    open.value = false
-    emits('success')
+    try {
+        const filter = await Promise.resolve(props.filter?.() || true)
+        if (!filter) return
+        open.value = false
+        emits('success')
+    } catch(err) {
+        error.value = err as Error
+    }
+    
 }
 </script>

@@ -130,7 +130,6 @@ export class DataService {
         })
         const setupLiveTables = () => {
             if (offline && kill && trackedTables) {
-                console.log('Table Init')
                 tables.length = 0
                 tables.push(...trackedTables?.map(table => this.surrealDbService.live(table, (action, _) => {
                     if (action === 'CLOSE') offline = true
