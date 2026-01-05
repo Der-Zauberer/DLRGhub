@@ -81,9 +81,9 @@ button.link-button:hover, button.link-button:focus, button.link-button:active {
 </style>
 
 <script setup lang="ts">
-import InputComponent from '@/components/InputComponent.vue';
-import { config, SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service';
-import { inject, reactive, ref } from 'vue';
+import InputComponent from '@/components/InputComponent.vue'
+import { config, parseCustomSurrealDbError, SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
+import { inject, reactive, ref } from 'vue'
 
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profiles = surrealdb.getProfile()
@@ -101,8 +101,7 @@ async function login() {
         await surrealdb.redirectPostLogin()
         error.value = undefined
     } catch (exception) {
-        console.log(exception)
-        error.value = surrealdb.parseCustomSurrealDbError(exception).key
+        error.value = parseCustomSurrealDbError(exception as Error).key
     } finally {
         loading.value = false
     }
