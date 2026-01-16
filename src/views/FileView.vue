@@ -3,85 +3,104 @@
     <div v-if="!route.params.id" class="container-xl">
 
         <HeadlineComponent title="Dateien">
-            <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen"></ButtonComponent>
-            <ButtonComponent color="ELEMENT" icon="upload" aria-label="Hochladen" @click="upload()"></ButtonComponent>
+            <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen" @click="createDialog = true"/>
+            <ButtonComponent color="ELEMENT" icon="upload" aria-label="Hochladen" @click="uploadFile()"/>
+            <DialogComponent name="Neue Datei" action="Speichern" v-model="createDialog" :filter="createFile">
+                <form class="grid-cols-1">
+                    <InputComponent label="Name" v-model="fileForm.name" required/>
+                    <swd-dropdown>
+                        <InputComponent label="Type" v-model="fileForm.type" required readonly/>
+                        <swd-dropdown-content>
+                            <swd-selection>
+                                <a v-for="type of ['text/plain', 'text/html']">{{ type }}</a>
+                            </swd-selection>
+                        </swd-dropdown-content>
+                    </swd-dropdown>
+                </form>
+            </DialogComponent>
         </HeadlineComponent>
-
 
         <swd-loading-spinner v-if="files.loading" :loading="file.loading" class="width-100"></swd-loading-spinner>
         <div class="grid-cols-1">
-            <template v-for="file in files.value" :key="file.id">
-                <ButtonLinkComponent v-if="!file.type.startsWith('application/')" :to="{ name: 'file', params: { id: file.id.id.toString() } }">{{ file.name }}</ButtonLinkComponent>
-                <ButtonLinkComponent v-if="file.type.startsWith('application/')" @click="open(file)">{{ file.name }}</ButtonLinkComponent>
+            <template v-for="file in files.value">
+                <ButtonLinkComponent :to="{ name: 'file', params: { id: file.id.id.toString() } }">{{ file.name }}</ButtonLinkComponent>
             </template>
         </div>
 
     </div>
 
     <div v-if="route.params.id" class="container-xl">
-        <HeadlineComponent :back="{ name: 'files' }" :title="file.value?.name"></HeadlineComponent>
+        <HeadlineComponent :back="{ name: 'files' }" :title="file.value?.name">
+            <ButtonComponent v-if="file.value && !['image', 'video', 'audio'].includes(file.value.type.split('/')[0])" :color="editableContent ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (editableContent ? 'done': 'pen')" :aria-label="editableContent ? 'save' : 'edit'" @click="editableContent ? saveFile.reload() : editableContent = true"/>
+            <ButtonComponent v-if="file.value" color="ELEMENT" icon="download" aria-label="download" @click="downloadFile(file.value)"/>
+            <ButtonComponent v-if="file.value" color="ELEMENT" icon="delete" aria-label="delete" @click="postDeleteDialog = true"/>
+            <DialogComponent v-if="file.value" name="Datei löschen" action="Löschen" v-model="postDeleteDialog" @success="deleteFile(file.value.id)">
+                <p>Bist du sicher die Datei zu löschen?</p>
+                <code>{{ file.value.name }}</code>
+            </DialogComponent>
+        </HeadlineComponent>
 
         <swd-loading-spinner :loading="file.loading" class="width-100"></swd-loading-spinner>
-        <div class="red-text" v-if="file.error">{{ file.error }}</div>
-        <div v-if="file.value && FILE_TYPES[file.value.type]">{{ FILE_TYPES[file.value.type].decode(file.value.content) }}</div>
-        <embed v-if="file.value && !FILE_TYPES[file.value.type]" :src="fileToDataUrl(file.value)" :type="file.value?.type"/>
-    </div>
+        <div class="red-text" v-if="file.error || saveFile.error">{{ file.error || saveFile.error }}</div>
 
-    <div v-if="!route.params.id" class="container-xl">
-        <form class="grid-cols-1" @submit.prevent="createOrEditFile()">
-            <InputComponent label="Id" v-model="fileForm.id.id" required/>
-            <InputComponent label="Name" v-model="fileForm.name" required/>
-            <swd-dropdown>
-                <InputComponent label="Type" v-model="fileForm.type" required readonly/>
-                <swd-dropdown-content>
-                    <swd-selection>
-                        <a v-for="type of Object.keys(FILE_TYPES)">{{ type }}</a>
-                    </swd-selection>
-                </swd-dropdown-content>
-            </swd-dropdown>
-            <swd-input>
-                <label for="content">Content</label>
-                <textarea id="content" required :value="fileForm.content ? FILE_TYPES[fileForm.type || 'text/plain'].decode(fileForm.content) : ''" @input="fileForm.content = FILE_TYPES[fileForm.type || 'text/plain'].encode((($event.target) as HTMLInputElement).value)"></textarea>
-            </swd-input>
-            <input type="submit" value="Save">
-        </form>
+        <img v-if="file.value?.type.startsWith('image/')" :src="fileToDataUrl(file.value)" class="media-content">
+        <video v-if="file.value?.type.startsWith('video/')" controls class="media-content">
+            <source :src="fileToDataUrl(file.value)" :type="file.value.type">
+        </video>
+        <audio v-if="file.value?.type.startsWith('audio/')" controls class="media-content">
+            <source :src="fileToDataUrl(file.value)" :type="file.value.type">
+        </audio>
+        
+        <embed v-if="file.value?.type === 'application/pdf'" :src="fileToDataUrl(file.value)" :type="file.value?.type" class="pdf-content"/>
+        <div v-if="file.value?.type === 'text/html'" v-html="decodeBinary(file.value.content)" :contenteditable="editableContent" @input="editContent = ($event.target as HTMLDivElement).innerHTML"></div>
+        <div v-if="file.value && !['image', 'video', 'audio'].includes(file.value.type.split('/')[0]) && file.value?.type !== 'application/pdf' && file.value?.type !== 'text/html'" class="text-content" :contenteditable="editableContent" @input="editContent = ($event.target as HTMLDivElement).innerHTML">{{ decodeBinary(file.value.content) }}</div>
     </div>
 
 </template>
 
+<style scoped>
+
+.media-content {
+    display: block;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.pdf-content {
+    display: block;
+    width: 100%;
+    height: calc(100vh - var(--theme-menu-height) - (5 * var(--theme-element-spacing)) - round(2.5em, 1px));
+}
+
+.text-content {
+    min-height: 3em;
+    white-space: pre-wrap;
+}
+
+</style>
+
 <script lang="ts" setup>
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue';
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import InputComponent from '@/components/InputComponent.vue';
-import { resource } from '@/core/resource';
-import type { BinaryFile } from '@/core/types';
-import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service';
-import { RecordId, surql, Table } from 'surrealdb';
-import { inject } from 'vue';
-import { useRoute } from 'vue-router';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
+import DialogComponent from '@/components/DialogComponent.vue'
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import InputComponent from '@/components/InputComponent.vue'
+import { resource } from '@/core/resource'
+import type { BinaryFile } from '@/core/types'
+import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
+import { RecordId, surql, Table } from 'surrealdb'
+import { inject, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
-const FILE_TYPES: Record<string, {
-    name: string
-    encode: (content: string) => ArrayBuffer
-    decode: (bytes: ArrayBuffer) => string
-}> = {
-    'text/plain': {
-        name: 'Text',
-        encode: (content: string) => new TextEncoder().encode(content),
-        decode: (bytes) => new TextDecoder().decode(bytes)
-    }
-}
+const createDialog = ref<boolean>(false)
+const postDeleteDialog = ref<boolean>(false)
+const editableContent = ref<boolean>(false)
 
-const fileForm : Partial<BinaryFile> & { id: RecordId<'file'> } = {
-    id: new RecordId('file', ''),
-    name: '',
-    type: '',
-    content: new ArrayBuffer()
-}
+const fileForm: { name: string, type: string } = { name: '', type: '' }
 
 const files = resource({
     parameter: { route },
@@ -90,24 +109,56 @@ const files = resource({
 
 const file = resource({
     parameter: { route },
-    loader: () => route.params.id ? surrealdb.select<BinaryFile>(new RecordId('file', route.params.id)) : undefined
+    loader: () => {
+        editableContent.value = false
+        return route.params.id ? surrealdb.select<BinaryFile>(new RecordId('file', route.params.id)) : undefined
+    }
 })
 
-async function createOrEditFile() {
-    await surrealdb.upsert(fileForm.id as RecordId, fileForm)
-    files.reload()
+let editContent: string | undefined = undefined
+const saveFile = resource({
+    loader: async () => {
+        if (file.value && editContent !== undefined) {
+            await file.reload(await surrealdb.update<BinaryFile>(file.value.id, { ...file.value, content: encodeBinary(editContent) }))
+        }
+        editableContent.value = false
+    }
+})
+
+function encodeBinary(content: string): ArrayBuffer {
+    return new TextEncoder().encode(content).buffer
 }
 
-async function upload() {
+function decodeBinary(bytes: ArrayBuffer): string {
+    return new TextDecoder().decode(bytes)
+}
+
+async function createFile(): Promise<boolean> {
+    await surrealdb.insert(new Table('file'), fileForm)
+    files.reload()
+    fileForm.name = ''
+    fileForm.type = ''
+    return true
+}
+
+async function uploadFile() {
     const input = await loadFiles()
-    console.log(input)
     await surrealdb.insert(new Table('file'), input)
     files.reload()
 }
 
-async function open(file: BinaryFile) {
-    const url = fileToDataUrl(await surrealdb.select<BinaryFile>(file.id))
-    window.open(url, '_blank', 'noopener,noreferrer')
+async function downloadFile(file: BinaryFile) {
+    const url = URL.createObjectURL(new Blob([new Uint8Array(file.content)], { type: file.type }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.name
+    a.click()
+    URL.revokeObjectURL(url)
+}
+
+async function deleteFile(id: RecordId) {
+    await surrealdb.delete(id)
+    router.push({ name: 'files' })
 }
 
 async function loadFiles(): Promise<{ name: string, type: string, content: ArrayBuffer }[]> {
@@ -129,7 +180,7 @@ async function loadFiles(): Promise<{ name: string, type: string, content: Array
                 output.push({
                     name: file.name,
                     type: file.type,
-                    content
+                    content: content.buffer as ArrayBuffer
                 })
             }
             resolve(output)
