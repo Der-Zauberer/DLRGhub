@@ -194,7 +194,7 @@ export class CacheDB {
 
 }
 
-export function dateToISODate(date?: Date): string | undefined {
+export function dateToIsoDate(date?: Date): string | undefined {
     return date ? date.toISOString().split('T')[0] : undefined
 }
 

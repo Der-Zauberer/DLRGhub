@@ -13,7 +13,7 @@
             <p v-if="error" class="red-text">{{ error }}</p>
 
             <div class="grid-cols-2" v-if="action">
-                <button class="grey-color" @click="open = false">Cancel</button>
+                <button class="grey-color" @click="open = false">Abbbrechen</button>
                 <button @click="success()">{{ action }}</button>
             </div>
 

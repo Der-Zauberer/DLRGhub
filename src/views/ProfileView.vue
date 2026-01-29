@@ -20,7 +20,10 @@
             </div>
         </div>
 
-        <button @click="$surrealDbService.invalidate(), $surrealDbService.redirectPostInvalidate()">Logout</button>
+        <div class="flex">
+            <button @click="surrealdb.invalidate(), surrealdb.redirectPostInvalidate()">Ausloggen</button>
+            <button @click="dialog.open = { name: 'Ausloggen', content: `Willst du dich wirklich von allen Geräten ausloggen?`, action: 'Ausloggen', filter: async () => surrealdb.invalidateAllDevices().then((() => true)), success: () => surrealdb.redirectPostInvalidate()}">Ausloggen von allen Geräten</button>
+        </div>
 
         <h3>Passwort ändern</h3>
 
@@ -34,7 +37,7 @@
             <div :class="password.success || password.error ? 'flex' : undefined">
                 <div v-if="password.success" class="green-text">Passwort erfolgreich geändert</div>
                 <div v-if="password.error" class="red-text">{{ password.error }}</div>
-                <ButtonComponent class="margin-left-auto">Passwort ändern</ButtonComponent>
+                <button class="margin-left-auto">Passwort ändern</button>
             </div>
             
         </form>
@@ -82,13 +85,15 @@
 </template>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import InputComponent from '@/components/InputComponent.vue';
-import { resource } from '@/core/resource';
-import type { User } from '@/core/types';
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service';
-import { inject, reactive, ref, type Ref } from 'vue';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import InputComponent from '@/components/InputComponent.vue'
+import { resource } from '@/core/resource'
+import type { User } from '@/core/types'
+import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service'
+import { inject, reactive, ref, type Ref } from 'vue'
 
+const dialog = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profiles = surrealdb.getProfile()
 const user = surrealdb.getUserAsRef()

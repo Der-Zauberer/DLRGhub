@@ -214,6 +214,10 @@ export class SurrealDbService extends Surreal {
         return await super.invalidate().then(() => (this.checkAuthGuard(this.router), true))
     }
 
+    async invalidateAllDevices(): Promise<true> {
+        return await this.insert('_invalidate_all_devices_request', {}).then(() => this.invalidate())
+    }
+
     async redirectPostInvalidate(route: string | RouteLocationNormalized = '/') {
         this.router.push(route)
     }

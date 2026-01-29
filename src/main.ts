@@ -20,6 +20,7 @@ import DesignView from './views/DesignView.vue'
 import PostEditView from './views/PostEditView.vue'
 import UserView from './views/UserView.vue'
 import UserEditView from './views/UserEditView.vue'
+import dialogService from './services/dialog.service'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -49,6 +50,7 @@ window.addEventListener('beforeinstallprompt', event => {
 
 const app = createApp(App)
 app.use(router)
+app.use(dialogService)
 app.use(surrealdbService)
 app.use(weatherService)
 app.use(dataService)

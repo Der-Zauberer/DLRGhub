@@ -123,6 +123,18 @@ DEFINE EVENT OVERWRITE _password_change_request ON TABLE _password_change_reques
     DELETE $after.id;
 };
 
+DEFINE TABLE OVERWRITE _invalidate_all_devices_request SCHEMAFULL
+	PERMISSIONS
+		FOR create WHERE $auth.id != NONE;
+DEFINE FIELD OVERWRITE id ON TABLE _invalidate_all_devices_request;
+DEFINE FIELD OVERWRITE user ON TABLE _invalidate_all_devices_request TYPE record<user> DEFAULT $auth.id;
+DEFINE FIELD OVERWRITE created ON TABLE _invalidate_all_devices_request TYPE datetime VALUE time::now() READONLY;
+
+DEFINE EVENT OVERWRITE _invalidate_all_devices_request ON TABLE _invalidate_all_devices_request WHEN $event = 'CREATE' THEN {
+    UPDATE user SET account.valid = $after.created;
+    DELETE $after.id;
+};
+
 DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
 	SIGNIN {
 		LET $user = SELECT * FROM user WHERE (email = $username OR name = $username) AND crypto::argon2::compare(password, $password);
@@ -155,3 +167,14 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
         };
         RETURN $auth;
     } DURATION FOR TOKEN 8h, FOR SESSION 8h;
+
+INSERT IGNORE INTO user {
+    id: user:admin,
+    name: 'admin',
+    displayname: 'admin',
+    email: 'admin@drlg.derzauberer.eu',
+    password: 'admin',
+    account: {
+		enabled: true
+	}
+};

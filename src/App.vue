@@ -18,6 +18,10 @@
 
     <main>
       <RouterView />
+      {{ dialog.open.value }}
+      <DialogComponent v-if="dialog.open.value" :modelValue="dialog.open.value !== undefined" @update:modelValue="$event ? {} : dialog.open = undefined" :name="dialog.open.value.name" :action="dialog.open.value.action" :filter="dialog.open.value.filter" @success="success()">
+        <div class="grid-cols-1" :innerHTML="dialog.open.value.content"></div>
+      </DialogComponent>
     </main>
 
 </template>
@@ -107,5 +111,12 @@ swd-menu a {
 </style>
 
 <script setup lang="ts">
+import { inject, watch } from 'vue'
+import DialogComponent from './components/DialogComponent.vue'
 import { RouterLink, RouterView } from 'vue-router'
+import { DIALOG_SERVICE, DialogService } from './services/dialog.service'
+
+const dialog = inject(DIALOG_SERVICE) as DialogService
+let success: () => unknown = () => {}
+watch(dialog.open, () => { if (dialog.open.value?.success) success = dialog.open.value.success })
 </script>

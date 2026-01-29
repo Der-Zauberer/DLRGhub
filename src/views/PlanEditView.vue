@@ -45,7 +45,7 @@
                 <div v-for="(shift, index) in plan.value.shifts" :key="index" class="input-table__row">
                     <swd-input class="ghost">
                         <label :label="`date-${index}`">Datum</label>
-                        <input :id="`date-${index}`" :value="dateToISODate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date;" type="date">    
+                        <input :id="`date-${index}`" :value="dateToIsoDate(shift.date)" @input="shift.date = isoDateToDate(($event.target as HTMLInputElement).value) as unknown as Date;" type="date">    
                     </swd-input>
                     <swd-input class="ghost">
                         <label :label="`name-${index}`">Name (Optional)</label>
@@ -163,7 +163,7 @@ import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { PlanSchedulesShift, Shift } from '@/core/types'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { DATA_SERVICE, DataService, dateToISODate, isoDateToDate } from '@/services/data.service'
+import { DATA_SERVICE, DataService, dateToIsoDate, isoDateToDate } from '@/services/data.service'
 import { RecordId, surql } from 'surrealdb'
 import { inject, ref, toRaw, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'

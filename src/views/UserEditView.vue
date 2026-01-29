@@ -43,6 +43,7 @@
                 <InputComponent label="Änderung erzwingen" type="checkbox" v-model="user.value.credentials!.change"/>
                 <InputComponent label="Ablauf" type="date" :value="dateToIsoDate(user.value.credentials!.expiry)" @input="user.value.credentials!.expiry = isoDateToDate(($event.target as HTMLInputElement).value)"/>
                 <InputComponent label="Passwort setzen" type="password" v-model="user.value.password"/>
+                <button v-if="user.value" @click.prevent="logoutFromAllDevices(user.value.id!, user.value.name!)">Ausloggen von allen Geräten</button>
             </div>
 
             <h6>Sicherheitsinformationen</h6>
@@ -71,6 +72,8 @@ import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { User } from '@/core/types'
+import { isoDateToDate, dateToIsoDate } from '@/services/data.service'
+import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
 import { inject, ref, useTemplateRef } from 'vue'
@@ -79,6 +82,7 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const dialog = inject(DIALOG_SERVICE) as DialogService
 
 const formRef = useTemplateRef('form')
 
@@ -124,12 +128,17 @@ async function deleteUser(id: RecordId<'user'>) {
     router.push({ name: 'user' })
 }
 
-function dateToIsoDate(date?: Date): string | undefined {
-    return date ? date.toISOString().split('T')[0] : undefined
-}
-
-function isoDateToDate(string?: string): Date | undefined {
-    return string && string.match(/\d{4}-\d{2}-\d{2}/g) ? new Date(string) : undefined
+async function logoutFromAllDevices(id: RecordId<'user'>, name: string) {
+    dialog.open = {
+        name: 'User ausloggen',
+        content: `Soll der User ${name} wirklich von allen Geräten ausgeloggt werden?`,
+        action: 'Ausloggen',
+        filter: async () => await surreal.query(surql`UPDATE ${id} SET account.valid = ${new Date()}`).then(() => true),
+        success: () => dialog.open = {
+            name: 'User ausgeloggt',
+            content: `Der User ${name} wurde erfolgreich von allen Geräten ausgeloggt.`
+        }
+    }
 }
 
 </script>
