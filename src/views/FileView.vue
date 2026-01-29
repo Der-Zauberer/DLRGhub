@@ -89,7 +89,7 @@ import { resource } from '@/core/resource'
 import type { BinaryFile } from '@/core/types'
 import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
-import { inject, ref } from 'vue'
+import { inject, ref, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -115,11 +115,11 @@ const file = resource({
     }
 })
 
-let editContent: string | undefined = undefined
+const  editContent = ref<string | undefined>(undefined)
 const saveFile = resource({
     loader: async () => {
-        if (file.value && editContent !== undefined) {
-            await file.reload(await surrealdb.update<BinaryFile>(file.value.id, { ...file.value, content: encodeBinary(editContent) }))
+        if (file.value && editContent.value !== undefined) {
+            await file.reload(await surrealdb.update<BinaryFile>(file.value.id, { ...file.value, content: encodeBinary(editContent.value) }))
         }
         editableContent.value = false
     }
