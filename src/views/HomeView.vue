@@ -63,10 +63,7 @@ function install() {
     }
 }
 
-const posts = resource({
-	loader: () => surreal.select<Post>('post')
-})
-
+const posts = dataService.getPosts()
 const weather = dataService.getWeather()
 const water = dataService.getWaterTemperature()
 

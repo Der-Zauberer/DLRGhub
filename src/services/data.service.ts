@@ -1,4 +1,4 @@
-import type { Plan, PlanSchedulesShift, ShiftScheduledByPlan } from "@/core/types"
+import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan } from "@/core/types"
 import { RecordId, surql, Uuid } from "surrealdb"
 import { ref, watch, type App } from "vue"
 import type { SurrealDbService } from "./surrealdb.service"
@@ -73,6 +73,18 @@ export class DataService {
         }
 
         return this.createCachedResource<ShiftScheduledByPlan[]>(cache, query, kill, ['shift'])
+    }
+
+    getPosts(kill?: Promise<void>): Resource<Post[], unknown> {
+        const cache = this.cache.objectStore<{ value: Post[] }>('readonly', store => store.get(['posts', '*'])).then(result => result?.value || [])
+
+        const query = async (): Promise<Post[]> => {
+            const posts = await this.surrealDbService.select<Post>('post')
+            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('posts', '*'), value: posts }))
+            return posts
+        }
+
+        return this.createCachedResource<Post[]>(cache, query, kill, ['post'])
     }
 
     async createPlan(name: string): Promise<Plan> {

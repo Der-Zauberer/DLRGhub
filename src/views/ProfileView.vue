@@ -21,7 +21,7 @@
         </div>
 
         <div class="flex">
-            <button @click="surrealdb.invalidate(), surrealdb.redirectPostInvalidate()">Ausloggen</button>
+            <button class="margin-left-auto" @click="surrealdb.invalidate(), surrealdb.redirectPostInvalidate()">Ausloggen</button>
             <button @click="dialog.open = { name: 'Ausloggen', content: `Willst du dich wirklich von allen Geräten ausloggen?`, action: 'Ausloggen', filter: async () => surrealdb.invalidateAllDevices().then((() => true)), success: () => surrealdb.redirectPostInvalidate()}">Ausloggen von allen Geräten</button>
         </div>
 
@@ -34,7 +34,7 @@
                 <InputComponent label="Neues Passwort wiederholen" type="password" v-model="password.repeat"/>
             </div>
 
-            <div :class="password.success || password.error ? 'flex' : undefined">
+            <div class="flex">
                 <div v-if="password.success" class="green-text">Passwort erfolgreich geändert</div>
                 <div v-if="password.error" class="red-text">{{ password.error }}</div>
                 <button class="margin-left-auto">Passwort ändern</button>
