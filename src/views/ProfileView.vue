@@ -10,7 +10,34 @@
             Dein Name wird lokal gespeichert und wird verwendet um anzuzeigen, für welche Schichten du eingeteilt bist. Dazu muss der Name exakt mit den Namen in den Schichten übereinstimmen.
         </swd-card>
 
+        <div class="grid-cols-md-2 grid-cols-1">
+            <InputComponent label="Benutzername" disabled :value="user?.name"/>
+            <InputComponent label="Email" type="email" disabled :value="user?.email"/>
+            <InputComponent label="Anzeigename" disabled :value="user?.displayname"/>
+            <div>
+                {{ user?.login?.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
+                <swd-subtitle>Letzter Login</swd-subtitle>
+            </div>
+        </div>
+
         <button @click="$surrealDbService.invalidate(), $surrealDbService.redirectPostInvalidate()">Logout</button>
+
+        <h3>Passwort ändern</h3>
+
+        <form @submit.prevent="changePassword()">
+            <div class="grid-cols-md-3 grid-cols-1">
+                <InputComponent label="Altes Passwort" type="password" v-model="password.old"/>
+                <InputComponent label="Neues Passwort" type="password" v-model="password.new"/>
+                <InputComponent label="Neues Passwort wiederholen" type="password" v-model="password.repeat"/>
+            </div>
+
+            <div :class="password.success || password.error ? 'flex' : undefined">
+                <div v-if="password.success" class="green-text">Passwort erfolgreich geändert</div>
+                <div v-if="password.error" class="red-text">{{ password.error }}</div>
+                <ButtonComponent class="margin-left-auto">Passwort ändern</ButtonComponent>
+            </div>
+            
+        </form>
 
         <h3>
             <div class="flex flex-space-between">
@@ -57,13 +84,35 @@
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue';
 import InputComponent from '@/components/InputComponent.vue';
-import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service';
-import { inject, ref, type Ref } from 'vue';
+import { resource } from '@/core/resource';
+import type { User } from '@/core/types';
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service';
+import { inject, reactive, ref, type Ref } from 'vue';
 
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profiles = surrealdb.getProfile()
 const user = surrealdb.getUserAsRef()
 
 const devtools: Ref<boolean> = ref(false)
+const password = reactive<PasswordChangeRequest & { error?: string } & { success?: boolean }>({ username: '' , old: '', new: '', repeat: '' })
+
+const profile = resource({
+    loader: () => surrealdb.info<User>()
+})
+
+async function changePassword() {
+    try {
+        await surrealdb.changePassword({ ...password, username: profile.value?.name || ''})
+        password.old = ''
+        password.new = ''
+        password.repeat = ''
+        delete password.error
+        password.success = true
+    } catch (exception) {
+        const dbError = parseCustomSurrealDbError(exception as Error)
+        password.error = dbError.success ? dbError.message : dbError.key
+        password.success = false
+    }
+}
 
 </script>

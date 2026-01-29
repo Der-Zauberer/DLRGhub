@@ -300,13 +300,13 @@ export function auth(condition: (user: User) => boolean = () => true): Navigatio
     }
 }
 
-export function parseCustomSurrealDbError(exception: Error | undefined): { key: string, success: boolean } {
-    if (!exception) return { key: '', success: false }
+export function parseCustomSurrealDbError(exception: Error | undefined): { name?: string, key?: string, message?: string, success: boolean } {
+    if (!exception) return { success: false }
     const error = exception as SurrealDbError
     if (error?.name === 'ResponseError' && error.message) {
         const [prefix, message] = error.message.split('There was a problem with the database: An error occurred: ')
-        const key = message ? message.split(':')[0] : undefined
-        return key ? { key, success: true } : { key: prefix, success: false }
+        const key = message ? message.split(':') : undefined
+        return { name: error?.name, key: key && key[0] || prefix, message: key && key[1], success: false }
     } else if (error?.name === 'VersionRetrievalFailure' || error?.name === 'ConnectionUnavailable') {
         return { key: 'error.connection', success: true }
     }

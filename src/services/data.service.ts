@@ -91,6 +91,10 @@ export class DataService {
     async removeShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people -= ${person}`)
     }
+    
+    async editDescription(shift: RecordId<'shift'>, description: string) {
+        await this.surrealDbService.query(surql`UPDATE ${shift} SET description = ${description}`)
+    }
 
     getWeather(): Resource<Weather, unknown> {
         const cache = this.cache.objectStore<Weather>('readonly', store => store.get(['weather', '*']))

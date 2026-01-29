@@ -22,6 +22,8 @@
 
             <div><ul><li v-for="person of shift.people.filter(person => !roles.includes(person.role))" :key="person.name">{{ person.name }}</li></ul></div>
 
+            <div v-if="shift.description">{{ shift.description }}</div>
+
         </div>
     </button>
 
@@ -38,6 +40,9 @@
                 <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))"/>
             </div>
         </div>
+        
+        <h5>Beschreibung</h5>
+        <textarea class="dialog-description" :value="shift.description" @change="data.editDescription(shift.id, ($event.target as HTMLInputElement).value)"></textarea>
     </DialogComponent>
 
 </template>
@@ -94,6 +99,8 @@
         flex-direction: column;
         gap: var(--theme-element-spacing);
         padding: calc(var(--theme-element-spacing) - var(--theme-border-width));
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
 
         & h5 {
             margin: 0;
@@ -149,6 +156,14 @@
             --theme-primary-color: inherit;
         }
     }
+}
+
+.dialog-description {
+    height: 4em;
+    width: 100%;
+    resize: none;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
 </style>

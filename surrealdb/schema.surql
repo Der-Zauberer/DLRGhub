@@ -31,6 +31,7 @@ DEFINE FIELD OVERWRITE name ON TABLE shift TYPE option<string>;
 DEFINE FIELD OVERWRITE date ON TABLE shift TYPE datetime;
 DEFINE FIELD OVERWRITE begin ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
 DEFINE FIELD OVERWRITE end ON TABLE shift TYPE option<string> ASSERT $value.matches('\\d{2}:\\d{2}');
+DEFINE FIELD OVERWRITE description ON TABLE shift TYPE option<string> VALUE (IF $value == '' { NONE } ELSE { $value });
 DEFINE FIELD OVERWRITE people ON TABLE shift TYPE array<object> DEFAULT [];
 DEFINE FIELD OVERWRITE people[*].name ON TABLE shift TYPE string;
 DEFINE FIELD OVERWRITE people[*].role ON TABLE shift TYPE option<string>;
@@ -82,6 +83,7 @@ DEFINE FIELD OVERWRITE account ON TABLE user TYPE object DEFAULT {}
         FOR select WHERE id = $auth.id || $auth.admin,
         FOR create, update, delete WHERE $auth.admin;
 DEFINE FIELD OVERWRITE account.enabled ON TABLE user TYPE bool DEFAULT false;
+DEFINE FIELD OVERWRITE account.valid ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE account.expiry ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE credentials ON TABLE user TYPE object DEFAULT {}
     PERMISSIONS
@@ -97,6 +99,30 @@ DEFINE FIELD OVERWRITE login ON TABLE user TYPE option<datetime>
 DEFINE INDEX OVERWRITE email ON user FIELDS email UNIQUE;
 DEFINE INDEX OVERWRITE name ON user FIELDS name UNIQUE;
 
+DEFINE TABLE OVERWRITE _password_change_request SCHEMAFULL
+	PERMISSIONS
+		FOR create FULL;
+DEFINE FIELD OVERWRITE id ON TABLE _password_change_request;
+DEFINE FIELD OVERWRITE username ON TABLE _password_change_request TYPE string DEFAULT (IF !$input.username && $auth { $auth.name });
+DEFINE FIELD OVERWRITE old ON TABLE _password_change_request TYPE string;
+DEFINE FIELD OVERWRITE new ON TABLE _password_change_request TYPE string;
+DEFINE FIELD OVERWRITE repeat ON TABLE _password_change_request TYPE string;
+DEFINE FIELD OVERWRITE created ON TABLE _password_change_request TYPE datetime VALUE time::now() READONLY;
+
+DEFINE EVENT OVERWRITE _password_change_request ON TABLE _password_change_request WHEN $event = 'CREATE' THEN {
+    LET $user = (SELECT * FROM ONLY user WHERE name = $after.username AND crypto::argon2::compare(password, $after.old));
+    IF !$user {
+        THROW 'error.user.password.invalid: Your credentials are invalid!';
+    } ELSE IF $after.new != $after.repeat {
+        THROW 'error.user.password.change.repeat: Your new passwords have to be the same!';
+    } ELSE IF $after.old == $after.new {
+        THROW 'error.user.password.change.different: Your new password must be different from the old one!';
+    } ELSE {
+        UPDATE $user.id SET password = $after.new, credentials.change = false, credentials.expiry = NONE, account.valid = time::now();
+    };
+    DELETE $after.id;
+};
+
 DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
 	SIGNIN {
 		LET $user = SELECT * FROM user WHERE (email = $username OR name = $username) AND crypto::argon2::compare(password, $password);
@@ -111,7 +137,7 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
         RETURN $user;
     }
 	SIGNUP (
-		CREATE user CONTENT {
+		RETURN CREATE user CONTENT {
             id: $username,
 			name: $name,
 			email: $email,
@@ -120,4 +146,12 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
                 enabled = false
             }
 		}
-	) DURATION FOR TOKEN 8h, FOR SESSION 8h;
+	)
+    AUTHENTICATE {
+        IF $auth.account.enabled == false || (type::is::datetime($auth.account.expiry) && $auth.account.expiry < time::now()) {
+            THROW 'error.user.deactivated: Your account is deactivated!';
+        } ELSE IF type::is::datetime($auth.account.valid) && time::unix($auth.account.valid) > $token.iat {
+            THROW 'error.user.authentication: Your authentication is expired!';
+        };
+        RETURN $auth;
+    } DURATION FOR TOKEN 8h, FOR SESSION 8h;

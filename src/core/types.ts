@@ -28,6 +28,7 @@ export type Shift = {
     date: Date
     begin?: string
     end?: string
+    description?: string
     people: {
         name: string
         role: string
@@ -76,11 +77,13 @@ export type User = {
     account: {
         enabled: boolean
         expiry?: Date
+        valid?: Date
     }
     credentials: {
         change: boolean
         expiry?: Date
     }
+    login?: Date
 }
 
 export type BeforeInstallPromptEvent = Event & {

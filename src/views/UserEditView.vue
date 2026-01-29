@@ -45,6 +45,18 @@
                 <InputComponent label="Passwort setzen" type="password" v-model="user.value.password"/>
             </div>
 
+            <h6>Sicherheitsinformationen</h6>
+            <div class="grid-cols-sm-2 grid-cols-1">
+                <div v-if="user.value.login">
+                    {{ user.value.login.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
+                    <swd-subtitle>Letzter Login</swd-subtitle>
+                </div>
+                <div v-if="user.value.account?.valid">
+                    {{ user.value.account?.valid.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
+                    <swd-subtitle>Sessions gültig seit</swd-subtitle>
+                </div>
+            </div>
+
         </form>
 
     </div>
