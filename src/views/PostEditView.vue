@@ -3,11 +3,7 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="post.value?.title" :resource="post" :back="{ name: 'home' }">
-            <ButtonComponent v-if="post.value" icon="delete" @click="postDeleteDialog = true"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
-            <DialogComponent v-if="post.value" name="Dienstplan löschen" action="Löschen" v-model="postDeleteDialog" @success="deletePost(post.value.id)">
-                    <p>Bist du sicher den Post zu löschen?</p>
-                    <code>{{ post.value?.title }}</code>
-            </DialogComponent>
+            <ButtonComponent v-if="post.value" icon="delete" @click="openDeleteDialog(post.value)"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
             <swd-loading-spinner :loading="savePost.loading">
                 <ButtonComponent v-if="post.value" icon="done" @click="savePost.reload()"><span class="only-bigger-sm">Speichern</span></ButtonComponent>
             </swd-loading-spinner>
@@ -33,7 +29,6 @@
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue'
-import DialogComponent from '@/components/DialogComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
@@ -43,14 +38,14 @@ import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from 
 import { RecordId } from 'surrealdb'
 import { inject, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 
 const route = useRoute()
 const router = useRouter()
+const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const formRef = useTemplateRef('form')
-
-const postDeleteDialog = ref<boolean>(false)
 
 const post = resource({
     loader: route.params.id !== 'new' ? surrealdb.select<Post>(new RecordId('post', route.params.id)) : {} as Post
@@ -74,9 +69,14 @@ const savePost = resource({
     }
 })
 
-async function deletePost(id: RecordId) {
-    await surrealdb.delete(id)
-    router.push({ name: 'home' })
+function openDeleteDialog(post: Post) {
+    dialogService.open = {
+        title: 'Dienstplan löschen',
+        content: ['Bist du sicher den Post zu löschen?', `<code>${post.title}</code>`],
+        action: 'Löschen',
+        filter: () => surrealdb.delete(post.id).then(() => true),
+        success: () => router.push({ name: 'home' })
+    }
 }
 
 </script>

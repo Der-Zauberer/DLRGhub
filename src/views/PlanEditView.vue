@@ -3,11 +3,7 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="plan.value?.name" :resource="plan" :back="{ name: 'plan', params: { id: $route.params.id } }">
-            <ButtonComponent v-if="plan.value" icon="delete" @click="planDeleteDialog = true"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
-            <DialogComponent v-if="plan.value" name="Dienstplan löschen" action="Löschen" v-model="planDeleteDialog" @success="deletePlan(plan.value.id)">
-                <p>Bist du sicher den Dienstplan zu löschen?</p>
-                <code>{{ plan.value?.name }}</code>
-            </DialogComponent>
+            <ButtonComponent v-if="plan.value" icon="delete" @click="openDeleteDialog(plan.value)"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
             <swd-loading-spinner :loading="savePlan.loading">
                 <ButtonComponent v-if="plan.value" icon="done" @click="savePlan.reload()"><span class="only-bigger-sm">Speichern</span></ButtonComponent>
             </swd-loading-spinner>
@@ -156,26 +152,25 @@
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue'
-import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
-import type { PlanSchedulesShift, Shift } from '@/core/types'
+import type { Plan, PlanSchedulesShift, Shift } from '@/core/types'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { DATA_SERVICE, DataService, dateToIsoDate, isoDateToDate } from '@/services/data.service'
 import { RecordId, surql } from 'surrealdb'
 import { inject, ref, toRaw, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 
 const route = useRoute()
 const router = useRouter()
+const dialogService = inject(DIALOG_SERVICE) as DialogService
 const dataService = inject(DATA_SERVICE) as DataService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const formRef = useTemplateRef('form')
-
-const planDeleteDialog = ref<boolean>(false)
 
 const plan = resource({
     loader: async () => (await surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`))[0],
@@ -231,9 +226,14 @@ const savePlan = resource({
     }
 })
 
-async function deletePlan(id: RecordId<'plan'>) {
-    await dataService.deletePlan(id)
-    router.push({ name: 'plans' })
+function openDeleteDialog(plan: Plan) {
+    dialogService.open = {
+        title: 'Dienstplan löschen',
+        content: ['Bist du sicher den Dienstplan zu löschen?', `<code>${plan.name}</code>`],
+        action: 'Löschen',
+        filter: () => dataService.deletePlan(plan.id).then(() => true),
+        success: () => router.push({ name: 'plans' })
+    }
 }
 
 </script>

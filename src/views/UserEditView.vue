@@ -3,15 +3,7 @@
     <div class="container-xl">
 
         <HeadlineComponent :title="user.value?.displayname || 'Unbenannt'" :resource="user" :back="{ name: 'user' }">
-            <ButtonComponent v-if="user.value && route.params.id !== 'new'" icon="delete" @click="userDeleteDialog = true"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
-            <DialogComponent v-if="user.value" name="Benutzer löschen" action="Löschen" v-model="userDeleteDialog" @success="deleteUser(user.value.id!)">
-                <p>Bist du sicher den Benutzer zu löschen?</p>
-                <swd-card>
-                    {{ user.value.displayname }}
-                    <swd-subtitle>{{ user.value.name }}</swd-subtitle>
-                    <swd-subtitle>{{ user.value.email }}</swd-subtitle>
-                </swd-card>
-            </DialogComponent>
+            <ButtonComponent v-if="user.value && route.params.id !== 'new'" icon="delete" @click="openDeleteDialog(user.value as User)"><span class="only-bigger-sm">Löschen</span></ButtonComponent>
             <swd-loading-spinner :loading="saveUser.loading">
                 <ButtonComponent v-if="user.value" icon="done" @click="saveUser.reload()"><span class="only-bigger-sm">Speichern</span></ButtonComponent>
             </swd-loading-spinner>
@@ -76,17 +68,15 @@ import { isoDateToDate, dateToIsoDate } from '@/services/data.service'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
-import { inject, ref, useTemplateRef } from 'vue'
+import { inject, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
-const dialog = inject(DIALOG_SERVICE) as DialogService
 
 const formRef = useTemplateRef('form')
-
-const userDeleteDialog = ref<boolean>(false)
 
 const newUser: Partial<User> = {
     id: new RecordId('user', ''),
@@ -123,20 +113,25 @@ const saveUser = resource({
     }
 })
 
-async function deleteUser(id: RecordId<'user'>) {
-    await surreal.delete(id)
-    router.push({ name: 'user' })
+function openDeleteDialog(user: User) {
+    dialogService.open = {
+        title: 'Benutzer löschen',
+        content: ['Bist du sicher den Benutzer zu löschen?', `<swd-card>${user.displayname}<swd-subtitle>${user.name}</swd-subtitle><swd-subtitle>${user.email}</swd-subtitle></swd-card>`],
+        action: 'Löschen',
+        filter: () => surreal.delete(user.id).then(() => true),
+        success: () => router.push({ name: 'user' })
+    }
 }
 
 async function logoutFromAllDevices(id: RecordId<'user'>, name: string) {
-    dialog.open = {
-        name: 'User ausloggen',
-        content: `Soll der User ${name} wirklich von allen Geräten ausgeloggt werden?`,
+    dialogService.open = {
+        title: 'User ausloggen',
+        content: [`Soll der User ${name} wirklich von allen Geräten ausgeloggt werden?`],
         action: 'Ausloggen',
         filter: async () => await surreal.query(surql`UPDATE ${id} SET account.valid = ${new Date()}`).then(() => true),
-        success: () => dialog.open = {
-            name: 'User ausgeloggt',
-            content: `Der User ${name} wurde erfolgreich von allen Geräten ausgeloggt.`
+        success: () => dialogService.open = {
+            title: 'User ausgeloggt',
+            content: [`Der User ${name} wurde erfolgreich von allen Geräten ausgeloggt.`]
         }
     }
 }

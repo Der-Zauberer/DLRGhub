@@ -1,6 +1,6 @@
 import { ref, type App, type Ref } from "vue"
 
-export type DialogOptions = { name: string, content: string, action?: string, filter?: () => boolean | Promise<boolean>, success?: () => unknown | Promise<unknown> }
+export type DialogOptions = { title: string, content: string[], action?: string, filter?: () => boolean | Promise<boolean>, success?: () => unknown | Promise<unknown> }
 
 export class DialogService {
     private dialog = ref<DialogOptions>()

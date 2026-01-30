@@ -27,7 +27,7 @@
         </div>
     </button>
 
-    <DialogComponent :name="shift?.name || shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' })" v-model="dialog" v-if="dialog">
+    <DialogComponent :title="shift?.name || shift.date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' })" v-model="dialog" v-if="dialog">
         <div v-for="[index, role] of [ ...roles, undefined ].entries()" :key="role" class="grid-cols-1 dialog-section">
             <h5>{{ role || 'Sonstige' }}</h5>
 

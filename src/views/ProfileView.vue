@@ -22,7 +22,7 @@
 
         <div class="flex">
             <button class="margin-left-auto" @click="surrealdb.invalidate(), surrealdb.redirectPostInvalidate()">Ausloggen</button>
-            <button @click="dialog.open = { name: 'Ausloggen', content: `Willst du dich wirklich von allen Geräten ausloggen?`, action: 'Ausloggen', filter: async () => surrealdb.invalidateAllDevices().then((() => true)), success: () => surrealdb.redirectPostInvalidate()}">Ausloggen von allen Geräten</button>
+            <button @click="dialogServcie.open = { title: 'Ausloggen', content: [`Willst du dich wirklich von allen Geräten ausloggen?`], action: 'Ausloggen', filter: async () => surrealdb.invalidateAllDevices().then((() => true)), success: () => surrealdb.redirectPostInvalidate()}">Ausloggen von allen Geräten</button>
         </div>
 
         <h3>Passwort ändern</h3>
@@ -93,7 +93,7 @@ import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service'
 import { inject, reactive, ref, type Ref } from 'vue'
 
-const dialog = inject(DIALOG_SERVICE) as DialogService
+const dialogServcie = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profiles = surrealdb.getProfile()
 const user = surrealdb.getUserAsRef()

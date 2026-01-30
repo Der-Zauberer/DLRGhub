@@ -65,6 +65,7 @@ export class DataService {
 
     getPersonShift(name: string, kill?: Promise<void>): Resource<ShiftScheduledByPlan[], unknown> {
         const cache = this.cache.objectStore<{ value: ShiftScheduledByPlan[] }>('readonly', store => store.get(['shifts', '*'])).then(result => result?.value || [])
+        
         const query = async (): Promise<ShiftScheduledByPlan[]> => {
             const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= time::now() ORDER BY date;`)
             this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('shifts', '*'), value: shifts }))
@@ -78,7 +79,7 @@ export class DataService {
         const cache = this.cache.objectStore<{ value: Post[] }>('readonly', store => store.get(['posts', '*'])).then(result => result?.value || [])
 
         const query = async (): Promise<Post[]> => {
-            const posts = await this.surrealDbService.select<Post>('post')
+            const posts = (await this.surrealDbService.select<Post>('post')).reverse()
             this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('posts', '*'), value: posts }))
             return posts
         }

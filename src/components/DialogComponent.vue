@@ -4,7 +4,7 @@
         <swd-card ref="slot">
 
             <div class="flex flex-space-between flex-center">
-                <h3>{{ name }}</h3>
+                <h3>{{ title }}</h3>
                 <ButtonComponent icon="close" apperience="GHOST" @click="open = false"/>
             </div>
 
@@ -30,7 +30,7 @@ const slotRef = useTemplateRef('slot')
 const open = defineModel<boolean>()
 const error = ref<Error | undefined>()
 
-const props = defineProps<{ name: string, action?: string, filter?: () => boolean | Promise<boolean> }>()
+const props = defineProps<{ title: string, action?: string, filter?: () => boolean | Promise<boolean> }>()
 const emits = defineEmits<{ ( e: 'success', value: void ): Promise<void> }>()
 
 async function success() {

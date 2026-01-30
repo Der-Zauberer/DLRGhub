@@ -5,7 +5,7 @@
         <HeadlineComponent title="Dateien">
             <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen" @click="createDialog = true"/>
             <ButtonComponent color="ELEMENT" icon="upload" aria-label="Hochladen" @click="uploadFile()"/>
-            <DialogComponent name="Neue Datei" action="Speichern" v-model="createDialog" :filter="createFile">
+            <DialogComponent title="Neue Datei" action="Speichern" v-model="createDialog" :filter="createFile">
                 <form class="grid-cols-1">
                     <InputComponent label="Name" v-model="fileForm.name" required/>
                     <swd-dropdown>
@@ -33,11 +33,7 @@
         <HeadlineComponent :back="{ name: 'files' }" :title="file.value?.name">
             <ButtonComponent v-if="file.value && !['image', 'video', 'audio'].includes(file.value.type.split('/')[0])" :color="editableContent ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (editableContent ? 'done': 'pen')" :aria-label="editableContent ? 'save' : 'edit'" @click="editableContent ? saveFile.reload() : editableContent = true"/>
             <ButtonComponent v-if="file.value" color="ELEMENT" icon="download" aria-label="download" @click="downloadFile(file.value)"/>
-            <ButtonComponent v-if="file.value" color="ELEMENT" icon="delete" aria-label="delete" @click="postDeleteDialog = true"/>
-            <DialogComponent v-if="file.value" name="Datei löschen" action="Löschen" v-model="postDeleteDialog" @success="deleteFile(file.value.id)">
-                <p>Bist du sicher die Datei zu löschen?</p>
-                <code>{{ file.value.name }}</code>
-            </DialogComponent>
+            <ButtonComponent v-if="file.value" color="ELEMENT" icon="delete" aria-label="delete" @click="openDeleteDialog(file.value)"/>
         </HeadlineComponent>
 
         <swd-loading-spinner :loading="file.loading" class="width-100"></swd-loading-spinner>
@@ -87,6 +83,7 @@ import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import { resource } from '@/core/resource'
 import type { BinaryFile } from '@/core/types'
+import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
 import { inject, ref, type Ref } from 'vue'
@@ -94,10 +91,10 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const createDialog = ref<boolean>(false)
-const postDeleteDialog = ref<boolean>(false)
 const editableContent = ref<boolean>(false)
 
 const fileForm: { name: string, type: string } = { name: '', type: '' }
@@ -156,10 +153,16 @@ async function downloadFile(file: BinaryFile) {
     URL.revokeObjectURL(url)
 }
 
-async function deleteFile(id: RecordId) {
-    await surrealdb.delete(id)
-    router.push({ name: 'files' })
+function openDeleteDialog(file: BinaryFile) {
+    dialogService.open = {
+        title: 'Datei löschen',
+        content: ['Bist du sicher die Datei zu löschen?', `<code>${file.name}</code>`],
+        action: 'Löschen',
+        filter: () => surrealdb.delete(file.id).then(() => true),
+        success: () => router.push({ name: 'files' })
+    }
 }
+
 
 async function loadFiles(): Promise<{ name: string, type: string, content: ArrayBuffer }[]> {
     return new Promise((resolve, reject) => {

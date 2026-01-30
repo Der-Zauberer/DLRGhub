@@ -6,7 +6,7 @@
 
         <HeadlineComponent title="Dienstpläne" :resource="plans" type="Dienstpläne">
             <ButtonComponent icon="add" color="ELEMENT" :aria-label="plans.status!=='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined" @click="planCreateDialog = true">{{ plans.status==='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined }}</ButtonComponent>
-            <DialogComponent name="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" :filter="createPlan">
+            <DialogComponent title="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" :filter="createPlan">
                 <form class="grid-cols-1">
                     <InputComponent label="Name" v-model="createPlanForm.name" required/>
                 </form>
