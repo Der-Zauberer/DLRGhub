@@ -45,7 +45,6 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import WeatherComponent from '@/components/WeatherComponent.vue'
-import { resource } from '@/core/resource';
 import type { BeforeInstallPromptEvent, Post} from '@/core/types'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'

@@ -65,7 +65,6 @@ export class DataService {
 
     getPersonShift(name: string, kill?: Promise<void>): Resource<ShiftScheduledByPlan[], unknown> {
         const cache = this.cache.objectStore<{ value: ShiftScheduledByPlan[] }>('readonly', store => store.get(['shifts', '*'])).then(result => result?.value || [])
-
         const query = async (): Promise<ShiftScheduledByPlan[]> => {
             const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= time::now() ORDER BY date;`)
             this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('shifts', '*'), value: shifts }))
@@ -111,6 +110,8 @@ export class DataService {
     getWeather(): Resource<Weather, unknown> {
         const cache = this.cache.objectStore<Weather>('readonly', store => store.get(['weather', '*']))
         const query = async (): Promise<Weather> => {
+            const result = await cache
+            if (result && Date.now() - new Date(result.source.updated).getTime() < 60 * 60 * 1000) return result
             const weather = await this.weatherService.getWeather()
             this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('weather', '*'), ...weather }))
             return weather
@@ -121,6 +122,8 @@ export class DataService {
     getWaterTemperature(): Resource<WaterTemperature, unknown> {
         const cache = this.cache.objectStore<WaterTemperature>('readonly', store => store.get(['water', '*']))
         const query = async (): Promise<WaterTemperature> => {
+            const result = await cache
+            if (result && Date.now() - new Date(result.source.updated).getTime() < 60 * 60 * 1000) return result
             const water = await this.weatherService.getWaterTemperature()
             this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('water', '*'), ...water }))
             return water
