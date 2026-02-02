@@ -1,3 +1,15 @@
+---------------
+-- functions --
+---------------
+
+DEFINE FUNCTION OVERWRITE fn::search::normalize($name: string, $seperator: option<string>) {
+    LET $result = $name.lowercase().replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').slug();
+    IF ($seperator != NONE && $seperator != '-') {
+        RETURN string::replace($result, '-', $seperator);
+    };
+    RETURN $result;
+};
+
 ------------
 --- post ---
 ------------
@@ -135,6 +147,32 @@ DEFINE EVENT OVERWRITE _invalidate_all_devices_request ON TABLE _invalidate_all_
     DELETE $after.id;
 };
 
+DEFINE TABLE OVERWRITE registration SCHEMAFULL
+	PERMISSIONS
+		FOR create FULL,
+        FOR select, update, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE id ON TABLE registration;
+DEFINE FIELD OVERWRITE email ON TABLE registration TYPE string ASSERT string::is::email($value);
+DEFINE FIELD OVERWRITE firstname ON TABLE registration TYPE string;
+DEFINE FIELD OVERWRITE lastname ON TABLE registration TYPE string;
+DEFINE FIELD OVERWRITE password ON TABLE registration TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value }) PERMISSIONS
+        FOR select NONE,
+        FOR create, update, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE approve ON TABLE registration TYPE bool PERMISSIONS FOR select, create, update, delete WHERE $auth.admin DEFAULT false;
+
+DEFINE EVENT OVERWRITE registration_update ON TABLE registration WHEN $event = 'CREATE' OR $event = 'UPDATE' THEN {
+    IF $after.approve {
+        INSERT INTO user {
+            email: $after.email,
+            name: fn::search::normalize($after.firstname, '_') + '.' + fn::search::normalize($after.lastname, '_'),
+            displayname: $after.firstname + ' ' + $after.lastname,
+            password: $after.password,
+            account: { enabled: true }
+        };
+        DELETE $after.id;
+    }
+};
+
 DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
 	SIGNIN {
 		LET $user = SELECT * FROM user WHERE (email = $username OR name = $username) AND crypto::argon2::compare(password, $password);
@@ -148,17 +186,6 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
         UPDATE $user.id SET login = time::now();
         RETURN $user;
     }
-	SIGNUP (
-		RETURN CREATE user CONTENT {
-            id: $username,
-			name: $name,
-			email: $email,
-			password: crypto::argon2::generate($password),
-            account: {
-                enabled = false
-            }
-		}
-	)
     AUTHENTICATE {
         IF $auth.account.enabled == false || (type::is::datetime($auth.account.expiry) && $auth.account.expiry < time::now()) {
             THROW 'error.user.deactivated: Your account is deactivated!';

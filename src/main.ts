@@ -21,12 +21,14 @@ import PostEditView from './views/PostEditView.vue'
 import UserView from './views/UserView.vue'
 import UserEditView from './views/UserEditView.vue'
 import dialogService from './services/dialog.service'
+import RegistrationVue from './views/RegistrationVue.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: HomeView, beforeEnter: auth() },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/register', name: 'register', component: LoginView },
     { path: '/plan', name: 'plans', component: PlanListView, beforeEnter: auth() },
     { path: '/plan/:id', name: 'plan', component: PlanView, beforeEnter: auth() },
     { path: '/plan/edit/:id', name: 'plan-edit', component: PlanEditView, beforeEnter: auth() },
@@ -37,6 +39,7 @@ const router = createRouter({
     { path: '/profile', name: 'profile', component: ProfileView, beforeEnter: auth() },
     { path: '/user', name: 'user', component: UserView, beforeEnter: auth(user => user.admin) },
     { path: '/user/:id', name: 'user-edit', component: UserEditView, beforeEnter: auth(user => user.admin) },
+    { path: '/registration', name: 'registrations', component: RegistrationVue, beforeEnter: auth(user => user.admin) },
     { path: '/design', name: 'design', component: DesignView, beforeEnter: auth() },
   ],
 })

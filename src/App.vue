@@ -18,7 +18,6 @@
 
     <main>
       <RouterView/>
-      {{ dialog.open.value }}
       <DialogComponent v-if="dialog.open.value" :modelValue="dialog.open.value !== undefined" @update:modelValue="$event ? {} : dialog.open = undefined" :title="dialog.open.value.title" :action="dialog.open.value.action" :filter="dialog.open.value.filter" @success="success()">
         <div class="grid-cols-1" v-for="content of dialog.open.value.content" :innerHTML="content">{{ content }}</div>
       </DialogComponent>

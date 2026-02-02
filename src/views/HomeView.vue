@@ -17,6 +17,7 @@
 
 				<ButtonComponent :to="{ name: 'post-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" class="width-100">Posten</ButtonComponent>
 				<ButtonComponent :to="{ name: 'user' }" color="ELEMENT" icon="user" class="width-100" v-if="user?.admin">Benutzerverwaltung</ButtonComponent>
+				<ButtonComponent :to="{ name: 'registrations' }" color="ELEMENT" icon="user" class="width-100" v-if="user?.admin">Registrierungen</ButtonComponent>
 
 			</div>
 			<div class="grid-span-md-2 grid-span-1">

@@ -58,7 +58,6 @@
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue'
-import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
@@ -125,13 +124,13 @@ function openDeleteDialog(user: User) {
 
 async function logoutFromAllDevices(id: RecordId<'user'>, name: string) {
     dialogService.open = {
-        title: 'User ausloggen',
-        content: [`Soll der User ${name} wirklich von allen Geräten ausgeloggt werden?`],
+        title: 'Benutzer ausloggen',
+        content: [`Soll der Benutzer ${name} von allen Geräten ausgeloggt werden?`],
         action: 'Ausloggen',
         filter: async () => await surreal.query(surql`UPDATE ${id} SET account.valid = ${new Date()}`).then(() => true),
         success: () => dialogService.open = {
-            title: 'User ausgeloggt',
-            content: [`Der User ${name} wurde erfolgreich von allen Geräten ausgeloggt.`]
+            title: 'Benutzer ausgeloggt',
+            content: [`Der Benutzer ${name} wurde erfolgreich von allen Geräten ausgeloggt.`]
         }
     }
 }

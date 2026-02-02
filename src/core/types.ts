@@ -86,6 +86,15 @@ export type User = {
     login?: Date
 }
 
+export type Registration = {
+    id: RecordId<'registration'>
+    email: string
+    firstname: string
+    lastname: string
+    password: string
+    approve: boolean
+}
+
 export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
   userChoice: Promise<{ 

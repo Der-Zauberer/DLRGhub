@@ -324,6 +324,33 @@ export function generateGUID(timebased?: boolean) {
     return guid
 }
 
+export function normalize(name: string, seperator?: string): string {
+    let normalized: string = '';
+    let blank: boolean = false;
+    const replacements: Record<string, string> = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss' };
+    for (let char of name.toLowerCase()) {
+        if (replacements[char]) {
+            normalized += replacements[char];
+            blank = false;
+        } else if (char === ' ' || char === '/' || char === '-') {
+            if (!blank) {
+                if (seperator) normalized += seperator;
+                blank = true;
+            }
+        } else if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
+            normalized += char;
+            blank = false;
+        } else {
+            for (let nkd of char.normalize('NFD')) {
+                if (nkd <= '\u007F') {
+                    normalized += nkd;
+                }
+            }   
+        }
+    }
+    return normalized;
+}
+
 export const SURREAL_DB_SERVICE = 'surrealDbService';
 
 export default {
