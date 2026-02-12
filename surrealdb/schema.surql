@@ -155,9 +155,7 @@ DEFINE FIELD OVERWRITE id ON TABLE registration;
 DEFINE FIELD OVERWRITE email ON TABLE registration TYPE string ASSERT string::is::email($value);
 DEFINE FIELD OVERWRITE firstname ON TABLE registration TYPE string;
 DEFINE FIELD OVERWRITE lastname ON TABLE registration TYPE string;
-DEFINE FIELD OVERWRITE password ON TABLE registration TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value }) PERMISSIONS
-        FOR select NONE,
-        FOR create, update, delete WHERE $auth.admin;
+DEFINE FIELD OVERWRITE password ON TABLE registration TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value });
 DEFINE FIELD OVERWRITE approve ON TABLE registration TYPE bool PERMISSIONS FOR select, create, update, delete WHERE $auth.admin DEFAULT false;
 
 DEFINE EVENT OVERWRITE registration_update ON TABLE registration WHEN $event = 'CREATE' OR $event = 'UPDATE' THEN {

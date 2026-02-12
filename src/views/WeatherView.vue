@@ -2,7 +2,9 @@
 
 	<div class="container-xxl grid-cols-md-2 grid-cols-1">
 
-		<WeatherComponent :weather="weather" :water="water" class="grid-span-md-2 grid-span-1" />
+		<HeadlineComponent title="Wetter" :back="{ name: 'home' }" class="grid-span-md-2 grid-span-1" style="margin-bottom: 0;"/>
+
+		<WeatherComponent :weather="weather" :water="water" class="grid-span-md-2 grid-span-1"/>
 
 		<swd-card>
 			<h3>
@@ -79,6 +81,8 @@
 </style>
 
 <script setup lang="ts">
+import ButtonComponent from '@/components/ButtonComponent.vue';
+import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import PlotComponent from '@/components/PlotComponent.vue';
 import WeatherComponent from '@/components/WeatherComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
