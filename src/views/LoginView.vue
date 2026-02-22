@@ -136,6 +136,7 @@ async function login() {
     loginError.value = undefined
     try {
         if (credentials.profile !== profiles.default.name) await surrealdb.autoConnect(profiles.profiles.find(profile => credentials.profile == profile.name))
+        await surrealdb.autoConnect()
         await surrealdb.signin(credentials)
         await surrealdb.redirectPostLogin()
         loginError.value = undefined
@@ -154,8 +155,7 @@ async function register() {
     registrationLoading.value = true
     registrationError.value = undefined
     try {
-        console.log('')
-        registration.success = await surrealdb.insert(new Table('registration'), registration as Registration).then(() => true)
+        registration.success = await surrealdb.insert(new Table('registration'), registration).then(() => true)
         loginError.value = undefined
     } catch (exception) {
         registrationError.value = parseCustomSurrealDbError(exception as Error).key

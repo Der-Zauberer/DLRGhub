@@ -49,7 +49,8 @@ import WeatherComponent from '@/components/WeatherComponent.vue'
 import type { BeforeInstallPromptEvent, Post} from '@/core/types'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { inject } from 'vue';
+import { RecordId } from 'surrealdb'
+import { inject, markRaw, toRaw } from 'vue';
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const dataService = inject(DATA_SERVICE) as DataService

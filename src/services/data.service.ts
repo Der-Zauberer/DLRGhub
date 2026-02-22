@@ -1,6 +1,6 @@
 import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan } from "@/core/types"
-import { RecordId, surql, Uuid } from "surrealdb"
-import { ref, watch, type App } from "vue"
+import { LiveSubscription, RecordId, surql, Table, Uuid } from "surrealdb"
+import { markRaw, ref, watch, type App } from "vue"
 import type { SurrealDbService } from "./surrealdb.service"
 import { resource, type Resource } from "@/core/resource"
 import type { WaterTemperature, Weather, WeatherService } from "./weather.service"
@@ -35,15 +35,16 @@ export class DataService {
     }
 
     getPlans(kill?: Promise<void>): Resource<Plan[], unknown> {
-        const cache = this.cache.objectStore<{ value: Plan[] }>('readonly', store => store.get(['plans', '*'])).then(result => result?.value || [])
+        const cache = this.cache.get<{ value: Plan[] }>(new RecordId('plans', '*')).then(result => result?.value || [])
 
         const query = async (): Promise<Plan[]> => {
-            const plans = await this.surrealDbService.select<Plan>('plan')
-            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('plans', '*'), value: plans }))
+            await this.surrealDbService.autoConnect()
+            const plans = await this.surrealDbService.select<Plan>(new Table('plan'))
+            this.cache.put({ id: new RecordId('plans', '*'), value: plans })
             const set = new Set(plans.map(plan => plan.id.id.toString()))
-            await this.cache.objectStore<PlanSchedulesShift[]>('readonly', store => store.index('table').getAll('plan')).then(result => 
+            await this.cache.getAll<PlanSchedulesShift>(new Table('plan')).then(result => 
                 result.filter(plan => !set.has(plan.id.id.toString()))
-                .forEach(plan => this.cache.objectStore('readwrite', store => store.delete([plan.id.tb, plan.id.id.toString()])))
+                .forEach(plan => this.cache.delete(plan.id))
             )
             return plans
         }
@@ -52,11 +53,12 @@ export class DataService {
     }
 
     getPlan(id: RecordId<'plan'>, kill?: Promise<void>): Resource<PlanSchedulesShift | undefined, unknown> {
-        const cache = this.cache.objectStore<PlanSchedulesShift | undefined>('readonly', store => store.get([id.tb, id.id.toString()]))
+        const cache = this.cache.get<PlanSchedulesShift | undefined>(id)
 
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
+            await this.surrealDbService.autoConnect()
             const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
-            if (plan) this.cache.objectStore('readwrite', store => store.put(plan))
+            if (plan) this.cache.put(plan)
             return plan
         }
 
@@ -64,11 +66,12 @@ export class DataService {
     }
 
     getPersonShift(name: string, kill?: Promise<void>): Resource<ShiftScheduledByPlan[], unknown> {
-        const cache = this.cache.objectStore<{ value: ShiftScheduledByPlan[] }>('readonly', store => store.get(['shifts', '*'])).then(result => result?.value || [])
+        const cache = this.cache.get<{ value: ShiftScheduledByPlan[] }>(new RecordId('shifts', '*')).then(result => result?.value || [])
         
         const query = async (): Promise<ShiftScheduledByPlan[]> => {
+            await this.surrealDbService.autoConnect()
             const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= time::now() ORDER BY date;`)
-            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('shifts', '*'), value: shifts }))
+            this.cache.put({ id: new RecordId('shifts', '*'), value: shifts })
             return shifts
         }
 
@@ -76,70 +79,76 @@ export class DataService {
     }
 
     getPosts(kill?: Promise<void>): Resource<Post[], unknown> {
-        const cache = this.cache.objectStore<{ value: Post[] }>('readonly', store => store.get(['posts', '*'])).then(result => result?.value || [])
+        const cache = this.cache.get<{ value: Post[] }>(new RecordId('posts', '*')).then(result => result?.value || [])
 
         const query = async (): Promise<Post[]> => {
-            const posts = (await this.surrealDbService.select<Post>('post')).reverse()
-            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('posts', '*'), value: posts }))
+            await this.surrealDbService.autoConnect()
+            const posts = (await this.surrealDbService.select<Post>(new Table('post'))).reverse()
+            this.cache.put({ id: new RecordId('posts', '*'), value: posts })
             return posts
         }
 
-        return this.createCachedResource<Post[]>(cache, query, kill, ['post'])
+        return this.createCachedResource<Post[]>(Promise.resolve<Post[]>([]), query, kill, ['post'])
     }
 
     async createPlan(name: string): Promise<Plan> {
-        return (await this.surrealDbService.insert<Plan, { name: string }>('plan', { name }))[0]
+        await this.surrealDbService.autoConnect()
+        return (await this.surrealDbService.insert<Plan>(new Table('plan'), { name }))[0]
     }
 
     async deletePlan(id: RecordId<'plan'>) {
+        await this.surrealDbService.autoConnect()
         await this.surrealDbService.query(surql` DELETE ${id}->schedules->shift;`);
         await this.surrealDbService.delete(id)
     }
 
     async addShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
+        await this.surrealDbService.autoConnect()
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people += ${person}`)
     }
 
     async removeShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
+        await this.surrealDbService.autoConnect()
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people -= ${person}`)
     }
     
     async editDescription(shift: RecordId<'shift'>, description: string) {
+        await this.surrealDbService.autoConnect()
         await this.surrealDbService.query(surql`UPDATE ${shift} SET description = ${description}`)
     }
 
     getWeather(): Resource<Weather, unknown> {
-        const cache = this.cache.objectStore<Weather>('readonly', store => store.get(['weather', '*']))
+        const cache = this.cache.get<Weather>(new RecordId('weather', '*'))
         const query = async (): Promise<Weather> => {
             const result = await cache
-            if (result && Date.now() - new Date(result.source.updated).getTime() < 60 * 60 * 1000) return result
+            if (result?.source?.updated && Date.now() - new Date(result.source.updated).getTime() < 60 * 60 * 1000) return result
             const weather = await this.weatherService.getWeather()
-            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('weather', '*'), ...weather }))
+            this.cache.put({ id: new RecordId('weather', '*'), ...weather })
             return weather
         }
         return this.createCachedResource<Weather>(cache, query)
     }
 
     getWaterTemperature(): Resource<WaterTemperature, unknown> {
-        const cache = this.cache.objectStore<WaterTemperature>('readonly', store => store.get(['water', '*']))
+        const cache = this.cache.get<WaterTemperature>(new RecordId('water', '*'))
         const query = async (): Promise<WaterTemperature> => {
             const result = await cache
-            if (result && Date.now() - new Date(result.source.updated).getTime() < 60 * 60 * 1000) return result
+            if (result?.source?.updated && Date.now() - new Date(result.source.updated).getTime() < 60 * 60 * 1000) return result
             const water = await this.weatherService.getWaterTemperature()
-            this.cache.objectStore('readwrite', store => store.put({ id: new RecordId('water', '*'), ...water }))
+            this.cache.put({ id: new RecordId('water', '*'), ...water })
             return water
         }
         return this.createCachedResource<WaterTemperature>(cache, query)
     }
 
     clearCache() {
-        this.cache.objectStore('readwrite', store => store.clear())
+        this.cache.clear()
         localStorage.clear()
     }
 
     private createCachedResource<T>(cache: Promise<T>, query: () => Promise<T>, kill?: Promise<void>, trackedTables?: string[]): Resource<T, unknown> {
         let offline = true
-        const tables: Promise<Uuid>[] = []
+        const subscriptions: LiveSubscription[] = []
         const res = resource({
             initializer: async () => {
                 const result = await cache
@@ -148,13 +157,17 @@ export class DataService {
             },
             loader: () => query().then((result) => (setupLiveTables(), result))
         })
-        const setupLiveTables = () => {
+        const setupLiveTables = async () => {
             if (offline && kill && trackedTables) {
-                tables.length = 0
-                tables.push(...trackedTables?.map(table => this.surrealDbService.live(table, (action, _) => {
-                    if (action === 'CLOSE') offline = true
-                    res.reload()
-                })))
+                subscriptions.length = 0
+                for (const table of trackedTables) {
+                    const subscription = await this.surrealDbService.live(new Table(table))
+                    subscriptions.push(subscription)
+                    for await (const event of subscription) {
+                        if (event.action === 'KILLED') offline = true
+                        res.reload()
+                    }
+                }
                 offline = false
             }
         }
@@ -163,7 +176,7 @@ export class DataService {
             const onlineEvent = () => res.reload()
             this.onlineEvents.add(onlineEvent)
             kill.then(() => {
-                tables.forEach(table => table.then((id) => this.surrealDbService.kill(id)))
+                subscriptions.forEach(subscription => subscription.kill())
                 this.onlineEvents.delete(onlineEvent)
             })
         }
@@ -184,8 +197,8 @@ export class CacheDB {
         this.db = new Promise((resolve, reject) => {
             const request = indexedDB.open(name, 1)
             request.onupgradeneeded = () => {
-                const store = request.result.createObjectStore('records', { keyPath: ['id.tb', 'id.id'] })
-                store.createIndex('table', 'id.tb')
+                const store = request.result.createObjectStore('records', { keyPath: 'id.value' })
+                store.createIndex('table', ['id'])
             }
             request.onsuccess = () => resolve(request.result)
             request.onerror = () => reject(request.error)
@@ -197,7 +210,28 @@ export class CacheDB {
         this.db = undefined
     }
 
-    async objectStore<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest): Promise<T> {
+    async get<T>(id: RecordId): Promise<T> {
+        const res = this.deserializeDeep<T>(await this.objectStore<{ id: [string, string] }>('readonly', store => store.get([id.table.toString(), id.id.toString()])))
+        return res
+    }
+
+    async getAll<T>(table: Table): Promise<T[]> {
+        return (await this.objectStore<{ id: [string, string] }[]>('readonly', store => store.index('table').getAll(table.name))).map(entity => this.deserializeDeep(entity)) as T[]
+    }
+
+    async put<T extends { id: RecordId }>(entity: T): Promise<unknown> {
+        return this.objectStore('readwrite', store => store.put(this.serializeDeep(entity)))
+    }
+
+    async delete(id: RecordId): Promise<unknown> {
+        return this.objectStore('readwrite', store => store.delete([id.table.toString(), id.id.toString()]))
+    }
+
+    async clear(): Promise<unknown> {
+        return this.objectStore('readwrite', store => store.clear())
+    }
+
+    private async objectStore<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest): Promise<T> {
         if (!this.db) throw new DOMException("IDBDatabase.transaction: Can't start a transaction on a closed database", "InvalidStateError")
         const db = await this.db
         const transaction = db.transaction('records', mode).objectStore('records')
@@ -206,6 +240,28 @@ export class CacheDB {
             request.onsuccess = () => resolve(request.result as T)
             request.onerror = () => reject(request.error)
         })
+    }
+
+    serializeDeep<T>(object: unknown): T {
+        if (object instanceof RecordId) return { __type: 'RecordId', value: [object.table.name, object.id.toString()] } as T
+        if (Array.isArray(object)) return object.map(item => this.serializeDeep(item)) as T
+        if (object && typeof object === 'object') {
+            return Object.fromEntries(Object.entries(object).map(([key, value]) => [key, this.serializeDeep(value)])) as T
+        }
+
+        return object as T
+    }
+
+    deserializeDeep<T>(object: unknown): T {
+        if (Array.isArray(object)) return object.map(item => this.deserializeDeep(item)) as T
+        if (object && typeof object === 'object') {
+            if ((object as Record<string, unknown>).__type === 'RecordId') {
+                const [table, id] = (object as Record<string, unknown>).value as [string, string]
+                return markRaw(new RecordId(table, id)) as T
+            }
+            return Object.fromEntries(Object.entries(object).map(([key, value]) => [key, this.deserializeDeep(value)])) as T
+        }
+        return object as T
     }
 
 }

@@ -116,7 +116,7 @@ const  editContent = ref<string | undefined>(undefined)
 const saveFile = resource({
     loader: async () => {
         if (file.value && editContent.value !== undefined) {
-            await file.reload(await surrealdb.update<BinaryFile>(file.value.id, { ...file.value, content: encodeBinary(editContent.value) }))
+            await file.reload(await surrealdb.update<BinaryFile>(file.value.id).content({ ...file.value, content: encodeBinary(editContent.value) }))
         }
         editableContent.value = false
     }

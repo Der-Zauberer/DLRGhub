@@ -36,12 +36,13 @@ import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { User } from '@/core/types'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { Table } from 'surrealdb'
 import { inject } from 'vue'
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const user = resource({
-    loader: surreal.select<User>('user')
+    loader: surreal.select<User>(new Table('user'))
 })
 
 </script>

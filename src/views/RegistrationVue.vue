@@ -34,14 +34,14 @@ import { resource } from '@/core/resource'
 import type { Registration } from '@/core/types'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { surql } from 'surrealdb'
+import { surql, Table } from 'surrealdb'
 import { inject } from 'vue'
 
 const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const registrations = resource({
-    loader: surreal.select<Registration>('registration')
+    loader: surreal.select<Registration>(new Table('registration'))
 })
 
 async function accept(registration: Registration) {

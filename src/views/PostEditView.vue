@@ -35,7 +35,7 @@ import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource';
 import type { Post } from '@/core/types';
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { RecordId } from 'surrealdb'
+import { RecordId, Table } from 'surrealdb'
 import { inject, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
@@ -63,7 +63,7 @@ const savePost = resource({
         delete (post.value as any).created
         delete (post.value as any).updated
 
-        post.value.id ? await surrealdb.update(post.value.id, post.value) : await surrealdb.insert('post', post.value)
+        post.value.id ? await surrealdb.update(post.value.id).content(post.value) : await surrealdb.insert(new Table('post'), post.value)
 
         router.push({ name: 'home' })
     }

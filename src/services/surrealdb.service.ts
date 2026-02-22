@@ -1,12 +1,12 @@
 import type { User } from '@/core/types'
-import { ConnectionStatus, ResponseError, Surreal, SurrealDbError, VersionRetrievalFailure, type ConnectOptions, type Token } from 'surrealdb'
-import { ref, type App, type ComputedRef, type Ref } from 'vue'
+import { DateTime, FileRef, RecordId, surql, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens } from 'surrealdb'
+import { markRaw, ref, type App, type ComputedRef, type Ref } from 'vue'
 import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 
 export const config: SurrealDbConfig = {
     default: {
         name: 'production',
-        address: 'wss://derzauberer-06c3cc37l9t95bs5baeq4gtut8.aws-euw1.surreal.cloud',
+        address: 'wss://derzauberer-06e7dvdgsls9d6i12vddn1d5u0.aws-euw1.surreal.cloud',
         namespace: 'dlrg.derzauberer.eu',
         database: 'main',
         access: 'user'
@@ -14,7 +14,7 @@ export const config: SurrealDbConfig = {
     profiles: [
         {
             name: 'production',
-            address: 'wss://derzauberer-06c3cc37l9t95bs5baeq4gtut8.aws-euw1.surreal.cloud',
+            address: 'wss://derzauberer-06e7dvdgsls9d6i12vddn1d5u0.aws-euw1.surreal.cloud',
             namespace: 'dlrg.derzauberer.eu',
             database: 'main',
             access: 'user'
@@ -118,6 +118,12 @@ export class Cookies {
 
 }
 
+const DRIVER_OPTIONS: DriverOptions = {
+    codecOptions: {
+        valueDecodeVisitor: (value) => value instanceof RecordId || value instanceof DateTime || value instanceof FileRef ? markRaw(value) : value,
+    }
+}
+
 const PROFILE_COOKIE = 'surreal_db_profiles'
 const TOKEN_COOKIE = 'surreal_db_token'
 const cookies = new Cookies()
@@ -130,33 +136,38 @@ let loginRedirect: RouteLocationNormalized | undefined
 export class SurrealDbService extends Surreal {
 
     constructor(private router: Router) {
-        super()
+        super(DRIVER_OPTIONS)
     }
 
     async connect(url: string | URL, opts?: ConnectOptions, ignoreAuthentication?: boolean): Promise<true> {
         stopLogoutTimeout?.()
-        const tryConnect = () => super.connect(url, opts).then(async response => (await this.ready, response))
+        const tryConnect = () => super.connect(url, { ...opts }).then(async response => (await this.ready, response))
         const response = tryConnect().catch(() => tryConnect())
         if (ignoreAuthentication) return response
-        return response.then(() => this.authenticate().catch(() => true))
+        return response.then(() => (this.authenticate(), true))
     }
 
     async autoConnect(configuration: SurrealDbProfile = profiles.default, ignoreAuthentication?: boolean): Promise<true> {
+        if (configuration === profiles.default && this.status !== 'disconnected') {
+            await super.ready
+            return true
+        }
         profiles.default = configuration
         if (!profiles.profiles.find(profile => profile.name === configuration.name)) profiles.profiles.push(configuration)
         cookies.set(PROFILE_COOKIE, JSON.stringify(profiles))
         return this.connect(configuration.address, { namespace: configuration.namespace, database: configuration.database }, ignoreAuthentication)
     }
 
-    async signin(credentials: { username: string, password: string }, configuration: SurrealDbProfile = profiles.default): Promise<Token> {
+    async signin(credentials: { username: string, password: string }, configuration: SurrealDbProfile = profiles.default): Promise<Tokens> {
         if (configuration !== profiles.default) await this.autoConnect(configuration, true)
-        const jwt = new JwtToken(await super.signin({
+        const tokens = await super.signin({
             namespace: configuration.namespace,
             database: configuration.database,
             access: configuration.access,
             variables: credentials
-        }))
-        user.value = await super.info<User>()
+        })
+        const jwt = new JwtToken(tokens.access)
+        user.value = await super.query<[User]>(surql`session::rd()`).then(result => result[0])
         globalToken = jwt
         const expiration = globalToken.getExpirationAsDate()
         if (expiration) cookies.set(`${TOKEN_COOKIE}_${configuration.name}`, globalToken.raw, expiration)
@@ -164,7 +175,7 @@ export class SurrealDbService extends Surreal {
         if (!profiles.profiles.find(profile => profile.name === configuration.name)) profiles.profiles.push(configuration)
         cookies.set(PROFILE_COOKIE, JSON.stringify(profiles))
         this.setLogoutTimeout()
-        return jwt.raw
+        return tokens
     }
 
     async redirectPostLogin(defaultRoute: string | RouteLocationNormalized = '/') {
@@ -172,29 +183,29 @@ export class SurrealDbService extends Surreal {
         loginRedirect = undefined
     }
 
-    async changePassword(credentials: PasswordChangeRequest): Promise<Token> {
-        return await this.insert('_password_change_request', credentials).then(() => this.signin({ username: credentials.username , password: credentials.new }))
+    async changePassword(credentials: PasswordChangeRequest): Promise<Tokens> {
+        return await this.insert(new Table('_password_change_request'), {}).then(() => this.signin({ username: credentials.username , password: credentials.new }))
     }
 
-    async authenticate(token?: string): Promise<true> {
-        if (!token) token = cookies.get(`${TOKEN_COOKIE}_${profiles.default.name}`)
-        if (!token) {
+    async authenticate(token?: Token | Tokens): Promise<Tokens> {
+        const tokens = token ? (typeof token === 'string' ? token : token.access) : cookies.get(`${TOKEN_COOKIE}_${profiles.default.name}`) as string
+        if (!tokens) {
             globalToken = undefined
-            throw new ResponseError('There was a problem with the database: There was a problem with authentication')
+            throw new SurrealError('There was a problem with authentication')
         }
-        const jwt = new JwtToken(token)
+        const jwt = new JwtToken(tokens)
         if (jwt.isExpired()) {
             globalToken = undefined
             cookies.delete(`${TOKEN_COOKIE}_${profiles.default.name}`)
-            throw new ResponseError('There was a problem with the database: There was a problem with authentication')
+            throw new SurrealError('There was a problem with authentication')
         }
         globalToken = jwt
-        return await super.authenticate(globalToken.raw)
+        return super.authenticate(globalToken.raw)
             .then(async result => {
                 globalToken = jwt
                 cookies.set(`${TOKEN_COOKIE}_${profiles.default.name}`, jwt.raw, jwt.getExpirationAsDate())
                 this.setLogoutTimeout()
-                user.value = await super.info<User>()
+                //user.value = await super.query<[User]>(surql`session::rd()`).then(result => result[0])
                 return result
             })
             .catch(error => {
@@ -206,16 +217,16 @@ export class SurrealDbService extends Surreal {
             })
     }
 
-    async invalidate(): Promise<true> {
+    async invalidate(): Promise<void> {
         user.value = undefined
         globalToken = undefined
         cookies.delete(`${TOKEN_COOKIE}_${profiles.default.name}`)
         stopLogoutTimeout?.()
-        return await super.invalidate().then(() => (this.checkAuthGuard(this.router), true))
+        return await super.invalidate().then(() => this.checkAuthGuard(this.router))
     }
 
-    async invalidateAllDevices(): Promise<true> {
-        return await this.insert('_invalidate_all_devices_request', {}).then(() => this.invalidate())
+    async invalidateAllDevices(): Promise<void> {
+        return await this.insert(new Table('_invalidate_all_devices_request'), {}).then(() => this.invalidate())
     }
 
     async redirectPostInvalidate(route: string | RouteLocationNormalized = '/') {
@@ -269,10 +280,6 @@ function loadToken(): JwtToken | undefined {
     return jwt
 }
 
-function addTimeOut<T>(promise: Promise<T>, time: number): Promise<T> {
-    return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new VersionRetrievalFailure(new Error("VersionRetrievalFailure: Failed to retrieve remote version. If the server is behind a proxy, make sure it's configured correctly."))), time))])
-}
-
 function addSurrealInitializer(SurrealDbService: SurrealDbService, timeout?: number): SurrealDbService {
     return new Proxy(SurrealDbService, {
         get(target, property) {
@@ -281,10 +288,8 @@ function addSurrealInitializer(SurrealDbService: SurrealDbService, timeout?: num
                 return original
             }
             return async <T extends (...args: unknown[]) => unknown>(...args: Parameters<T>) => {
-                if (original !== target.connect && original !== target.autoConnect && (target.status === ConnectionStatus.Disconnected || target.status === ConnectionStatus.Error)) {
-                    await target.autoConnect()
-                }
-                return timeout ? addTimeOut((original as T).apply(target, args) as Promise<unknown>, timeout) : (original as T).apply(target, args)
+                if (original !== target.connect && original !== target.autoConnect && target.status === 'disconnected') await target.autoConnect()
+                return (original as T).apply(target, args)
             }
         },
     })
@@ -306,7 +311,7 @@ export function auth(condition: (user: User) => boolean = () => true): Navigatio
 
 export function parseCustomSurrealDbError(exception: Error | undefined): { name?: string, key?: string, message?: string, success: boolean } {
     if (!exception) return { success: false }
-    const error = exception as SurrealDbError
+    const error = exception as SurrealError
     if (error?.name === 'ResponseError' && error.message) {
         const [prefix, message] = error.message.split('There was a problem with the database: An error occurred: ')
         const key = message ? message.split(':') : undefined
@@ -325,38 +330,38 @@ export function generateGUID(timebased?: boolean) {
 }
 
 export function normalize(name: string, seperator?: string): string {
-    let normalized: string = '';
-    let blank: boolean = false;
-    const replacements: Record<string, string> = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss' };
+    let normalized: string = ''
+    let blank: boolean = false
+    const replacements: Record<string, string> = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss' }
     for (let char of name.toLowerCase()) {
         if (replacements[char]) {
-            normalized += replacements[char];
-            blank = false;
+            normalized += replacements[char]
+            blank = false
         } else if (char === ' ' || char === '/' || char === '-') {
             if (!blank) {
                 if (seperator) normalized += seperator;
-                blank = true;
+                blank = true
             }
         } else if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
-            normalized += char;
-            blank = false;
+            normalized += char
+            blank = false
         } else {
             for (let nkd of char.normalize('NFD')) {
                 if (nkd <= '\u007F') {
-                    normalized += nkd;
+                    normalized += nkd
                 }
             }   
         }
     }
-    return normalized;
+    return normalized
 }
 
-export const SURREAL_DB_SERVICE = 'surrealDbService';
+export const SURREAL_DB_SERVICE = 'surrealDbService'
 
 export default {
     install(app: App) {
         const router = app.config.globalProperties.$router
-        const surrealDbService = addSurrealInitializer(new SurrealDbService(router), 7000)
+        const surrealDbService = new SurrealDbService(router)
         app.config.globalProperties.$surrealDbService = surrealDbService
         app.provide('surrealDbService', surrealDbService)
     }

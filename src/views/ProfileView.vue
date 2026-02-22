@@ -91,6 +91,7 @@ import { resource } from '@/core/resource'
 import type { User } from '@/core/types'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service'
+import { surql } from 'surrealdb'
 import { inject, reactive, ref, type Ref } from 'vue'
 
 const dialogServcie = inject(DIALOG_SERVICE) as DialogService
@@ -102,7 +103,7 @@ const devtools: Ref<boolean> = ref(false)
 const password = reactive<PasswordChangeRequest & { error?: string } & { success?: boolean }>({ username: '' , old: '', new: '', repeat: '' })
 
 const profile = resource({
-    loader: () => surrealdb.info<User>()
+    loader: () => surrealdb.query<[User]>(surql`session::rd()`).then(result => result[0])
 })
 
 async function changePassword() {
