@@ -160,7 +160,7 @@ import type { Plan, PlanSchedulesShift, Shift } from '@/core/types'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { DATA_SERVICE, DataService, dateToIsoDate, isoDateToDate } from '@/services/data.service'
 import { RecordId, surql } from 'surrealdb'
-import { inject, ref, toRaw, useTemplateRef } from 'vue'
+import { inject, toRaw, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 
@@ -173,7 +173,7 @@ const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const formRef = useTemplateRef('form')
 
 const plan = resource({
-    loader: async () => (await surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`))[0],
+    loader: () => surrealdb.up().then(() => surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`)).then(result => result[0]),
 })
 
 const shiftsToAdd: Shift[] = []
@@ -204,13 +204,14 @@ const savePlan = resource({
             form.reportValidity()
             return
         }
+        await surrealdb.up()
         await surrealdb.query(surql`
-            BEGIN TRANSACTION;
-            UPDATE ${plan.value.id} CONTENT ${plan.value};
+            --BEGIN TRANSACTION;
+            UPDATE ${plan.value.id} CONTENT (SELECT * OMIT shifts FROM ONLY ${plan.value});
             FOR $shift IN ${shiftsToAdd} {
                 LET $plan = ${plan.value.id};
-                LET $id = (INSERT INTO shift $shift).id;
-                RELATE $plan->schedules->$id;
+                --LET $id = (CREATE ONLY shift CONTENT $shift).id;
+                --RELATE $plan->schedules->$id;
             };
             FOR $shift IN ${shiftsToRemove} {
                 LET $id = $shift.id;
@@ -219,7 +220,7 @@ const savePlan = resource({
             FOR $shift IN ${plan.value.shifts.filter(shift => shift.id)} {
                 UPDATE $shift.id CONTENT $shift;
             };
-            COMMIT TRANSACTION;
+            --COMMIT TRANSACTION;
         `);
 
         router.push({ name: 'plan', params: { id: route.params.id } })

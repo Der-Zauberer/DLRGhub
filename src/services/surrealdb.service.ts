@@ -1,6 +1,7 @@
+import { resource, type Resource } from '@/core/resource'
 import type { User } from '@/core/types'
-import { DateTime, FileRef, RecordId, surql, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens } from 'surrealdb'
-import { markRaw, ref, type App, type ComputedRef, type Ref } from 'vue'
+import { DateTime, FileRef, RecordId, surql, Surreal, SurrealError, Table, u, type ConnectOptions, type DriverOptions, type Token, type Tokens } from 'surrealdb'
+import { markRaw, type App } from 'vue'
 import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 
 export const config: SurrealDbConfig = {
@@ -35,6 +36,13 @@ export type SurrealDbProfile = {
     namespace: string,
     database: string,
     access: string
+}
+
+export type SurrealDbAccount =  {
+    id: string
+    access: string
+    refresh?: string
+    expiration: number
 }
 
 export type SurrealDbConfig = {
@@ -125,11 +133,11 @@ const DRIVER_OPTIONS: DriverOptions = {
 }
 
 const PROFILE_COOKIE = 'surreal_db_profiles'
-const TOKEN_COOKIE = 'surreal_db_token'
+const ACCOUNT_COOKIE = 'surreal_db_account'
 const cookies = new Cookies()
 const profiles = loadProfiles()
-const user: Ref<User | undefined> = ref()
-let globalToken = loadToken()
+const user = resource<User, unknown>({ loader: () => account && account.expiration > new Date().getTime() ? undefined : undefined })
+let account = loadAccount()
 let stopLogoutTimeout: () => void
 let loginRedirect: RouteLocationNormalized | undefined
 
@@ -147,7 +155,7 @@ export class SurrealDbService extends Surreal {
         return response.then(() => (this.authenticate(), true))
     }
 
-    async autoConnect(configuration: SurrealDbProfile = profiles.default, ignoreAuthentication?: boolean): Promise<true> {
+    async up(configuration: SurrealDbProfile = profiles.default, ignoreAuthentication?: boolean): Promise<true> {
         if (configuration === profiles.default && this.status !== 'disconnected') {
             await super.ready
             return true
@@ -159,18 +167,25 @@ export class SurrealDbService extends Surreal {
     }
 
     async signin(credentials: { username: string, password: string }, configuration: SurrealDbProfile = profiles.default): Promise<Tokens> {
-        if (configuration !== profiles.default) await this.autoConnect(configuration, true)
+        if (configuration !== profiles.default) await this.up(configuration, true)
         const tokens = await super.signin({
             namespace: configuration.namespace,
             database: configuration.database,
             access: configuration.access,
             variables: credentials
         })
-        const jwt = new JwtToken(tokens.access)
-        user.value = await super.query<[User]>(surql`session::rd()`).then(result => result[0])
-        globalToken = jwt
-        const expiration = globalToken.getExpirationAsDate()
-        if (expiration) cookies.set(`${TOKEN_COOKIE}_${configuration.name}`, globalToken.raw, expiration)
+        const jwt = new JwtToken(typeof tokens === 'string' ? tokens : tokens.access)
+        account = {
+            id: '',
+            access: jwt.raw,
+            refresh: tokens.refresh,
+            expiration: jwt.getExpirationAsDate()!.getTime()
+        }
+        cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account), jwt.getExpirationAsDate())
+        this.setLogoutTimeout()
+        user.reload(await super.query<[User]>(surql`SELECT * FROM ONLY session::rd()`).then(result => result[0]))
+        const expiration = jwt.getExpirationAsDate()
+        if (expiration) cookies.set(`${ACCOUNT_COOKIE}_${configuration.name}`, JSON.stringify(account), expiration)
         profiles.default = configuration
         if (!profiles.profiles.find(profile => profile.name === configuration.name)) profiles.profiles.push(configuration)
         cookies.set(PROFILE_COOKIE, JSON.stringify(profiles))
@@ -188,29 +203,33 @@ export class SurrealDbService extends Surreal {
     }
 
     async authenticate(token?: Token | Tokens): Promise<Tokens> {
-        const tokens = token ? (typeof token === 'string' ? token : token.access) : cookies.get(`${TOKEN_COOKIE}_${profiles.default.name}`) as string
+        const tokens = token ? (typeof token === 'string' ? token : token.access) : account?.access
         if (!tokens) {
-            globalToken = undefined
+            account = undefined
             throw new SurrealError('There was a problem with authentication')
         }
-        const jwt = new JwtToken(tokens)
-        if (jwt.isExpired()) {
-            globalToken = undefined
-            cookies.delete(`${TOKEN_COOKIE}_${profiles.default.name}`)
+        if (account && account.expiration < new Date().getTime()) {
+            account = undefined
+            cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account))
             throw new SurrealError('There was a problem with authentication')
         }
-        globalToken = jwt
-        return super.authenticate(globalToken.raw)
+        return super.authenticate(tokens)
             .then(async result => {
-                globalToken = jwt
-                cookies.set(`${TOKEN_COOKIE}_${profiles.default.name}`, jwt.raw, jwt.getExpirationAsDate())
+                const jwt = new JwtToken(typeof result === 'string' ? result : result.access)
+                account = {
+                    id: '',
+                    access: jwt.raw,
+                    refresh: result.refresh,
+                    expiration: jwt.getExpirationAsDate()!.getTime()
+                }
+                cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account), jwt.getExpirationAsDate())
                 this.setLogoutTimeout()
-                //user.value = await super.query<[User]>(surql`session::rd()`).then(result => result[0])
+                user.reload(await super.query<[User]>(surql`SELECT * FROM ONLY session::rd()`).then(result => result[0]))
                 return result
             })
             .catch(error => {
-                globalToken = undefined
-                cookies.delete(`${TOKEN_COOKIE}_${profiles.default.name}`)
+                account = undefined
+                cookies.delete(`${ACCOUNT_COOKIE}_${profiles.default.name}`)
                 stopLogoutTimeout?.()
                 this.checkAuthGuard(this.router)
                 throw error
@@ -218,9 +237,9 @@ export class SurrealDbService extends Surreal {
     }
 
     async invalidate(): Promise<void> {
-        user.value = undefined
-        globalToken = undefined
-        cookies.delete(`${TOKEN_COOKIE}_${profiles.default.name}`)
+        user.reload()
+        account = undefined
+        cookies.delete(`${ACCOUNT_COOKIE}_${profiles.default.name}`)
         stopLogoutTimeout?.()
         return await super.invalidate().then(() => this.checkAuthGuard(this.router))
     }
@@ -233,21 +252,17 @@ export class SurrealDbService extends Surreal {
         this.router.push(route)
     }
 
-    getUser(): User | undefined {
-        return user.value ? Object.assign(user.value) : undefined
-    }
-    
-    getUserAsRef(): ComputedRef<User | undefined> {
-        return user as ComputedRef<User | undefined>
-    }
-
     getProfile(): SurrealDbConfig {
         return Object.assign(profiles)
     }
 
+    getUser(): Resource<User, unknown> {
+        return user
+    }
+
     private setLogoutTimeout() {
-        if (!globalToken || !globalToken.payload?.exp) return
-        const timeout = setTimeout(() => this.invalidate(), Math.max((globalToken?.payload?.exp || 0) * 1000 - Date.now(), 0))
+        if (!account) return
+        const timeout = setTimeout(() => this.invalidate(), Math.max(new Date(account.expiration).getTime() - Date.now(), 0))
         stopLogoutTimeout = () => clearTimeout(timeout)
     }
 
@@ -269,36 +284,22 @@ function loadProfiles(): SurrealDbConfig {
     return JSON.parse(json) as SurrealDbConfig
 }
 
-function loadToken(): JwtToken | undefined {
-    const token = cookies.get(`${TOKEN_COOKIE}_${profiles.default.name}`)
-    if (!token) return undefined
-    const jwt = new JwtToken(token)
-    if (jwt.isExpired()) {
-        cookies.delete(`${TOKEN_COOKIE}_${profiles.default.name}`)
+function loadAccount(): SurrealDbAccount | undefined {
+    const json = cookies.get(`${ACCOUNT_COOKIE}_${profiles.default.name}`)
+    if (!json) return undefined
+    const account = JSON.parse(json) as SurrealDbAccount | undefined
+    if (!account) return undefined
+    if (account.expiration < new Date().getTime()) {
+        cookies.delete(`${ACCOUNT_COOKIE}_${profiles.default.name}`)
         return undefined
     }
-    return jwt
-}
-
-function addSurrealInitializer(SurrealDbService: SurrealDbService, timeout?: number): SurrealDbService {
-    return new Proxy(SurrealDbService, {
-        get(target, property) {
-            const original = target[property as keyof SurrealDbService]
-            if (typeof original !== 'function' || original.constructor.name !== 'AsyncFunction') {
-                return original
-            }
-            return async <T extends (...args: unknown[]) => unknown>(...args: Parameters<T>) => {
-                if (original !== target.connect && original !== target.autoConnect && target.status === 'disconnected') await target.autoConnect()
-                return (original as T).apply(target, args)
-            }
-        },
-    })
+    return account
 }
 
 export function auth(condition: (user: User) => boolean = () => true): NavigationGuardWithThis<undefined> {
     return (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-        if (globalToken?.isExpired()) globalToken = undefined
-        if (!globalToken && to.path !== '/login') {
+        if (account && account.expiration < new Date().getTime()) account = undefined
+        if (!account && to.path !== '/login') {
             loginRedirect = to
             next('/login')
         } else if (user.value && !condition(user.value)) {
@@ -312,8 +313,8 @@ export function auth(condition: (user: User) => boolean = () => true): Navigatio
 export function parseCustomSurrealDbError(exception: Error | undefined): { name?: string, key?: string, message?: string, success: boolean } {
     if (!exception) return { success: false }
     const error = exception as SurrealError
-    if (error?.name === 'ResponseError' && error.message) {
-        const [prefix, message] = error.message.split('There was a problem with the database: An error occurred: ')
+    if (error?.name === 'ThrownError' && error.message) {
+        const [prefix, message] = error.message.split('An error occurred: ')
         const key = message ? message.split(':') : undefined
         return { name: error?.name, key: key && key[0] || prefix, message: key && key[1], success: false }
     } else if (error?.name === 'VersionRetrievalFailure' || error?.name === 'ConnectionUnavailable') {

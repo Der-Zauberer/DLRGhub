@@ -16,8 +16,8 @@
 				</swd-card>
 
 				<ButtonComponent :to="{ name: 'post-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" class="width-100">Posten</ButtonComponent>
-				<ButtonComponent :to="{ name: 'user' }" color="ELEMENT" icon="user" class="width-100" v-if="user?.admin">Benutzerverwaltung</ButtonComponent>
-				<ButtonComponent :to="{ name: 'registrations' }" color="ELEMENT" icon="user" class="width-100" v-if="user?.admin">Registrierungen</ButtonComponent>
+				<ButtonComponent :to="{ name: 'user' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Benutzerverwaltung</ButtonComponent>
+				<ButtonComponent :to="{ name: 'registrations' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Registrierungen</ButtonComponent>
 
 			</div>
 			<div class="grid-span-md-2 grid-span-1">
@@ -46,15 +46,14 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import WeatherComponent from '@/components/WeatherComponent.vue'
-import type { BeforeInstallPromptEvent, Post} from '@/core/types'
+import type { BeforeInstallPromptEvent} from '@/core/types'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { RecordId } from 'surrealdb'
-import { inject, markRaw, toRaw } from 'vue';
+import { inject } from 'vue'
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const dataService = inject(DATA_SERVICE) as DataService
-const user = surreal.getUserAsRef()
+const user = surreal.getUser()
 const pwa = (window as unknown as {pwa: BeforeInstallPromptEvent | undefined}).pwa
 
 function install() {

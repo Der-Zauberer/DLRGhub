@@ -11,11 +11,11 @@
         </swd-card>
 
         <div class="grid-cols-md-2 grid-cols-1">
-            <InputComponent label="Benutzername" disabled :value="user?.name"/>
-            <InputComponent label="Email" type="email" disabled :value="user?.email"/>
-            <InputComponent label="Anzeigename" disabled :value="user?.displayname"/>
+            <InputComponent label="Benutzername" disabled :value="user.value?.name"/>
+            <InputComponent label="Email" type="email" disabled :value="user.value?.email"/>
+            <InputComponent label="Anzeigename" disabled :value="user.value?.displayname"/>
             <div>
-                {{ user?.login?.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
+                {{ user.value?.login?.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
                 <swd-subtitle>Letzter Login</swd-subtitle>
             </div>
         </div>
@@ -50,36 +50,31 @@
         </h3>
 
         <div class="grid-cols-1" v-if="devtools">
-
             <p>
                 {{ profiles.default.name }}<br>
                 {{ profiles.default.address }}<br>
                 {{ profiles.default.namespace }}:{{ profiles.default.database }} ({{ profiles.default.access }})<br>
                 <swd-subtitle>Profil</swd-subtitle>
             </p>
-
             <p>
-                {{ user?.id || 'unauthenticated' }}<br>
+                {{ user.value?.id || 'unauthenticated' }}<br>
                 <swd-subtitle>Benutzer</swd-subtitle>
             </p>
-
             <p>
                 {{ surrealdb.status }}<br>
                 <swd-subtitle>DB Status</swd-subtitle>
             </p>
-
             <p>
                 {{ $dataService.online }}<br>
                 <swd-subtitle>Service Worker Online</swd-subtitle>
             </p>
-
             <div class="flex">
                 <button @click="$surrealDbService.close()">Disconnect</button>
                 <button @click="$surrealDbService.autoConnect()">Reconnect</button>
                 <button @click="$dataService.clearCache()">Clear Cache</button>
             </div>
-
         </div>
+
     </div>
 
 </template>
@@ -97,13 +92,13 @@ import { inject, reactive, ref, type Ref } from 'vue'
 const dialogServcie = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profiles = surrealdb.getProfile()
-const user = surrealdb.getUserAsRef()
+const user = surrealdb.getUser()
 
 const devtools: Ref<boolean> = ref(false)
 const password = reactive<PasswordChangeRequest & { error?: string } & { success?: boolean }>({ username: '' , old: '', new: '', repeat: '' })
 
 const profile = resource({
-    loader: () => surrealdb.query<[User]>(surql`session::rd()`).then(result => result[0])
+    loader: () => surrealdb.up().then(() => surrealdb.query<[User]>(surql`SELECT * FROM ONLY session::rd()`).then(result => result[0]))
 })
 
 async function changePassword() {

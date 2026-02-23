@@ -1,5 +1,5 @@
 import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan } from "@/core/types"
-import { LiveSubscription, RecordId, surql, Table, Uuid } from "surrealdb"
+import { LiveSubscription, RecordId, surql, Table } from "surrealdb"
 import { markRaw, ref, watch, type App } from "vue"
 import type { SurrealDbService } from "./surrealdb.service"
 import { resource, type Resource } from "@/core/resource"
@@ -28,7 +28,7 @@ export class DataService {
     }
 
     async reconnect(): Promise<true> {
-        return this.surrealDbService.autoConnect().then((result) => {
+        return this.surrealDbService.up().then((result) => {
             this.onlineEvents.forEach(event => event())
             return result
         })
@@ -38,7 +38,7 @@ export class DataService {
         const cache = this.cache.get<{ value: Plan[] }>(new RecordId('plans', '*')).then(result => result?.value || [])
 
         const query = async (): Promise<Plan[]> => {
-            await this.surrealDbService.autoConnect()
+            await this.surrealDbService.up()
             const plans = await this.surrealDbService.select<Plan>(new Table('plan'))
             this.cache.put({ id: new RecordId('plans', '*'), value: plans })
             const set = new Set(plans.map(plan => plan.id.id.toString()))
@@ -56,7 +56,7 @@ export class DataService {
         const cache = this.cache.get<PlanSchedulesShift | undefined>(id)
 
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
-            await this.surrealDbService.autoConnect()
+            await this.surrealDbService.up()
             const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
             if (plan) this.cache.put(plan)
             return plan
@@ -69,7 +69,7 @@ export class DataService {
         const cache = this.cache.get<{ value: ShiftScheduledByPlan[] }>(new RecordId('shifts', '*')).then(result => result?.value || [])
         
         const query = async (): Promise<ShiftScheduledByPlan[]> => {
-            await this.surrealDbService.autoConnect()
+            await this.surrealDbService.up()
             const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= time::now() ORDER BY date;`)
             this.cache.put({ id: new RecordId('shifts', '*'), value: shifts })
             return shifts
@@ -82,7 +82,7 @@ export class DataService {
         const cache = this.cache.get<{ value: Post[] }>(new RecordId('posts', '*')).then(result => result?.value || [])
 
         const query = async (): Promise<Post[]> => {
-            await this.surrealDbService.autoConnect()
+            await this.surrealDbService.up()
             const posts = (await this.surrealDbService.select<Post>(new Table('post'))).reverse()
             this.cache.put({ id: new RecordId('posts', '*'), value: posts })
             return posts
@@ -92,28 +92,28 @@ export class DataService {
     }
 
     async createPlan(name: string): Promise<Plan> {
-        await this.surrealDbService.autoConnect()
+        await this.surrealDbService.up()
         return (await this.surrealDbService.insert<Plan>(new Table('plan'), { name }))[0]
     }
 
     async deletePlan(id: RecordId<'plan'>) {
-        await this.surrealDbService.autoConnect()
+        await this.surrealDbService.up()
         await this.surrealDbService.query(surql` DELETE ${id}->schedules->shift;`);
         await this.surrealDbService.delete(id)
     }
 
     async addShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
-        await this.surrealDbService.autoConnect()
+        await this.surrealDbService.up()
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people += ${person}`)
     }
 
     async removeShiftPerson(shift: RecordId<'shift'>, person: { name: string, role?: string }) {
-        await this.surrealDbService.autoConnect()
+        await this.surrealDbService.up()
         await this.surrealDbService.query(surql`UPDATE ${shift} SET people -= ${person}`)
     }
     
     async editDescription(shift: RecordId<'shift'>, description: string) {
-        await this.surrealDbService.autoConnect()
+        await this.surrealDbService.up()
         await this.surrealDbService.query(surql`UPDATE ${shift} SET description = ${description}`)
     }
 

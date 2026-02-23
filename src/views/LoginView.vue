@@ -135,8 +135,7 @@ async function login() {
     loginLoading.value = true
     loginError.value = undefined
     try {
-        if (credentials.profile !== profiles.default.name) await surrealdb.autoConnect(profiles.profiles.find(profile => credentials.profile == profile.name))
-        await surrealdb.autoConnect()
+        await surrealdb.up(credentials.profile !== profiles.default.name ? profiles.profiles.find(profile => credentials.profile == profile.name) : undefined, true)
         await surrealdb.signin(credentials)
         await surrealdb.redirectPostLogin()
         loginError.value = undefined
