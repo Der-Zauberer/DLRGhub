@@ -1,5 +1,5 @@
 import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan } from "@/core/types"
-import { LiveSubscription, RecordId, surql, Table } from "surrealdb"
+import { LiveSubscription, RecordId, s, surql, Table } from "surrealdb"
 import { markRaw, ref, watch, type App } from "vue"
 import type { SurrealDbService } from "./surrealdb.service"
 import { resource, type Resource } from "@/core/resource"
@@ -57,7 +57,7 @@ export class DataService {
 
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
             await this.surrealDbService.up()
-            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
+            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM $this.id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
             if (plan) this.cache.put(plan)
             return plan
         }
@@ -70,7 +70,7 @@ export class DataService {
         
         const query = async (): Promise<ShiftScheduledByPlan[]> => {
             await this.surrealDbService.up()
-            const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= time::now() ORDER BY date;`)
+            const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= (time::now() - 1d) ORDER BY date;`)
             this.cache.put({ id: new RecordId('shifts', '*'), value: shifts })
             return shifts
         }
@@ -88,7 +88,7 @@ export class DataService {
             return posts
         }
 
-        return this.createCachedResource<Post[]>(Promise.resolve<Post[]>([]), query, kill, ['post'])
+        return this.createCachedResource<Post[]>(cache, query, kill, ['post'])
     }
 
     async createPlan(name: string): Promise<Plan> {
@@ -158,18 +158,21 @@ export class DataService {
             loader: () => query().then((result) => (setupLiveTables(), result))
         })
         const setupLiveTables = async () => {
-            if (offline && kill && trackedTables) {
-                subscriptions.length = 0
-                for (const table of trackedTables) {
-                    const subscription = await this.surrealDbService.live(new Table(table))
-                    subscriptions.push(subscription)
-                    for await (const event of subscription) {
-                        if (event.action === 'KILLED') offline = true
-                        res.reload()
-                    }
-                }
-                offline = false
+            if (!offline || !kill || !trackedTables) {
+                return
             }
+            subscriptions.length = 0
+            for (const table of trackedTables) {
+                await this.surrealDbService.up()
+                const subscription = await this.surrealDbService.live(new Table(table))
+                subscriptions.push(subscription)
+                for await (const event of subscription) {
+                    if (event.action === 'KILLED') offline = true
+                    res.reload()
+                }
+            }
+            offline = false
+            
         }
         if (kill) {
             setupLiveTables()
@@ -243,16 +246,17 @@ export class CacheDB {
     }
 
     serializeDeep<T>(object: unknown): T {
+        if (object instanceof Date) return object as T
         if (object instanceof RecordId) return { __type: 'RecordId', value: [object.table.name, object.id.toString()] } as T
         if (Array.isArray(object)) return object.map(item => this.serializeDeep(item)) as T
         if (object && typeof object === 'object') {
             return Object.fromEntries(Object.entries(object).map(([key, value]) => [key, this.serializeDeep(value)])) as T
         }
-
         return object as T
     }
 
     deserializeDeep<T>(object: unknown): T {
+        if (object instanceof Date) return object as T
         if (Array.isArray(object)) return object.map(item => this.deserializeDeep(item)) as T
         if (object && typeof object === 'object') {
             if ((object as Record<string, unknown>).__type === 'RecordId') {

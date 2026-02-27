@@ -128,7 +128,10 @@ export class Cookies {
 
 const DRIVER_OPTIONS: DriverOptions = {
     codecOptions: {
-        valueDecodeVisitor: (value) => value instanceof RecordId || value instanceof DateTime || value instanceof FileRef ? markRaw(value) : value,
+        valueDecodeVisitor: (value) => {
+            if (value instanceof DateTime) return new Date(value.toString())
+            return value instanceof RecordId || value instanceof FileRef ? markRaw(value) : value
+        },
     }
 }
 
@@ -363,6 +366,7 @@ export default {
     install(app: App) {
         const router = app.config.globalProperties.$router
         const surrealDbService = new SurrealDbService(router)
+        //surrealDbService.up()
         app.config.globalProperties.$surrealDbService = surrealDbService
         app.provide('surrealDbService', surrealDbService)
     }

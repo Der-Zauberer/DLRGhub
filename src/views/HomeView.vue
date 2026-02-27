@@ -49,7 +49,7 @@ import WeatherComponent from '@/components/WeatherComponent.vue'
 import type { BeforeInstallPromptEvent} from '@/core/types'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { inject } from 'vue'
+import { inject, onBeforeUnmount } from 'vue'
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const dataService = inject(DATA_SERVICE) as DataService
@@ -63,7 +63,7 @@ function install() {
     }
 }
 
-const posts = dataService.getPosts()
+const posts = dataService.getPosts(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 const weather = dataService.getWeather()
 const water = dataService.getWaterTemperature()
 

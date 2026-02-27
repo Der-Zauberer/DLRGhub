@@ -67,7 +67,13 @@ const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
-const currentShifts = computed(() => plan.value?.shifts.filter(shift => shift.date >= new Date()))
-const previousShifts = computed(() => plan.value?.shifts.filter(shift => shift.date < new Date()))
+const currentShifts = computed(() => plan.value?.shifts.filter(shift => shift.date >= getYesterday()))
+const previousShifts = computed(() => plan.value?.shifts.filter(shift => shift.date < getYesterday()))
+
+function getYesterday(): Date {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    return yesterday
+}
 
 </script>
