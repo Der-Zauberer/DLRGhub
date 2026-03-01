@@ -112,6 +112,8 @@ DEFINE FIELD OVERWRITE login ON TABLE user TYPE option<datetime>
 DEFINE INDEX OVERWRITE email ON user FIELDS email UNIQUE;
 DEFINE INDEX OVERWRITE name ON user FIELDS name UNIQUE;
 
+DEFINE TABLE OVERWRITE user_public SCHEMAFULL AS SELECT id, email, name, displayname FROM user WHERE account.enabled && (!type::is_datetime(account.expiry) || account.expiry > time::now()) PERMISSIONS FOR select WHERE $auth.id;
+
 DEFINE TABLE OVERWRITE _password_change_request SCHEMAFULL
 	PERMISSIONS
 		FOR create FULL;

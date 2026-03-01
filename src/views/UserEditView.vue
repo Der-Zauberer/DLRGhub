@@ -67,7 +67,7 @@ import { isoDateToDate, dateToIsoDate } from '@/services/data.service'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
-import { inject, useTemplateRef } from 'vue'
+import { inject, markRaw, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -78,7 +78,7 @@ const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const formRef = useTemplateRef('form')
 
 const newUser: Partial<User> = {
-    id: new RecordId('user', ''),
+    id: markRaw(new RecordId('user', '')),
     admin: false,
     account: {
         enabled: false

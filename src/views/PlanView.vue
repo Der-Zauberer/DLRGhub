@@ -70,7 +70,7 @@ const data = inject(DATA_SERVICE) as DataService
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const user = resource({
-    loader: () => surreal.select<User>(new Table('user')).then(result => result.map(user => user.displayname))
+    loader: () => surreal.select<User>(new Table('user_public')).then(result => result.map(user => user.displayname))
 })
 
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
