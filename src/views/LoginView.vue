@@ -29,7 +29,7 @@
 
         </form>
 
-        <form v-if="$route.name === 'register' && !registration.success" class="login__form" @submit.prevent="register()">
+        <form v-if="$route.name === 'register' && !registrationSuccess" class="login__form" @submit.prevent="register()">
             
             <h3 class="margin-0">Mitglieder Registrierung</h3>
 
@@ -47,7 +47,7 @@
             </swd-loading-spinner>
         </form>
 
-        <form v-if="$route.name === 'register' && registration.success" class="login__form" @submit.prevent="register()">
+        <form v-if="$route.name === 'register' && registrationSuccess" class="login__form" @submit.prevent="register()">
             
             <h3 class="margin-0">Registrierung Abgeschlossen</h3>
             <div>Ein Admin muss deine Registrierung bestätigen. Danach kannst du dich mit folgenden Daten anmelden:</div>
@@ -146,7 +146,8 @@ async function login() {
     }
 }
 
-const registration = reactive<Partial<Registration> & { success: boolean }>({ success: false })
+const registration = reactive<Partial<Registration>>({})
+const registrationSuccess = ref<boolean>(false)
 const registrationLoading = ref<boolean>()
 const registrationError = ref<string>()
 
@@ -155,7 +156,7 @@ async function register() {
     registrationError.value = undefined
     try {
         await surrealdb.up()
-        registration.success = await surrealdb.insert(new Table('registration'), registration).then(() => true)
+        registrationSuccess.value = await surrealdb.insert(new Table('registration'), registration).then(() => true)
         loginError.value = undefined
     } catch (exception) {
         registrationError.value = parseCustomSurrealDbError(exception as Error).key

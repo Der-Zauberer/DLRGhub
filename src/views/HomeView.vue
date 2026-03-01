@@ -15,9 +15,9 @@
 					<button class="width-100" @click="install()">Install</button>
 				</swd-card>
 
-				<ButtonComponent :to="{ name: 'post-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" class="width-100">Posten</ButtonComponent>
+				<ButtonComponent :to="{ name: 'post-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" class="width-100">Neuer Post</ButtonComponent>
 				<ButtonComponent :to="{ name: 'user' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Benutzerverwaltung</ButtonComponent>
-				<ButtonComponent :to="{ name: 'registrations' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Registrierungen</ButtonComponent>
+				<ButtonComponent :to="{ name: 'registrations' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Registrierungen <swd-chip class="margin-left-auto red-color" v-if="openRegistrations?.value !== 0">{{ openRegistrations.value }}</swd-chip></ButtonComponent>
 
 			</div>
 			<div class="grid-span-md-2 grid-span-1">
@@ -28,8 +28,8 @@
 				<swd-loading-spinner v-if="posts?.status === 'LOADING' && !posts?.value" class="width-100" loading="true"></swd-loading-spinner>
 
 				<swd-card v-for="post in posts.value">
-					<HeadlineComponent :title="post.title" :subtitle="post.author">
-						<ButtonComponent :to="{ name: 'post-edit', params: { id: post.id.id.toString() } }" color="ELEMENT" icon="pen" aria-label="Edit" />
+					<HeadlineComponent :title="post.title" :subtitle="post.author.displayname">
+						<ButtonComponent v-if="user.value?.admin || user.value?.id.equals(post.author.id)" :to="{ name: 'post-edit', params: { id: post.id.id.toString() } }" color="ELEMENT" icon="pen" aria-label="Edit" />
 					</HeadlineComponent>
 					<div style="white-space: pre-wrap;">{{ post.message }}</div>
 				</swd-card>
@@ -46,15 +46,22 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import WeatherComponent from '@/components/WeatherComponent.vue'
+import { resource } from '@/core/resource'
 import type { BeforeInstallPromptEvent} from '@/core/types'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { surql } from 'surrealdb'
 import { inject, onBeforeUnmount } from 'vue'
 
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const dataService = inject(DATA_SERVICE) as DataService
-const user = surreal.getUser()
+const user = dataService.getUser()
 const pwa = (window as unknown as {pwa: BeforeInstallPromptEvent | undefined}).pwa
+
+const openRegistrations = resource({
+	parameter: user,
+	loader: () => surreal.up().then(() => surreal.query<[Number]>(surql`(SELECT count() FROM registration GROUP ALL)[0].count`).then(result => result[0]))
+})
 
 function install() {
     if (pwa) {

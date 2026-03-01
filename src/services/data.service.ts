@@ -57,7 +57,7 @@ export class DataService {
 
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
             await this.surrealDbService.up()
-            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM $this.id->schedules->shift ORDER BY date) as shifts FROM ONLY ${id};`)
+            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this.id->schedules->shift) ORDER BY date) as shifts FROM ONLY ${id};`)
             if (plan) this.cache.put(plan)
             return plan
         }
@@ -83,7 +83,7 @@ export class DataService {
 
         const query = async (): Promise<Post[]> => {
             await this.surrealDbService.up()
-            const posts = (await this.surrealDbService.select<Post>(new Table('post'))).reverse()
+            const [posts] = await this.surrealDbService.query<[Post[]]>(surql`SELECT *, author.* FROM post ORDER BY created DESC;`)
             this.cache.put({ id: new RecordId('posts', '*'), value: posts })
             return posts
         }

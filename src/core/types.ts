@@ -46,7 +46,7 @@ export type ShiftScheduledByPlan = Shift & {
 export type Post = {
     id: RecordId<'post'>
     title: string
-    author: string
+    author: User
     message: string
     created: Date
     updated: Date

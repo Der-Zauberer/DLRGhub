@@ -16,10 +16,11 @@ DEFINE FUNCTION OVERWRITE fn::search::normalize($name: string, $seperator: optio
 
 DEFINE TABLE OVERWRITE post SCHEMAFULL TYPE NORMAL
     PERMISSIONS
-        FOR select, create, update, delete WHERE $auth.id != NONE;
+        FOR select, create WHERE $auth.id != NONE,
+        FOR update, delete WHERE author = $auth.id || $auth.admin;
 DEFINE FIELD OVERWRITE id ON TABLE post;
 DEFINE FIELD OVERWRITE title ON TABLE post TYPE string;
-DEFINE FIELD OVERWRITE author ON TABLE post TYPE string;
+DEFINE FIELD OVERWRITE author ON TABLE post TYPE record<user> READONLY DEFAULT $auth.id;
 DEFINE FIELD OVERWRITE message ON TABLE post TYPE string;
 DEFINE FIELD OVERWRITE created ON TABLE post TYPE option<datetime> DEFAULT time::now() READONLY;
 DEFINE FIELD OVERWRITE updated ON TABLE post TYPE option<datetime> VALUE time::now();
@@ -79,34 +80,34 @@ DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
 	PERMISSIONS
 		FOR select, update WHERE id = $auth.id || $auth.admin,
         FOR create, delete WHERE $auth.admin;
-DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is::email($value);
+DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is_email($value);
 DEFINE FIELD OVERWRITE name ON TABLE user TYPE string;
 DEFINE FIELD OVERWRITE displayname ON TABLE user TYPE string;
 DEFINE FIELD OVERWRITE password ON TABLE user TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value })
     PERMISSIONS
         FOR select NONE,
-        FOR create, update, delete WHERE $auth.admin;
+        FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE admin ON TABLE user TYPE bool DEFAULT false
     PERMISSIONS
         FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update, delete WHERE $auth.admin;
+        FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE account ON TABLE user TYPE object DEFAULT {}
     PERMISSIONS
         FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update, delete WHERE $auth.admin;
+        FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE account.enabled ON TABLE user TYPE bool DEFAULT false;
 DEFINE FIELD OVERWRITE account.valid ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE account.expiry ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE credentials ON TABLE user TYPE object DEFAULT {}
     PERMISSIONS
         FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update, delete WHERE $auth.admin;
+        FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE credentials.change ON TABLE user TYPE bool DEFAULT false;
 DEFINE FIELD OVERWRITE credentials.expiry ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE login ON TABLE user TYPE option<datetime>    
     PERMISSIONS
         FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update, delete NONE;
+        FOR create, update NONE;
 
 DEFINE INDEX OVERWRITE email ON user FIELDS email UNIQUE;
 DEFINE INDEX OVERWRITE name ON user FIELDS name UNIQUE;
@@ -152,11 +153,11 @@ DEFINE TABLE OVERWRITE registration SCHEMAFULL
 		FOR create FULL,
         FOR select, update, delete WHERE $auth.admin;
 DEFINE FIELD OVERWRITE id ON TABLE registration;
-DEFINE FIELD OVERWRITE email ON TABLE registration TYPE string ASSERT string::is::email($value);
+DEFINE FIELD OVERWRITE email ON TABLE registration TYPE string ASSERT string::is_email($value);
 DEFINE FIELD OVERWRITE firstname ON TABLE registration TYPE string;
 DEFINE FIELD OVERWRITE lastname ON TABLE registration TYPE string;
 DEFINE FIELD OVERWRITE password ON TABLE registration TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value });
-DEFINE FIELD OVERWRITE approve ON TABLE registration TYPE bool PERMISSIONS FOR select, create, update, delete WHERE $auth.admin DEFAULT false;
+DEFINE FIELD OVERWRITE approve ON TABLE registration TYPE bool PERMISSIONS FOR select, create, update WHERE $auth.admin DEFAULT false;
 
 DEFINE EVENT OVERWRITE registration_update ON TABLE registration WHEN $event = 'CREATE' OR $event = 'UPDATE' THEN {
     IF $after.approve {
@@ -176,18 +177,18 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
 		LET $user = SELECT * FROM user WHERE (email = $username OR name = $username) AND crypto::argon2::compare(password, $password);
         IF !$user {
             THROW 'error.user.password.invalid: Your credentials are invalid!';
-        } ELSE IF $user.account.enabled == false || (type::is::datetime($user.account.expiry) && $user.account.expiry < time::now()) {
+        } ELSE IF $user.account.enabled == false || (type::is_datetime($user.account.expiry) && $user.account.expiry < time::now()) {
             THROW 'error.user.deactivated: Your account is deactivated!';
-        } ELSE IF $user.credentials.change == true || (type::is::datetime($user.credentials.expiry) && $user.credentials.expiry < time::now()) {
+        } ELSE IF $user.credentials.change == true || (type::is_datetime($user.credentials.expiry) && $user.credentials.expiry < time::now()) {
             THROW 'error.user.password.change.required: Your password have to be changed!';
         };
         UPDATE $user.id SET login = time::now();
         RETURN $user;
     }
     AUTHENTICATE {
-        IF $auth.account.enabled == false || (type::is::datetime($auth.account.expiry) && $auth.account.expiry < time::now()) {
+        IF $auth.account.enabled == false || (type::is_datetime($auth.account.expiry) && $auth.account.expiry < time::now()) {
             THROW 'error.user.deactivated: Your account is deactivated!';
-        } ELSE IF type::is::datetime($auth.account.valid) && time::unix($auth.account.valid) > $token.iat {
+        } ELSE IF type::is_datetime($auth.account.valid) && time::unix($auth.account.valid) > $token.iat {
             THROW 'error.user.authentication: Your authentication is expired!';
         };
         RETURN $auth;

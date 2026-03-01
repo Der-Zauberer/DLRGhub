@@ -15,7 +15,6 @@
 
         <form v-if="post.value" ref="form" class="grid-cols-1">
             <InputComponent label="Title" v-model="post.value.title" required/>
-            <InputComponent label="Author" v-model="post.value.author" required/>
 
             <swd-input>
                 <label for="message">Message</label>
@@ -60,6 +59,7 @@ const savePost = resource({
             return
         }
 
+        delete (post.value as any).author
         delete (post.value as any).created
         delete (post.value as any).updated
 

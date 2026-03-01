@@ -367,7 +367,6 @@ export default {
     install(app: App) {
         const router = app.config.globalProperties.$router
         const surrealDbService = new SurrealDbService(router)
-        //surrealDbService.up()
         app.config.globalProperties.$surrealDbService = surrealDbService
         app.provide('surrealDbService', surrealDbService)
     }

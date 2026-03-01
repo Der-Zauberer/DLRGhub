@@ -13,14 +13,14 @@
 
         <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="currentShifts?.length">
             <li v-for="shift of currentShifts">
-                <ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/>
+                <ShiftComponent :shift="shift" :user="user.value || []" :roles="plan.value?.roles || []"/>
             </li>
         </ul>
 
         <HeadlineComponent title="Vergangene Wachen" v-if="previousShifts?.length && currentShifts?.length"/>
         <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="previousShifts?.length">
             <li v-for="shift of previousShifts">
-                <ShiftComponent :shift="shift" :roles="plan.value?.roles || []"/>
+                <ShiftComponent :shift="shift" :user="user.value || []" :roles="plan.value?.roles || []"/>
             </li>
         </ul>
 
@@ -57,18 +57,27 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import ShiftComponent from '@/components/ShiftComponent.vue'
+import { resource } from '@/core/resource'
+import type { User } from '@/core/types'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
-import { parseCustomSurrealDbError } from '@/services/surrealdb.service'
-import { RecordId } from 'surrealdb'
+import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { RecordId, Table } from 'surrealdb'
 import { computed, inject, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
+const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
+
+const user = resource({
+    loader: () => surreal.select<User>(new Table('user')).then(result => result.map(user => user.displayname))
+})
 
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 const currentShifts = computed(() => plan.value?.shifts.filter(shift => shift.date >= getYesterday()))
 const previousShifts = computed(() => plan.value?.shifts.filter(shift => shift.date < getYesterday()))
+
+const test = computed(() => console.log('Watcher', plan))
 
 function getYesterday(): Date {
     const yesterday = new Date()

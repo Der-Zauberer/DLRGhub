@@ -35,10 +35,18 @@
                 <button disabled>{{ person }}</button>
                 <ButtonComponent class="right-item" color="ELEMENT" icon="delete" aria-label="Löschen" @click="data.removeShiftPerson(shift.id, role ? { name: person, role: role } : { name: person })"/>
             </div>
-            <div class="person-input">
-                <input ref="input" @keydown.enter="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))">
-                <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))"/>
-            </div>
+            
+            <swd-dropdown>
+                <div class="person-input">
+                    <input ref="input" @keydown.enter="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))">
+                    <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))"/>
+                </div>
+                <swd-dropdown-content>
+                    <swd-selection v-if="user">
+                        <button v-for="name of user.filter(name => !($refs.input as HTMLInputElement[] | undefined)?.[index]?.value || name.includes(($refs.input as HTMLInputElement[])[index].value))">{{ name }}</button>
+                    </swd-selection>
+                </swd-dropdown-content>
+            </swd-dropdown>
         </div>
         
         <h5>Beschreibung</h5>
@@ -179,7 +187,7 @@ import ButtonComponent from './ButtonComponent.vue';
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
-const props = defineProps<{ shift: Shift, roles: string[] }>()
+const props = defineProps<{ shift: Shift, roles: string[], user: string[] }>()
 
 const component = useTemplateRef('component')
 const dialog = ref<boolean>(false)
