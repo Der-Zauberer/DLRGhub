@@ -1,6 +1,6 @@
 import { resource, type Resource } from '@/core/resource'
 import type { User } from '@/core/types'
-import { DateTime, FileRef, RecordId, surql, Surreal, SurrealError, Table, u, type ConnectOptions, type DriverOptions, type Token, type Tokens } from 'surrealdb'
+import { DateTime, FileRef, surql, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId } from 'surrealdb'
 import { markRaw, type App } from 'vue'
 import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 
@@ -139,10 +139,11 @@ const PROFILE_COOKIE = 'surreal_db_profiles'
 const ACCOUNT_COOKIE = 'surreal_db_account'
 const cookies = new Cookies()
 const profiles = loadProfiles()
-const user = resource<User, unknown>({ loader: () => account && account.expiration > new Date().getTime() ? undefined : undefined })
 let account = loadAccount()
 let stopLogoutTimeout: () => void
 let loginRedirect: RouteLocationNormalized | undefined
+
+const user = resource<User, unknown>({ loader: () => account && account.expiration > new Date().getTime() ? undefined : undefined })
 
 export class SurrealDbService extends Surreal {
 

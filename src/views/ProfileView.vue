@@ -10,7 +10,11 @@
             Dein Name wird lokal gespeichert und wird verwendet um anzuzeigen, für welche Schichten du eingeteilt bist. Dazu muss der Name exakt mit den Namen in den Schichten übereinstimmen.
         </swd-card>
 
-        <div class="grid-cols-md-2 grid-cols-1">
+        <OfflineComponent v-if="parseCustomSurrealDbError(user.error).key === 'error.connection'" :loading="user.loading" @reload="user.reload()"/>
+        <dlrg-error v-if="user?.status === 'ERROR' && parseCustomSurrealDbError(user.error).key !== 'error.connection'">{{ user?.error }}</dlrg-error>
+        <swd-loading-spinner v-if="user?.status === 'LOADING' && !user?.value" class="width-100" loading="true"></swd-loading-spinner>
+
+        <div class="grid-cols-md-2 grid-cols-1" v-if="user.value">
             <InputComponent label="Benutzername" disabled :value="user.value?.name"/>
             <InputComponent label="Email" type="email" disabled :value="user.value?.email"/>
             <InputComponent label="Anzeigename" disabled :value="user.value?.displayname"/>
@@ -82,28 +86,24 @@
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
-import { resource } from '@/core/resource'
-import type { User } from '@/core/types'
+import OfflineComponent from '@/components/OfflineComponent.vue'
+import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service'
-import { surql } from 'surrealdb'
 import { inject, reactive, ref, type Ref } from 'vue'
 
 const dialogServcie = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const dataService = inject(DATA_SERVICE) as DataService
 const profiles = surrealdb.getProfile()
-const user = surrealdb.getUser()
+const user = dataService.getUser()
 
 const devtools: Ref<boolean> = ref(false)
 const password = reactive<PasswordChangeRequest & { error?: string } & { success?: boolean }>({ username: '' , old: '', new: '', repeat: '' })
 
-const profile = resource({
-    loader: () => surrealdb.up().then(() => surrealdb.query<[User]>(surql`SELECT * FROM ONLY session::rd()`).then(result => result[0]))
-})
-
 async function changePassword() {
     try {
-        await surrealdb.changePassword({ ...password, username: profile.value?.name || ''})
+        await surrealdb.changePassword({ ...password, username: user.value?.name || ''})
         password.old = ''
         password.new = ''
         password.repeat = ''

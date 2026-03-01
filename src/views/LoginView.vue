@@ -154,6 +154,7 @@ async function register() {
     registrationLoading.value = true
     registrationError.value = undefined
     try {
+        await surrealdb.up()
         registration.success = await surrealdb.insert(new Table('registration'), registration).then(() => true)
         loginError.value = undefined
     } catch (exception) {

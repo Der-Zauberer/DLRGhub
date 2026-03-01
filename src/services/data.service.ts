@@ -1,9 +1,9 @@
-import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan } from "@/core/types"
-import { LiveSubscription, RecordId, s, surql, Table } from "surrealdb"
+import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan, User } from "@/core/types"
+import { LiveSubscription, RecordId, surql, Table } from "surrealdb"
 import { markRaw, ref, watch, type App } from "vue"
-import type { SurrealDbService } from "./surrealdb.service"
 import { resource, type Resource } from "@/core/resource"
 import type { WaterTemperature, Weather, WeatherService } from "./weather.service"
+import type { SurrealDbService } from "./surrealdb.service"
 
 export class DataService {
 
@@ -115,6 +115,10 @@ export class DataService {
     async editDescription(shift: RecordId<'shift'>, description: string) {
         await this.surrealDbService.up()
         await this.surrealDbService.query(surql`UPDATE ${shift} SET description = ${description}`)
+    }
+
+    getUser(): Resource<User, unknown> {
+        return this.surrealDbService.getUser()
     }
 
     getWeather(): Resource<Weather, unknown> {
