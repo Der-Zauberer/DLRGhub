@@ -35,11 +35,12 @@
 
 	& .weather-preview__icon {
         aspect-ratio: 1;
-		font-size: 2.2em;
+		font-size: 2em;
+        transform: translateY(20%);
 	}
 
 	& .weather-preview__text {
-		font-size: 1.4em;
+		font-size: 1.2em;
 		align-self: center;
 	}
 }
