@@ -121,6 +121,12 @@ export class DataService {
         return this.surrealDbService.getUser()
     }
 
+    getUserNames(): Resource<string[], unknown> {
+        return resource({
+            loader: () => this.surrealDbService.up().then(() => this.surrealDbService.select<User>(new Table('user_public')).then(result => result.map(user => user.displayname)))
+        })
+    }
+
     getWeather(): Resource<Weather, unknown> {
         const cache = this.cache.get<Weather>(new RecordId('weather', '*'))
         const query = async (): Promise<Weather> => {

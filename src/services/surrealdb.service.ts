@@ -1,6 +1,6 @@
 import { resource, type Resource } from '@/core/resource'
 import type { User } from '@/core/types'
-import { DateTime, FileRef, surql, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId } from 'surrealdb'
+import { DateTime, FileRef, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId } from 'surrealdb'
 import { markRaw, type App } from 'vue'
 import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 
@@ -147,6 +147,8 @@ const user = resource<User, unknown>({ loader: () => account && account.expirati
 
 export class SurrealDbService extends Surreal {
 
+    private authReady: Promise<Token | Tokens> = new Promise(() => {})
+
     constructor(private router: Router) {
         super(DRIVER_OPTIONS)
     }
@@ -156,12 +158,13 @@ export class SurrealDbService extends Surreal {
         const tryConnect = () => super.connect(url, { ...opts }).then(async response => (await this.ready, response))
         const response = tryConnect().catch(() => tryConnect())
         if (ignoreAuthentication) return response
-        return response.then(() => (this.authenticate(), true))
+        return response.then(() => (this.authenticate(), response))
     }
 
     async up(configuration: SurrealDbProfile = profiles.default, ignoreAuthentication?: boolean): Promise<true> {
         if (configuration === profiles.default && this.status !== 'disconnected') {
             await super.ready
+            if (!ignoreAuthentication) await this.authReady
             return true
         }
         profiles.default = configuration
@@ -187,7 +190,7 @@ export class SurrealDbService extends Surreal {
         }
         cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account), jwt.getExpirationAsDate())
         this.setLogoutTimeout()
-        user.reload(await super.query<[User]>(surql`SELECT * FROM ONLY session::rd()`).then(result => result[0]))
+        user.reload(await super.auth<User>())
         const expiration = jwt.getExpirationAsDate()
         if (expiration) cookies.set(`${ACCOUNT_COOKIE}_${configuration.name}`, JSON.stringify(account), expiration)
         profiles.default = configuration
@@ -228,7 +231,8 @@ export class SurrealDbService extends Surreal {
                 }
                 cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account), jwt.getExpirationAsDate())
                 this.setLogoutTimeout()
-                user.reload(await super.query<[User]>(surql`SELECT * FROM ONLY session::rd()`).then(result => result[0]))
+                user.reload(await super.auth<User>())
+                this.authReady = Promise.resolve(result)
                 return result
             })
             .catch(error => {
@@ -245,6 +249,7 @@ export class SurrealDbService extends Surreal {
         account = undefined
         cookies.delete(`${ACCOUNT_COOKIE}_${profiles.default.name}`)
         stopLogoutTimeout?.()
+        this.authReady = new Promise(() => {})
         return await super.invalidate().then(() => this.checkAuthGuard(this.router))
     }
 

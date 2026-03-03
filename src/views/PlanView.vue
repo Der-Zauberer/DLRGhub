@@ -57,27 +57,20 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import ShiftComponent from '@/components/ShiftComponent.vue'
-import { resource } from '@/core/resource'
-import type { User } from '@/core/types'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { RecordId, Table } from 'surrealdb'
+import { parseCustomSurrealDbError } from '@/services/surrealdb.service'
+import { RecordId } from 'surrealdb'
 import { computed, inject, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
-const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
-const user = resource({
-    loader: () => surreal.select<User>(new Table('user_public')).then(result => result.map(user => user.displayname))
-})
+const user = data.getUserNames()
 
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 const currentShifts = computed(() => plan.value?.shifts.filter(shift => shift.date >= getYesterday()))
 const previousShifts = computed(() => plan.value?.shifts.filter(shift => shift.date < getYesterday()))
-
-const test = computed(() => console.log('Watcher', plan))
 
 function getYesterday(): Date {
     const yesterday = new Date()
