@@ -1,6 +1,6 @@
 <template>
 
-	<div class="container-xxl grid-cols-md-2 grid-cols-1">
+	<div class="container-xl grid-cols-md-2 grid-cols-1">
 
 		<HeadlineComponent title="Wetter" :back="{ name: 'home' }" class="grid-span-md-2 grid-span-1" style="margin-bottom: 0;"/>
 

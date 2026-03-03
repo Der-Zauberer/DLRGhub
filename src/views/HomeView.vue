@@ -41,6 +41,14 @@
 
 </template>
 
+<style scoped>
+
+[class*="grid-cols-"] > [class*="grid-cols-"] {
+	--theme-element-spacing: var(--theme-inner-element-spacing)
+}
+
+</style>
+
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
