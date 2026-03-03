@@ -1,7 +1,7 @@
 <template>
     <component :is="link ? 'RouterLink' : 'div'" :to="{ name: 'weather' }" style="text-decoration: none;">
         <swd-card :class="'grid-span-md-2 grid-1 margin-bottom-0' + (link ? ' swd-card-hover' : '')">
-            <HeadlineComponent title="Wetter" subtitle="Gailingen am Hochrhein"><swd-icon class="right-icon" v-if="link"></swd-icon></HeadlineComponent>
+            <HeadlineComponent title="Wetter" subtitle="Gailingen am Hochrhein" align="center"><swd-icon class="right-icon" v-if="link"></swd-icon></HeadlineComponent>
 
             <div class="flex flex-wrap flex-space-between">
 

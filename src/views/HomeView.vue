@@ -28,7 +28,7 @@
 				<swd-loading-spinner v-if="posts?.status === 'LOADING' && !posts?.value" class="width-100" loading="true"></swd-loading-spinner>
 
 				<swd-card v-for="post in posts.value">
-					<HeadlineComponent :title="post.title" :subtitle="post.author.displayname">
+					<HeadlineComponent :title="post.title" :subtitle="post.author.displayname" align="start">
 						<ButtonComponent v-if="user.value?.admin || user.value?.id.equals(post.author.id)" :to="{ name: 'post-edit', params: { id: post.id.id.toString() } }" color="ELEMENT" icon="pen" aria-label="Edit" />
 					</HeadlineComponent>
 					<div style="white-space: pre-wrap;">{{ post.message }}</div>

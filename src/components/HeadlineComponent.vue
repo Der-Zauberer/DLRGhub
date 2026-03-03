@@ -1,5 +1,5 @@
 <template>
-    <div class="headline">
+    <div class="headline" :style="align ? `align-items: ${align}` : undefined">
         <div class="headline__tools">
             <ButtonComponent v-if="back" :to="back" icon="left" aria-label="Zurück" color="ELEMENT"/>
             <h2>{{title}}<swd-subtitle v-if="subtitle">{{ subtitle }}</swd-subtitle></h2>
@@ -56,5 +56,5 @@ import type { UnknownResource } from '@/core/resource';
 import { type RouteLocationAsRelativeGeneric } from 'vue-router';
 import ButtonComponent from './ButtonComponent.vue';
 
-defineProps<{ title?: string, subtitle?: string, back?: RouteLocationAsRelativeGeneric, resource?: UnknownResource, mobile?: 'true' | 'false' | boolean}>()
+defineProps<{ title?: string, subtitle?: string, back?: RouteLocationAsRelativeGeneric, resource?: UnknownResource, mobile?: 'true' | 'false' | boolean, align?: 'start' | 'center' | 'end'}>()
 </script>
