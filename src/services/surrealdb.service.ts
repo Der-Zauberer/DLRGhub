@@ -203,7 +203,7 @@ export class SurrealDbService extends Surreal {
     }
 
     async changePassword(credentials: PasswordChangeRequest): Promise<Tokens> {
-        return await this.insert(new Table('_password_change_request'), {}).then(() => this.signin({ username: credentials.username , password: credentials.new }))
+        return await this.insert(new Table('_password_change_request'), credentials).then(() => this.signin({ username: credentials.username , password: credentials.new }))
     }
 
     async authenticate(token?: Token | Tokens): Promise<Tokens> {
@@ -317,12 +317,11 @@ export function auth(condition: (user: User) => boolean = () => true): Navigatio
 export function parseCustomSurrealDbError(exception: Error | undefined): { name?: string, key?: string, message?: string, success: boolean } {
     if (!exception) return { success: false }
     const error = exception as SurrealError
-    if (error?.name === 'ThrownError' && error.message) {
-        const [prefix, message] = error.message.split('An error occurred: ')
-        const key = message ? message.split(':') : undefined
-        return { name: error?.name, key: key && key[0] || prefix, message: key && key[1], success: false }
+    if (['ThrownError', 'InternalError'].includes(error?.name) && error.message) {
+        const [key, messages] = error.message.replace(/^.*An error occurred:\s*/, '').split(/:(.+)/)
+        return { name: error.name, key: key?.trim() || error.message, message: messages?.trim() || error.message, success: true }
     } else if (error?.name === 'VersionRetrievalFailure' || error?.name === 'ConnectionUnavailable') {
-        return { key: 'error.connection', success: true }
+        return { key: 'error.connection', message: error.message, success: true }
     }
     return { key: error.toString(), success: false }
 }

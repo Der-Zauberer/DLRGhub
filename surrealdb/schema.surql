@@ -176,7 +176,7 @@ DEFINE EVENT OVERWRITE registration_update ON TABLE registration WHEN $event = '
 
 DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
 	SIGNIN {
-		LET $user = SELECT * FROM user WHERE (email = $username OR name = $username) AND crypto::argon2::compare(password, $password);
+		LET $user = SELECT * FROM ONLY user WHERE (email = $username OR name = $username) AND crypto::argon2::compare(password, $password);
         IF !$user {
             THROW 'error.user.password.invalid: Your credentials are invalid!';
         } ELSE IF $user.account.enabled == false || (type::is_datetime($user.account.expiry) && $user.account.expiry < time::now()) {
