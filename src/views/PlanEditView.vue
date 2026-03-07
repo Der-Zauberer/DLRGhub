@@ -173,7 +173,7 @@ const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const formRef = useTemplateRef('form')
 
 const plan = resource({
-    loader: () => surrealdb.up().then(() => surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM $this.id->schedules->shift ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`)).then(result => result[0]),
+    loader: () => surrealdb.up().then(() => surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this.id->schedules->shift) ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`)).then(result => result[0]),
 })
 
 const shiftsToAdd: Shift[] = []
