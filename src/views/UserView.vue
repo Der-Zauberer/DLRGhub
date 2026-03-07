@@ -104,7 +104,7 @@ const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const users = resource({
     parameter: { route },
-    loader: (parameter) => !parameter.route.params.id ? surreal.up().then(() => surreal.select<User>(new Table('user'))) : undefined
+    loader: parameter => !parameter.route.params.id ? surreal.up().then(() => surreal.select<User>(new Table('user'))) : undefined
 })
 
 const formRef = useTemplateRef('form')
@@ -122,7 +122,7 @@ const newUser: Partial<User> = {
 const userId = ref<string>()
 const user = resource({
     parameter: { route },
-    loader: async (parameter) => {
+    loader: async parameter => {
         if (!parameter.route.params.id) return undefined
         const result = route.params.id === 'new' ? { ...newUser as User } : await surreal.up().then(() => surreal.select<User>(new RecordId('user', route.params.id)))
         userId.value = result?.id?.id?.toString()

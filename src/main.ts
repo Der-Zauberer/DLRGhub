@@ -39,6 +39,7 @@ const router = createRouter({
     { path: '/user', name: 'user', component: UserView, beforeEnter: auth(user => user.admin) },
     { path: '/user/:id', name: 'user-edit', component: UserView, beforeEnter: auth(user => user.admin) },
     { path: '/registration', name: 'registrations', component: RegistrationVue, beforeEnter: auth(user => user.admin) },
+    { path: '/registration/:id', name: 'registration-edit', component: RegistrationVue, beforeEnter: auth(user => user.admin) },
     { path: '/design', name: 'design', component: DesignView, beforeEnter: auth() },
   ],
 })
