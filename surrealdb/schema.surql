@@ -72,6 +72,39 @@ DEFINE FIELD OVERWRITE created.timestamp ON TABLE file TYPE datetime DEFAULT tim
 DEFINE FIELD OVERWRITE updated.user ON TABLE file TYPE record<user> VALUE $auth.id;
 DEFINE FIELD OVERWRITE updated.timestamp ON TABLE file TYPE datetime VALUE time::now();
 
+DEFINE API '/file' FOR get 
+    MIDDLEWARE api::timeout(1s)
+    THEN {
+        LET $files = SELECT id, name FROM file;
+        {
+            status: 200,
+            body: $files.fold('', |$a, $b| $a + '<a href="file/' + record::id($b.id) + '">' + $b.name + '</a><br>'),
+            headers: {
+                'Content-Type': 'text/html',
+            }
+        }
+    };
+
+DEFINE API '/file/:id' FOR get 
+    MIDDLEWARE api::timeout(1s)
+    THEN {
+        LET $file = (SELECT * FROM file WHERE id = type::record('file', $request.params.id))[0];
+        IF $file != NONE {{
+            status: 200,
+            body: $file.content,
+            headers: {
+                'Content-Type': $file.type,
+                'Content-Disposition': 'inline; filename="' + $file.name + '"'
+            }
+        }} ELSE {{
+            status: 404,
+            body: 'File not found!',
+            headers: {
+                'Content-Type': 'text/html',
+            }
+        }};
+    };
+
 ------------
 --- user ---
 ------------
