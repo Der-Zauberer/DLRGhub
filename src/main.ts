@@ -19,7 +19,6 @@ import FileView from './views/FileView.vue'
 import DesignView from './views/DesignView.vue'
 import PostEditView from './views/PostEditView.vue'
 import UserView from './views/UserView.vue'
-import UserEditView from './views/UserEditView.vue'
 import dialogService from './services/dialog.service'
 import RegistrationVue from './views/RegistrationVue.vue'
 
@@ -38,7 +37,7 @@ const router = createRouter({
     { path: '/weather', name: 'weather', component: WeatherView, beforeEnter: auth() },
     { path: '/profile', name: 'profile', component: ProfileView, beforeEnter: auth() },
     { path: '/user', name: 'user', component: UserView, beforeEnter: auth(user => user.admin) },
-    { path: '/user/:id', name: 'user-edit', component: UserEditView, beforeEnter: auth(user => user.admin) },
+    { path: '/user/:id', name: 'user-edit', component: UserView, beforeEnter: auth(user => user.admin) },
     { path: '/registration', name: 'registrations', component: RegistrationVue, beforeEnter: auth(user => user.admin) },
     { path: '/design', name: 'design', component: DesignView, beforeEnter: auth() },
   ],

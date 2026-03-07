@@ -101,14 +101,14 @@ const fileForm: { name: string, type: string } = { name: '', type: '' }
 
 const files = resource({
     parameter: { route },
-    loader: () => !route.params.id ? surrealdb.query<[BinaryFile[]]>(surql`SELECT * OMIT content FROM file;`).then(result => result[0]) : undefined
+    loader: () => !route.params.id ? surrealdb.up().then(() => surrealdb.query<[BinaryFile[]]>(surql`SELECT * OMIT content FROM file;`).then(result => result[0])) : undefined
 })
 
 const file = resource({
     parameter: { route },
     loader: () => {
         editableContent.value = false
-        return route.params.id ? surrealdb.select<BinaryFile>(new RecordId('file', route.params.id)) : undefined
+        return route.params.id ? surrealdb.up().then(() => surrealdb.select<BinaryFile>(new RecordId('file', route.params.id))) : undefined
     }
 })
 
@@ -116,7 +116,9 @@ const  editContent = ref<string | undefined>(undefined)
 const saveFile = resource({
     loader: async () => {
         if (file.value && editContent.value !== undefined) {
-            await file.reload(await surrealdb.update<BinaryFile>(file.value.id).content({ ...file.value, content: encodeBinary(editContent.value) }))
+            await surrealdb.up()
+            const result = await surrealdb.update<BinaryFile>(file.value.id).content({ ...file.value, content: encodeBinary(editContent.value) })
+            await file.reload(result)
         }
         editableContent.value = false
     }
@@ -131,6 +133,7 @@ function decodeBinary(bytes: ArrayBuffer): string {
 }
 
 async function createFile(): Promise<boolean> {
+    await surrealdb.up()
     await surrealdb.insert(new Table('file'), fileForm)
     files.reload()
     fileForm.name = ''
@@ -140,6 +143,7 @@ async function createFile(): Promise<boolean> {
 
 async function uploadFile() {
     const input = await loadFiles()
+    await surrealdb.up()
     await surrealdb.insert(new Table('file'), input)
     files.reload()
 }
@@ -158,7 +162,7 @@ function openDeleteDialog(file: BinaryFile) {
         title: 'Datei löschen',
         content: ['Bist du sicher die Datei zu löschen?', `<code>${file.name}</code>`],
         action: 'Löschen',
-        filter: () => surrealdb.delete(file.id).then(() => true),
+        filter: () => surrealdb.up().then(() => surrealdb.delete(file.id)).then(() => true),
         success: () => router.push({ name: 'files' })
     }
 }

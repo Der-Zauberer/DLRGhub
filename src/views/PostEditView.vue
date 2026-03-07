@@ -47,7 +47,7 @@ const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const formRef = useTemplateRef('form')
 
 const post = resource({
-    loader: route.params.id !== 'new' ? surrealdb.select<Post>(new RecordId('post', route.params.id)) : {} as Post
+    loader: route.params.id !== 'new' ? surrealdb.up().then(() => surrealdb.select<Post>(new RecordId('post', route.params.id))) : {} as Post
 })
 
 const savePost = resource({
@@ -63,6 +63,7 @@ const savePost = resource({
         delete (post.value as any).created
         delete (post.value as any).updated
 
+        await surrealdb.up()
         post.value.id ? await surrealdb.update(post.value.id).content(post.value) : await surrealdb.insert(new Table('post'), post.value)
 
         router.push({ name: 'home' })

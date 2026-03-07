@@ -54,7 +54,6 @@ export class DataService {
 
     getPlan(id: RecordId<'plan'>, kill?: Promise<void>): Resource<PlanSchedulesShift | undefined, unknown> {
         const cache = this.cache.get<PlanSchedulesShift | undefined>(id)
-
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
             await this.surrealDbService.up()
             const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this.id->schedules->shift) ORDER BY date) as shifts FROM ONLY ${id};`)

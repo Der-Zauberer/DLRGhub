@@ -67,9 +67,9 @@ export function resource<T, P>(options: ResourceOptions<T, P>): Resource<T, P> {
 }
 
 export function unwrapParameters<P>(parameters?: ResourceParameter<P>): P | undefined {
-    if (!parameters) return;
-    if (isRef(parameters) || isReactive(parameters)) return toRaw(parameters) as P;
-    return Object.fromEntries(Object.entries(parameters).map(([key, value]) => [key, isRef(value) || isReactive(parameters) ? toRaw(value) : value])) as P;
+    if (!parameters) return
+    if (isRef(parameters) || isReactive(parameters)) return toRaw(parameters) as P
+    return Object.fromEntries(Object.entries(parameters).map(([key, value]) => [key, isRef(value) || isReactive(parameters) ? toRaw(value) : value])) as P
 }
 
 function resolve<T, P>(value: ResourceValue<T, P>, resource: MutableResource<T, P>, options: ResourceOptions<T, P>, calls: { index: number }, index: number): Promise<T | undefined> | T | undefined {

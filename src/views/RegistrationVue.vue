@@ -41,7 +41,7 @@ const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const registrations = resource({
-    loader: surreal.select<Registration>(new Table('registration'))
+    loader: surreal.up().then(() => surreal.select<Registration>(new Table('registration')))
 })
 
 async function accept(registration: Registration) {
@@ -49,7 +49,7 @@ async function accept(registration: Registration) {
         title: 'Registrierung annehmen',
         content: [`Soll die Registrierung ${registration.firstname} ${registration.lastname} als Benutzer aufgenommen werden?`],
         action: 'Annehmen',
-        filter: async () => await surreal.query(surql`UPDATE ${registration.id} SET approve = true`).then(() => true),
+        filter: async () => await surreal.up().then(() => surreal.query(surql`UPDATE ${registration.id} SET approve = true`)).then(() => true),
         success: () => (dialogService.open = {
             title: 'Registrierung angenommen',
             content: [`Der Registrierung ${registration.firstname} ${registration.lastname} wurde angenommen.`]
@@ -62,7 +62,7 @@ async function decline(registration: Registration) {
         title: 'Registrierung ablehnen',
         content: [`Soll die Registrierung ${registration.firstname} ${registration.lastname} abgelehnt werden?`],
         action: 'Ablehnen',
-        filter: async () => await surreal.delete(registration.id).then(() => true),
+        filter: async () => await surreal.up().then(() => surreal.delete(registration.id)).then(() => true),
         success: () => (dialogService.open = {
             title: 'Registrierung abgelehnt',
             content: [`Der Registrierung ${registration.firstname} ${registration.lastname} wurde abgelehnt.`]

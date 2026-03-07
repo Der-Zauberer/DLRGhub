@@ -1,6 +1,6 @@
 import { resource, type Resource } from '@/core/resource'
 import type { User } from '@/core/types'
-import { DateTime, FileRef, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId } from 'surrealdb'
+import { DateTime, FileRef, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId, type RecordIdValue } from 'surrealdb'
 import { markRaw, type App } from 'vue'
 import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 
@@ -91,6 +91,23 @@ export class JwtToken {
     }
 }
 
+/*
+export class FakeRecordId<Tb extends string, Id extends RecordIdValue> {
+    internal: { table: Table<Tb>, id: Id }
+
+    constructor(table: Tb | Table<Tb>, id: Id) {
+        this.internal = { table: typeof table === 'string' ? new Table(table) : table , id }
+    }
+
+	equals(other: unknown): boolean { return new RecordId(this.internal.table, this.internal.id).equals(other) }
+	toJSON(): string { return new RecordId(this.internal.table, this.internal.id).toJSON() }
+	toString(): string { return new RecordId(this.internal.table, this.internal.id).toString() }
+	get table(): Table<Tb> { return this.internal.table }
+	get id(): Id { return this.internal.id }
+
+}
+*/
+
 export class Cookies {
     
     private readonly cookies: Map<string, string> = new Map()
@@ -130,6 +147,7 @@ const DRIVER_OPTIONS: DriverOptions = {
     codecOptions: {
         valueDecodeVisitor: (value) => {
             if (value instanceof DateTime) return new Date(value.toString())
+            //if (value instanceof RecordId) return new FakeRecordId(value.table, value.id)
             return value instanceof RecordId || value instanceof FileRef ? markRaw(value) : value
         },
     }
@@ -147,7 +165,7 @@ const user = resource<User, unknown>({ loader: () => account && account.expirati
 
 export class SurrealDbService extends Surreal {
 
-    private authReady: Promise<Token | Tokens> = new Promise(() => {})
+    private authReady = new Promise<Token | Tokens>((resolve, reject) => this.subscribe('auth', tokens => tokens ? resolve(tokens) : reject()))
 
     constructor(private router: Router) {
         super(DRIVER_OPTIONS)
@@ -174,6 +192,7 @@ export class SurrealDbService extends Surreal {
     }
 
     async signin(credentials: { username: string, password: string }, configuration: SurrealDbProfile = profiles.default): Promise<Tokens> {
+        await this.up(profiles.default, true)
         if (configuration !== profiles.default) await this.up(configuration, true)
         const tokens = await super.signin({
             namespace: configuration.namespace,
@@ -206,10 +225,12 @@ export class SurrealDbService extends Surreal {
     }
 
     async changePassword(credentials: PasswordChangeRequest): Promise<Tokens> {
+        await this.up(profiles.default, true)
         return await this.insert(new Table('_password_change_request'), credentials).then(() => this.signin({ username: credentials.username , password: credentials.new }))
     }
 
     async authenticate(token?: Token | Tokens): Promise<Tokens> {
+        await this.up(profiles.default, true)
         const tokens = token ? (typeof token === 'string' ? token : token.access) : account?.access
         if (!tokens) {
             account = undefined
@@ -232,7 +253,6 @@ export class SurrealDbService extends Surreal {
                 cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account), jwt.getExpirationAsDate())
                 this.setLogoutTimeout()
                 user.reload(await super.auth<User>())
-                this.authReady = Promise.resolve(result)
                 return result
             })
             .catch(error => {
@@ -249,7 +269,7 @@ export class SurrealDbService extends Surreal {
         account = undefined
         cookies.delete(`${ACCOUNT_COOKIE}_${profiles.default.name}`)
         stopLogoutTimeout?.()
-        this.authReady = new Promise(() => {})
+        this.authReady = new Promise<Token | Tokens>((resolve, reject) => this.subscribe('auth', tokens => tokens ? resolve(tokens) : reject()))
         return await super.invalidate().then(() => this.checkAuthGuard(this.router))
     }
 
