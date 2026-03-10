@@ -60,12 +60,22 @@ DEFINE EVENT OVERWRITE schedules_delete ON TABLE schedules WHEN $event == 'DELET
 --- file ---
 ------------
 
+DEFINE TABLE OVERWRITE directory SCHEMAFULL TYPE NORMAL
+    PERMISSIONS
+        FOR select, create, update, delete WHERE $auth.id != NONE;
+DEFINE FIELD OVERWRITE id ON TABLE directory;
+DEFINE FIELD OVERWRITE name ON TABLE directory TYPE string; --TODO prevent slashes
+DEFINE FIELD OVERWRITE parent ON TABLE directory TYPE option<record<directory>> REFERENCE ON DELETE CASCADE; --TODO prevent loop
+DEFINE FIELD OVERWRITE path ON TABLE directory COMPUTED (IF parent.path { parent.path + '/' } ELSE { '/' }) + name TYPE string;
+
 DEFINE TABLE OVERWRITE file SCHEMAFULL TYPE NORMAL
     PERMISSIONS
         FOR select, create, update, delete WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE file;
-DEFINE FIELD OVERWRITE name ON TABLE file TYPE string;
+DEFINE FIELD OVERWRITE name ON TABLE file TYPE string; --TODO prevent slashes
 DEFINE FIELD OVERWRITE type ON TABLE file TYPE string;
+DEFINE FIELD OVERWRITE parent ON TABLE file TYPE option<record<directory>> REFERENCE ON DELETE CASCADE;
+DEFINE FIELD OVERWRITE path ON TABLE file COMPUTED (IF parent.path { parent.path + '/' } ELSE { '/' }) + name TYPE string;
 DEFINE FIELD OVERWRITE content ON TABLE file TYPE bytes;
 DEFINE FIELD OVERWRITE created.user ON TABLE file TYPE record<user> DEFAULT $auth.id READONLY;
 DEFINE FIELD OVERWRITE created.timestamp ON TABLE file TYPE datetime DEFAULT time::now() READONLY;
@@ -75,34 +85,47 @@ DEFINE FIELD OVERWRITE updated.timestamp ON TABLE file TYPE datetime VALUE time:
 DEFINE API '/file' FOR get 
     MIDDLEWARE api::timeout(1s)
     THEN {
-        LET $files = SELECT id, name FROM file;
+        LET $base = '/api/dlrg.derzauberer.eu/main/file'
+        LET $root = array::union((SELECT name, path FROM directory WHERE !parent), (SELECT name, path FROM file WHERE !parent));
         {
             status: 200,
-            body: $files.fold('', |$a, $b| $a + '<a href="file/' + record::id($b.id) + '">' + $b.name + '</a><br>'),
+            body: $root.fold('', |$a, $b| $a + '<a href="' + $base + $b.path + '">' + $b.name + '</a><br>'),
             headers: {
                 'Content-Type': 'text/html',
             }
         }
     };
 
-DEFINE API '/file/:id' FOR get 
+
+DEFINE API '/file/*path' FOR get
     MIDDLEWARE api::timeout(1s)
     THEN {
-        LET $file = (SELECT * FROM file WHERE id = type::record('file', $request.params.id))[0];
-        IF $file != NONE {{
+        LET $base = '/api/dlrg.derzauberer.eu/main/file'
+        LET $path = $request.params.path.fold('', |$a, $b| $a + '/' + $b);
+        LET $file = SELECT name, type, content FROM ONLY file WHERE path = $path;
+        IF $file {{
             status: 200,
             body: $file.content,
             headers: {
                 'Content-Type': $file.type,
                 'Content-Disposition': 'inline; filename="' + $file.name + '"'
             }
-        }} ELSE {{
-            status: 404,
-            body: 'File not found!',
-            headers: {
-                'Content-Type': 'text/html',
-            }
-        }};
+        }} ELSE {
+            LET $directory = SELECT parent.path, array::union(<~directory.{ name, path }, <~file.{ name, path }) AS children FROM ONLY directory WHERE path = $path;
+            IF $directory {{
+                status: 200,
+                body: '<a href="' + $base + (IF $directory.parent.path { $directory.parent.path } ELSE {''}) + '">..</a><br>' + $directory.children.fold('', |$a, $b| $a + '<a href="' + $base + $b.path + '">' + $b.name + '</a><br>'),
+                headers: {
+                    'Content-Type': 'text/html',
+                }
+            }} ELSE {{
+                status: 404,
+                body: 'File or directory ' + $path + ' not found!',
+                headers: {
+                    'Content-Type': 'text/html',
+                }
+            }};
+        };
     };
 
 ------------
