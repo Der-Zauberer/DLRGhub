@@ -21,6 +21,8 @@ import PostEditView from './views/PostEditView.vue'
 import UserView from './views/UserView.vue'
 import dialogService from './services/dialog.service'
 import RegistrationVue from './views/RegistrationVue.vue'
+import ImprintView from './views/ImprintView.vue'
+import PrivacyPolicyView from './views/PrivacyPolicyView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +30,8 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomeView, beforeEnter: auth() },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: LoginView },
+    { path: '/imprint', name: 'imprint', component: ImprintView },
+    { path: '/privacy-policy', name: 'privacy-policy', component: PrivacyPolicyView },
     { path: '/plan', name: 'plans', component: PlanListView, beforeEnter: auth() },
     { path: '/plan/:id', name: 'plan', component: PlanView, beforeEnter: auth() },
     { path: '/plan/edit/:id', name: 'plan-edit', component: PlanEditView, beforeEnter: auth() },

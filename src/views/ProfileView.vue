@@ -46,6 +46,12 @@
             
         </form>
 
+        <h3>Rechtliches</h3>
+        <div class="grid-cols-1">
+            <ButtonLinkComponent :to="{ name: 'imprint' }">Impressum</ButtonLinkComponent>
+            <ButtonLinkComponent :to="{ name: 'privacy-policy' }">Datenschuterklärung</ButtonLinkComponent>
+        </div>
+
         <h3>
             <div class="flex flex-space-between">
                 Entwickleroptionen
@@ -85,6 +91,7 @@
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue'
+import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import { DATA_SERVICE, DataService } from '@/services/data.service'
