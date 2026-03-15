@@ -52,11 +52,19 @@ export type Post = {
     updated: Date
 }
 
+export type Directory = {
+    id: RecordId<'directory'>
+    name: string
+    parent: RecordId<'directory'> | undefined
+    path: string
+}
+
 export type BinaryFile = {
     id: RecordId<'file'>
     name: string
     type: string
-    content: ArrayBuffer
+    parent: RecordId<'directory'> | undefined
+    path: string
     created: {
         user: RecordId<'user'>
         timestamp: Date
