@@ -48,13 +48,7 @@ DEFINE FIELD OVERWRITE description ON TABLE shift TYPE option<string> VALUE (IF 
 DEFINE FIELD OVERWRITE people ON TABLE shift TYPE array<object> DEFAULT [];
 DEFINE FIELD OVERWRITE people[*].name ON TABLE shift TYPE string;
 DEFINE FIELD OVERWRITE people[*].role ON TABLE shift TYPE option<string>;
-
-DEFINE TABLE OVERWRITE schedules SCHEMAFULL TYPE RELATION IN plan OUT shift
-    PERMISSIONS FOR select, create, update, delete WHERE $auth.id != NONE;
-
-DEFINE EVENT OVERWRITE schedules_delete ON TABLE schedules WHEN $event == 'DELETE' THEN {
-    DELETE $before.out;
-};
+DEFINE FIELD OVERWRITE plan ON TABLE shift TYPE record<plan> REFERENCE ON DELETE CASCADE;
 
 ------------
 --- file ---

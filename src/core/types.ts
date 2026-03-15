@@ -33,6 +33,7 @@ export type Shift = {
         name: string
         role: string
     }[]
+    plan: RecordId<'plan'>
 }
 
 export type PlanSchedulesShift = Plan & {

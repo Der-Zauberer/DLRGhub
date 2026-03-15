@@ -173,14 +173,14 @@ const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const formRef = useTemplateRef('form')
 
 const plan = resource({
-    loader: () => surrealdb.up().then(() => surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this.id->schedules->shift) ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`)).then(result => result[0]),
+    loader: () => surrealdb.up().then(() => surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this<~shift.*) ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`)).then(result => result[0]),
 })
 
 const shiftsToAdd: Shift[] = []
 const shiftsToRemove: Shift[] = []
 
 function addShiftRow(plan: PlanSchedulesShift) {
-    const shift: Shift = { id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [] }
+    const shift: Shift = { id: undefined as unknown as RecordId<'shift'>, date: new Date(), people: [], plan: plan.id }
     plan.shifts.push(shift)
     shiftsToAdd.push(shift)
 }
@@ -209,9 +209,7 @@ const savePlan = resource({
             BEGIN TRANSACTION;
             UPDATE ${plan.value.id} CONTENT (SELECT * OMIT shifts FROM ONLY ${plan.value});
             FOR $shift IN ${shiftsToAdd} {
-                LET $plan = ${plan.value.id};
-                LET $id = (CREATE ONLY shift CONTENT $shift).id;
-                RELATE $plan->schedules->$id;
+                CREATE ONLY shift CONTENT $shift;
             };
             FOR $shift IN ${shiftsToRemove} {
                 LET $id = $shift.id;

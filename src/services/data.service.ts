@@ -54,9 +54,10 @@ export class DataService {
 
     getPlan(id: RecordId<'plan'>, kill?: Promise<void>): Resource<PlanSchedulesShift | undefined, unknown> {
         const cache = this.cache.get<PlanSchedulesShift | undefined>(id)
+        
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
             await this.surrealDbService.up()
-            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this.id->schedules->shift) ORDER BY date) as shifts FROM ONLY ${id};`)
+            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this<~shift.*) ORDER BY date) as shifts FROM ONLY ${id};`)
             if (plan) this.cache.put(plan)
             return plan
         }
@@ -69,7 +70,7 @@ export class DataService {
         
         const query = async (): Promise<ShiftScheduledByPlan[]> => {
             await this.surrealDbService.up()
-            const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, (<-schedules<-plan)[0].* AS plan FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= (time::now() - 1d) ORDER BY date;`)
+            const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, plan.* FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= (time::now() - 1d) ORDER BY date;`)
             this.cache.put({ id: new RecordId('shifts', '*'), value: shifts })
             return shifts
         }
@@ -172,13 +173,15 @@ export class DataService {
             }
             subscriptions.length = 0
             for (const table of trackedTables) {
-                await this.surrealDbService.up()
-                const subscription = await this.surrealDbService.live(new Table(table))
-                subscriptions.push(subscription)
-                for await (const event of subscription) {
-                    if (event.action === 'KILLED') offline = true
-                    res.reload()
-                }
+                (async () => {
+                    await this.surrealDbService.up()
+                    const subscription = await this.surrealDbService.live(new Table(table))
+                    subscriptions.push(subscription)
+                    for await (const event of subscription) {
+                        if (event.action === 'KILLED') offline = true
+                        res.reload()
+                    }
+                })()
             }
             offline = false
             

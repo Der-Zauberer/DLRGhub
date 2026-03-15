@@ -58,6 +58,11 @@
             <InputComponent label="Password" type="password" v-model="registration.password" required/>
             <InputComponent label="Passwort Wiederhohlen" type="password" v-model="passwordRepeat" required :invalid="registrationError == ERROR['error.user.password.change.repeat']"/>
 
+            <div class="flex">
+                <input type="checkbox" required style="min-height: 1.5em; min-width: 1.5em;">
+                <p>Ich habe die <RouterLink :to="{ name: 'privacy-policy' }">Datenschutzerklärung</RouterLink> gelesen und habe dabei die Luft länger angehalten als beim 25-Meter tauchen. Ich stimme zu!</p>
+            </div>
+
             <div class="red-text" v-if="registrationError">{{ registrationError }}</div>
 
             <swd-loading-spinner :loading="registrationLoading" class="width-100">
@@ -79,6 +84,11 @@
 
             <RouterLink :to="{ name: 'login' }" class="button text-center">Zurück zum Login</RouterLink>
         </form>
+
+        <footer class="grey-text">
+            <RouterLink :to="{ name: 'imprint' }">Impressum</RouterLink>
+            <RouterLink :to="{ name: 'privacy-policy' }">Datenschuterklärung</RouterLink>
+        </footer>
 
     </div>
 
@@ -134,6 +144,15 @@ button.link-button:hover, button.link-button:focus, button.link-button:active {
     margin: 0;
 }
 
+footer {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    display: flex;
+    gap: var(--theme-inner-element-spacing);
+    justify-content: end;
+}
+
 </style>
 
 <script setup lang="ts">
@@ -152,6 +171,7 @@ const loginLoading = ref<boolean>()
 const loginError = ref<string>()
 
 const ERROR: Record<string, string> = {
+    'error.connection': 'Verbindung zum Anmeldeserver konnte nicht hergestellt werden!',
     'error.user.deactivated': 'Dein Benutzerkonto ist deaktiviert',
     'error.user.password.invalid': 'Dein Benutzername oder Passwort ist falsch!',
     'error.user.password.change.required': 'Dein Passwort muss geändert werden!',
