@@ -40,7 +40,7 @@ export type PlanSchedulesShift = Plan & {
     shifts: Shift[]
 }
 
-export type ShiftScheduledByPlan = Shift & {
+export type ShiftScheduledByPlan = Omit<Shift, 'plan'> & {
     plan: Plan
 }
 

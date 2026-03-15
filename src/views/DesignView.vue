@@ -71,7 +71,7 @@
 
             <div>
                 <swd-card-outline>
-                    <ShiftComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Aufbau', begin: '13:00', end: '19:00', people: [ { name: 'Max Mustermann', role: 'Wachleiter' }, { name: 'Erika Musterfrau', role: 'Sanitäter' }, { name: 'Heinrich Huber', role: 'Default' }, { name: 'Simone Straub', role: 'Default' } ] }" :roles="['Wachleiter', 'Sanitäter', 'Wachgänger']" :user="['User1', 'User2', 'User3']"/>
+                    <ShiftComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Aufbau', begin: '13:00', end: '19:00', people: [ { name: 'Max Mustermann', role: 'Wachleiter' }, { name: 'Erika Musterfrau', role: 'Sanitäter' }, { name: 'Heinrich Huber', role: 'Default' }, { name: 'Simone Straub', role: 'Default' } ], plan: new RecordId('plan', 'test') }" :roles="['Wachleiter', 'Sanitäter', 'Wachgänger']" :user="['User1', 'User2', 'User3']"/>
                 </swd-card-outline>
                 <swd-card>
                     Shift
