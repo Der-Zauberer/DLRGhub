@@ -74,6 +74,8 @@
         <p>Falls die Nutzer nicht möchten, dass Cookies auf ihrem Rechner gespeichert werden, werden sie gebeten die entsprechende Option in den Systemeinstellungen ihres Browsers zu deaktivieren. Gespeicherte Cookies können in den Systemeinstellungen des Browsers gelöscht werden. Der Ausschluss von Cookies kann zu Funktionseinschränkungen dieses Onlineangebotes führen.</p>
         <p>Ein genereller Widerspruch gegen den Einsatz der zu Zwecken des Onlinemarketing eingesetzten Cookies kann bei einer Vielzahl der Dienste, vor allem im Fall des Trackings, über die US-amerikanische Seite <a target="_blank" href="http://www.aboutads.info/choices/">http://www.aboutads.info/choices/</a> oder die EU-Seite <a target="_blank" href="http://www.youronlinechoices.com/">http://www.youronlinechoices.com/</a> erklärt werden. Des Weiteren kann die Speicherung von Cookies mittels deren Abschaltung in den Einstellungen des Browsers erreicht werden. Bitte beachten Sie, dass dann gegebenenfalls nicht alle Funktionen dieses Onlineangebotes genutzt werden können.</p>
 
+        <button @click="deleteCookies()">Lokale Cookies löschen</button>
+
         <h2>Löschung von Daten</h2>
         <p>Die von uns verarbeiteten Daten werden nach Maßgabe der Art. 17 und 18 DSGVO gelöscht oder in ihrer Verarbeitung eingeschränkt. Sofern nicht im Rahmen dieser Datenschutzerklärung ausdrücklich angegeben, werden die bei uns gespeicherten Daten gelöscht, sobald sie für ihre Zweckbestimmung nicht mehr erforderlich sind und der Löschung keine gesetzlichen Aufbewahrungspflichten entgegenstehen. Sofern die Daten nicht gelöscht werden, weil sie für andere und gesetzlich zulässige Zwecke erforderlich sind, wird deren Verarbeitung eingeschränkt. D.h. die Daten werden gesperrt und nicht für andere Zwecke verarbeitet. Das gilt z.B. für Daten, die aus handels- oder steuerrechtlichen Gründen aufbewahrt werden müssen.</p>
         <p>Nach gesetzlichen Vorgaben in Deutschland, erfolgt die Aufbewahrung insbesondere für 10 Jahre gemäß §§ 147 Abs. 1 AO, 257 Abs. 1 Nr. 1 und 4, Abs. 4 HGB (Bücher, Aufzeichnungen, Lageberichte, Buchungsbelege, Handelsbücher, für Besteuerung relevanter Unterlagen, etc.) und 6 Jahre gemäß § 257 Abs. 1 Nr. 2 und 3, Abs. 4 HGB (Handelsbriefe).</p>
@@ -127,10 +129,18 @@
         <p>Wir binden Informationen der Plattform admin.ch Bundesamt für Umwelt BAFU, Abteilung Hydrologie, Postfach 3003 Bern ein. Datenschutzerklärung: <a target="_blank" href="https://www.admin.ch/gov/de/start/rechtliches.html#-827789746">https://www.admin.ch/gov/de/start/rechtliches.html#-827789746</a></p>
 
     </div>
+
 </template>
 
 <script setup lang="ts">
+import { Cookies } from '@/services/surrealdb.service';
 import { ref } from 'vue'
 const email = ref<string>()
 const decode = (base64: string) => decodeURIComponent(escape(window.atob(base64)))
+
+function deleteCookies() {
+    new Cookies().clear()
+    indexedDB.databases().then(dbs => dbs.forEach(db => db.name ? indexedDB.deleteDatabase(db.name) : {}))
+}
+
 </script>

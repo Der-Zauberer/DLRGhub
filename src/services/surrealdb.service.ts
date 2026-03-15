@@ -91,23 +91,6 @@ export class JwtToken {
     }
 }
 
-/*
-export class FakeRecordId<Tb extends string, Id extends RecordIdValue> {
-    internal: { table: Table<Tb>, id: Id }
-
-    constructor(table: Tb | Table<Tb>, id: Id) {
-        this.internal = { table: typeof table === 'string' ? new Table(table) : table , id }
-    }
-
-	equals(other: unknown): boolean { return new RecordId(this.internal.table, this.internal.id).equals(other) }
-	toJSON(): string { return new RecordId(this.internal.table, this.internal.id).toJSON() }
-	toString(): string { return new RecordId(this.internal.table, this.internal.id).toString() }
-	get table(): Table<Tb> { return this.internal.table }
-	get id(): Id { return this.internal.id }
-
-}
-*/
-
 export class Cookies {
     
     private readonly cookies: Map<string, string> = new Map()
@@ -141,13 +124,16 @@ export class Cookies {
         this.cookies.delete(name)
     }
 
+    clear() {
+        this.getAll().forEach((_, key: string) => this.delete(key))
+    }
+
 }
 
 const DRIVER_OPTIONS: DriverOptions = {
     codecOptions: {
         valueDecodeVisitor: (value) => {
             if (value instanceof DateTime) return new Date(value.toString())
-            //if (value instanceof RecordId) return new FakeRecordId(value.table, value.id)
             return value instanceof RecordId || value instanceof FileRef ? markRaw(value) : value
         },
     }
