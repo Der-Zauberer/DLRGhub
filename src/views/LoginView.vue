@@ -86,8 +86,9 @@
         </form>
 
         <footer class="grey-text">
-            <RouterLink :to="{ name: 'imprint' }">Impressum</RouterLink>
-            <RouterLink :to="{ name: 'privacy-policy' }">Datenschuterklärung</RouterLink>
+            <RouterLink :to="{ name: 'register' }">Registrieren</RouterLink>
+            <a target="_blank" href="/imprint">Impressum</a>
+            <a target="_blank" href="/privacy-policy">Datenschuterklärung</a>
         </footer>
 
     </div>
@@ -103,11 +104,12 @@
     justify-content: space-around;
     box-sizing: border-box;
     background: url('/resources/gallery/rhinewatch.jpg') center center / cover no-repeat;
-    z-index: 10;
+    z-index: 3;
     top: 0;
     min-height: 100dvh;
     min-width: 100vw;
     padding: calc(var(--theme-element-spacing) * 2);
+    padding-bottom: calc(var(--theme-element-spacing) * 2 + 1em);
 }
 
 .login form {
@@ -129,7 +131,7 @@
 
 @media only screen and (max-width: 575px) {
     .login form { width: 100% }
-    .login { padding: var(--theme-element-spacing) }
+    .login { padding: var(--theme-element-spacing); padding-bottom: calc(var(--theme-element-spacing) + 1em); }
 }
 
 button.link-button, button.link-button:focus, button.link-button:active {
@@ -146,10 +148,10 @@ button.link-button:hover, button.link-button:focus, button.link-button:active {
 
 footer {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    bottom: 0.3em;
+    right: 1ch;
     display: flex;
-    gap: var(--theme-inner-element-spacing);
+    gap: 1ch;
     justify-content: end;
 }
 

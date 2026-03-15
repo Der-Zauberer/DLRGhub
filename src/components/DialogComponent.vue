@@ -5,15 +5,15 @@
 
             <div class="flex flex-space-between flex-center">
                 <h3>{{ title }}</h3>
-                <ButtonComponent icon="close" apperience="GHOST" @click="open = false"/>
+                <ButtonComponent v-if="!consent" icon="close" apperience="GHOST" @click="open = false"/>
             </div>
 
             <slot></slot>
 
             <p v-if="error" class="red-text">{{ error }}</p>
 
-            <div class="grid-cols-2" v-if="action">
-                <button class="grey-color" @click="open = false">Abbrechen</button>
+            <div :class="consent ? 'grid-cols-1' : 'grid-cols-2'" v-if="action">
+                <button v-if="!consent" class="grey-color" @click="open = false">Abbrechen</button>
                 <button @click="success()">{{ action }}</button>
             </div>
 
@@ -30,7 +30,7 @@ const slotRef = useTemplateRef('slot')
 const open = defineModel<boolean>()
 const error = ref<Error | undefined>()
 
-const props = defineProps<{ title: string, action?: string, filter?: () => boolean | Promise<boolean> }>()
+const props = defineProps<{ title: string, consent?: boolean, action?: string, filter?: () => boolean | Promise<boolean> }>()
 const emits = defineEmits<{ ( e: 'success', value: void ): Promise<void> }>()
 
 async function success() {
