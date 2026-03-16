@@ -36,7 +36,7 @@
                     <path d="M1 3 H7 V7 H1 Z" style="fill: var(--theme-secondary-color); stroke: var(--theme-secondary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                     <path d="M1 5 H 17 V13 H1 Z" style="fill: var(--theme-primary-color); stroke: var(--theme-primary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                 </svg>
-                <span class="directory__name">{{ entry.name + '/' }}</span>
+                <span class="directory__name">{{ entry.name }}</span>
             </RouterLink>
             <RouterLink v-for="entry of directory.value?.files" :to="'/file' + entry.path">
                 <svg v-if="!entry.type.startsWith('image/')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
@@ -71,11 +71,13 @@
 <style scoped>
 
 .directories {
+    --theme-element-spacing: 15px;
+    margin: 0 calc(var(--theme-element-spacing) / -1);
     gap: 0;
 
     & > * {
         position: relative;
-        padding: calc(var(--theme-element-spacing) / 2);
+        padding: calc(var(--theme-element-spacing));
         border-radius: var(--theme-border-radius);
         text-align: center;
 
@@ -84,19 +86,31 @@
             box-sizing: border-box;
             top: 0;
             left: 0;
-            width: calc(100% - var(--theme-element-spacing));
-            margin: calc(var(--theme-element-spacing) / 2);
+            width: calc(100% - var(--theme-element-spacing) * 2);
+            margin: calc(var(--theme-element-spacing));
             border-radius: var(--theme-border-radius);
         }
 
         & .directory__name {
-            display: block;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-clamp: 2;
             overflow-wrap: anywhere;
+            overflow: hidden;
+            text-overflow: elipsis;
             font-size: 0.8em;
+            height: round(2.2em, 1px);
             color: var(--theme-text-color);
+            
         }
 
     }
+
+    & > *:hover {
+        background: var(--theme-element-primary-color);
+    }
+
 }
 
 .media-content {
