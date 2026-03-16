@@ -87,8 +87,8 @@
 
         <footer class="grey-text">
             <RouterLink :to="{ name: 'register' }">Registrieren</RouterLink>
-            <a target="_blank" href="/imprint">Impressum</a>
-            <a target="_blank" href="/privacy-policy">Datenschuterklärung</a>
+            <RouterLink :to="{ name: 'imprint' }">Impressum</RouterLink>
+            <RouterLink :to="{ name: 'privacy-policy' }">Datenschutzerklärung</RouterLink>
         </footer>
 
     </div>

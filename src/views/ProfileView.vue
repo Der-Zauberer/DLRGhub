@@ -49,7 +49,7 @@
         <h3>Rechtliches</h3>
         <div class="grid-cols-1">
             <ButtonLinkComponent :to="{ name: 'imprint' }">Impressum</ButtonLinkComponent>
-            <ButtonLinkComponent :to="{ name: 'privacy-policy' }">Datenschuterklärung</ButtonLinkComponent>
+            <ButtonLinkComponent :to="{ name: 'privacy-policy' }">Datenschutzerklärung</ButtonLinkComponent>
         </div>
 
         <h3>
