@@ -244,7 +244,9 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
             THROW 'error.user.authentication: Your authentication is expired!';
         };
         RETURN $auth;
-    } DURATION FOR TOKEN 8h, FOR SESSION 8h, FOR GRANT 1d;
+    } 
+    --WITH REFRESH
+    DURATION FOR TOKEN 8h, FOR SESSION 8h, FOR GRANT 30d;
 
 INSERT IGNORE INTO user {
     id: user:admin,
