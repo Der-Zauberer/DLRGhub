@@ -2,7 +2,7 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent :title="directory.value?.file?.name || 'Dateien'">
+        <HeadlineComponent :title="directory.value?.file?.name || 'Dateien'" :back="[ ...$route.params.pathMatch ].length ? { path: '/' + [ 'file', ...$route.params.pathMatch ].splice(0, [ ...$route.params.pathMatch ].length).join('/') } as unknown as RouteLocationAsRelativeGeneric : undefined">
             <template v-if="!directory.value?.file">
                 <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen" @click="createDialog = true"/>
                 <ButtonComponent color="ELEMENT" icon="upload" aria-label="Hochladen" @click="uploadFile()"/>
@@ -80,6 +80,8 @@
         padding: calc(var(--theme-element-spacing));
         border-radius: var(--theme-border-radius);
         text-align: center;
+        text-decoration: unset !important;
+        color: var(--theme-text-color);
 
         & img {
             position: absolute;
@@ -100,9 +102,6 @@
             overflow: hidden;
             text-overflow: elipsis;
             font-size: 0.8em;
-            height: round(2.2em, 1px);
-            color: var(--theme-text-color);
-            
         }
 
     }
@@ -143,7 +142,7 @@ import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
 import { BoundQuery, surql, Table } from 'surrealdb'
 import { inject, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, type RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
