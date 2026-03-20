@@ -1,6 +1,6 @@
 import { resource, type Resource } from '@/core/resource'
 import type { User } from '@/core/types'
-import { DateTime, FileRef, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId, type RecordIdValue } from 'surrealdb'
+import { DateTime, FileRef, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId } from 'surrealdb'
 import { markRaw, type App } from 'vue'
 import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 

@@ -38,12 +38,12 @@
             
             <swd-dropdown>
                 <div class="person-input">
-                    <input ref="input" @keydown.enter="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))">
+                    <input ref="input" @keydown.enter="proccessInput(($refs.input as HTMLInputElement[])[index], input => !shift.people.filter(person => person.role === role).find(person => person.name === input) ? data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }) : {})">
                     <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))"/>
                 </div>
                 <swd-dropdown-content>
                     <swd-selection v-if="user">
-                        <button v-for="name of user.filter(name => !($refs.input as HTMLInputElement[] | undefined)?.[index]?.value || name.includes(($refs.input as HTMLInputElement[])[index].value))">{{ name }}</button>
+                        <button v-for="name of user.filter(name => !($refs.input as HTMLInputElement[] | undefined)?.[index]?.value || name.includes(($refs.input as HTMLInputElement[])[index].value)).filter(name => !shift.people.filter(person => person.role === role).find(person => person.name === name))">{{ name }}</button>
                     </swd-selection>
                 </swd-dropdown-content>
             </swd-dropdown>
