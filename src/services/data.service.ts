@@ -10,8 +10,6 @@ export class DataService {
     private readonly ONLINE_EVENT = 'online'
     private readonly OFFLINE_EVENT = 'offline'
 
-    private readonly PROFILE_NAME = 'profile_name'
-
     public readonly online = ref<boolean>(navigator.onLine)
     private readonly onlineEvents = new Set<() => unknown>()
     private readonly cache = new CacheDB('cache')
@@ -20,11 +18,6 @@ export class DataService {
     constructor(private surrealDbService: SurrealDbService, private weatherService: WeatherService) {
         window.addEventListener(this.ONLINE_EVENT,  () => (this.online.value = true, this.reconnect()))
         window.addEventListener(this.OFFLINE_EVENT, () => (this.online.value = false, surrealDbService.close()))
-        const name = localStorage.getItem(this.PROFILE_NAME)
-        if (name && name.length !== 0) this.profileName.value = name
-        watch(this.profileName, () => {
-            localStorage.setItem(this.PROFILE_NAME, this.profileName.value)
-        })
     }
 
     async reconnect(): Promise<true> {
@@ -65,12 +58,12 @@ export class DataService {
         return this.createCachedResource<PlanSchedulesShift | undefined>(cache, query, kill, ['plan', 'shift'])
     }
 
-    getPersonShift(name: string, kill?: Promise<void>): Resource<ShiftScheduledByPlan[], unknown> {
+    getPersonShift(kill?: Promise<void>): Resource<ShiftScheduledByPlan[], unknown> {
         const cache = this.cache.get<{ value: ShiftScheduledByPlan[] }>(new RecordId('shifts', '*')).then(result => result?.value || [])
         
         const query = async (): Promise<ShiftScheduledByPlan[]> => {
             await this.surrealDbService.up()
-            const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, plan.* FROM shift WHERE people.map(|$person| $person.name).includes(${name}) AND date >= (time::now() - 1d) ORDER BY date;`)
+            const [shifts] = await this.surrealDbService.query<[ShiftScheduledByPlan[]]>(surql`SELECT *, plan.* FROM shift WHERE people.map(|$person| $person.name).includes($auth.displayname) AND date >= (time::now() - 1d) ORDER BY date;`)
             this.cache.put({ id: new RecordId('shifts', '*'), value: shifts })
             return shifts
         }
@@ -118,7 +111,16 @@ export class DataService {
     }
 
     getUser(): Resource<User, unknown> {
-        return this.surrealDbService.getUser()
+        const cache = this.cache.get<{ value: User }>(new RecordId('user', '*')).then(result => result?.value)
+
+        const query = async (): Promise<User> => {
+            await this.surrealDbService.up()
+            const user = await this.surrealDbService.auth<User>()
+            if (user) this.cache.put({ id: new RecordId('user', '*'), value: user })
+            return user as unknown as User
+        }
+
+        return this.createCachedResource<User>(cache, query)
     }
 
     getUserNames(): Resource<string[], unknown> {

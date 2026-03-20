@@ -10,7 +10,7 @@
                 <div>{{ shift.begin }}</div>
                 <div v-if="shift.end">{{ shift.end }}</div>
             </div>
-            <swd-icon class="shift__descriptor__marked star-filled-icon" v-if="data.profileName.value && shift.people.filter((person) => person.name === data.profileName.value).length"></swd-icon>
+            <swd-icon class="shift__descriptor__marked star-filled-icon" v-if="userDisplayName && shift.people.filter((person) => person.name === userDisplayName).length"></swd-icon>
         </div>
         <div class="shift__content">
             <h5 v-if="shift.name">{{ shift?.name }}</h5>
@@ -178,7 +178,7 @@
 
 <script setup lang="ts">
 import type { Shift } from '@/core/types';
-import { inject, ref, useTemplateRef } from 'vue';
+import { computed, inject, ref, useTemplateRef, watch } from 'vue';
 import DialogComponent from './DialogComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { useRoute } from 'vue-router';
@@ -187,14 +187,18 @@ import ButtonComponent from './ButtonComponent.vue';
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
-const props = defineProps<{ shift: Shift, roles: string[], user: string[] }>()
+const props = defineProps<{ shift: Shift, roles: string[], user: string[], userDisplayName?: string }>()
 
 const component = useTemplateRef('component')
 const dialog = ref<boolean>(false)
 
-if (route.query.shift === props.shift.id.id.toString()) {
-    component.value?.scrollIntoView({ behavior: 'smooth' })
-}
+let initialLoading = true
+watch(() => props.shift, () => {
+    if (initialLoading && route.query.shift === props.shift.id.id.toString()) {
+        component.value?.scrollIntoView({ behavior: 'smooth' })
+        initialLoading = false
+    }
+})
 
 function proccessInput(input: HTMLInputElement, callback: (input: string) => unknown) {
     if (!input.value) return

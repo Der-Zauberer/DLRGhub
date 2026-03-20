@@ -4,12 +4,6 @@
 
         <h3>Profileinstellungen</h3>
 
-        <InputComponent class="margin-bottom" label="Name" placeholder="Max Mustermann" v-model.lazy="$dataService.profileName.value"/>
-
-        <swd-card>
-            Dein Name wird lokal gespeichert und wird verwendet um anzuzeigen, für welche Schichten du eingeteilt bist. Dazu muss der Name exakt mit den Namen in den Schichten übereinstimmen.
-        </swd-card>
-
         <OfflineComponent v-if="parseCustomSurrealDbError(user.error).key === 'error.connection'" :loading="user.loading" @reload="user.reload()"/>
         <dlrg-error v-if="user?.status === 'ERROR' && parseCustomSurrealDbError(user.error).key !== 'error.connection'">{{ user?.error }}</dlrg-error>
         <swd-loading-spinner v-if="user?.status === 'LOADING' && !user?.value" class="width-100" loading="true"></swd-loading-spinner>

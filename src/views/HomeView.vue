@@ -16,7 +16,7 @@
 				</swd-card>
 
 				<ButtonComponent :to="{ name: 'user' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Benutzerverwaltung</ButtonComponent>
-				<ButtonComponent :to="{ name: 'registrations' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Registrierungen <swd-chip class="margin-left-auto red-color" v-if="openRegistrations?.value !== 0">{{ openRegistrations.value }}</swd-chip></ButtonComponent>
+				<ButtonComponent :to="{ name: 'registrations' }" color="ELEMENT" icon="user" class="width-100" v-if="user.value?.admin">Registrierungen <swd-chip class="margin-left-auto red-color" v-if="openRegistrations?.value && openRegistrations?.value !== 0">{{ openRegistrations.value }}</swd-chip></ButtonComponent>
 				<ButtonComponent :to="{ name: 'post-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" class="width-100">Neuer Post</ButtonComponent>
 				
 			</div>

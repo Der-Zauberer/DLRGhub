@@ -13,14 +13,14 @@
 
         <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="currentShifts?.length">
             <li v-for="shift of currentShifts">
-                <ShiftComponent :shift="shift" :user="user.value || []" :roles="plan.value?.roles || []"/>
+                <ShiftComponent :shift="shift" :roles="plan.value?.roles || []" :user="userNames.value || []" :userDisplayName="user.value?.displayname"/>
             </li>
         </ul>
 
         <HeadlineComponent title="Vergangene Wachen" v-if="previousShifts?.length && currentShifts?.length"/>
         <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="previousShifts?.length">
             <li v-for="shift of previousShifts">
-                <ShiftComponent :shift="shift" :user="user.value || []" :roles="plan.value?.roles || []"/>
+                <ShiftComponent :shift="shift" :roles="plan.value?.roles || []" :user="userNames.value || []" :userDisplayName="user.value?.displayname"/>
             </li>
         </ul>
 
@@ -66,7 +66,8 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const data = inject(DATA_SERVICE) as DataService
 
-const user = data.getUserNames()
+const userNames = data.getUserNames()
+const user = data.getUser()
 
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 const currentShifts = computed(() => plan.value?.shifts.filter(shift => shift.date >= getYesterday()))

@@ -23,9 +23,7 @@
             </li>
         </ul>
 
-        <HeadlineComponent title="Meine Schichten" :subtitle="profileName || 'Nicht konfiguriert'" :resource="shifts">
-            <ButtonComponent icon="settings" color="ELEMENT" :aria-label="profileName ? 'Konfigurieren' : undefined" :to="{ name: 'profile' }">{{ !profileName ? 'Konfigurieren' : undefined }}</ButtonComponent>
-        </HeadlineComponent>
+        <HeadlineComponent title="Meine Schichten"></HeadlineComponent>
 
         <dlrg-empty v-if="shifts?.status === 'EMPTY'">Keine Schichten gefunden!</dlrg-empty>
         <dlrg-error v-if="shifts?.status === 'ERROR' && parseCustomSurrealDbError(plans.error).key !== 'error.connection'">{{ shifts?.error }}</dlrg-error>
@@ -55,13 +53,12 @@ import { inject, onBeforeUnmount, reactive, ref } from 'vue'
 
 const data = inject(DATA_SERVICE) as DataService
 
-const profileName = data.profileName
 const planCreateDialog = ref<boolean>(false)
 
 const createPlanForm = reactive<{ name?: string }>({})
 
 const plans = data.getPlans(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
-const shifts = data.getPersonShift(profileName.value, new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
+const shifts = data.getPersonShift(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 
 async function createPlan(): Promise<boolean> {
     if (!createPlanForm.name) return false
