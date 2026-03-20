@@ -6,8 +6,8 @@
 
             <h3>Mitglieder Login</h3>
 
-            <InputComponent label="Benutzername" v-model="credentials.username"/>
-            <InputComponent label="Passwort" type="password" v-model="credentials.password"/>
+            <InputComponent label="Benutzername" v-model="credentials.username" required/>
+            <InputComponent label="Passwort" type="password" v-model="credentials.password" required/>
 
             <swd-dropdown style="margin-left: auto;">
                 <button type="button" class="link-button">Server auswählen <swd-icon class="down-icon" aria-hidden="true"></swd-icon></button>
@@ -25,6 +25,10 @@
 
             <swd-loading-spinner :loading="loginLoading" class="width-100">
                 <input type="submit" value="Login" class="width-100">
+            </swd-loading-spinner>
+
+            <swd-loading-spinner :loading="loginLoading" class="width-100">
+                <button class="width-100" @click.prevent="loginWithGoogle()">Login with Google</button>
             </swd-loading-spinner>
 
         </form>
@@ -158,6 +162,7 @@ footer {
 </style>
 
 <script setup lang="ts">
+
 import InputComponent from '@/components/InputComponent.vue'
 import type { Registration } from '@/core/types'
 import { config, normalize, parseCustomSurrealDbError, SURREAL_DB_SERVICE, type PasswordChangeRequest, type SurrealDbService } from '@/services/surrealdb.service'
@@ -238,6 +243,50 @@ async function register() {
         registrationError.value = parseCustomSurrealDbError(exception as Error).key
     } finally {
         registrationLoading.value = false
+    }
+}
+
+async function loginWithGoogle() {
+    const response = await new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = 'https://accounts.google.com/gsi/client'
+        script.async = true
+        script.defer = true
+        script.onerror = reject
+        document.head.appendChild(script)
+
+        script.onload = () => {
+            window.google.accounts.id.initialize({
+                client_id: import.meta.env.VITE_GOOGLE_AUTH_CLIENT_ID,
+                callback: response => resolve(response)
+            })
+            window.google.accounts.id.prompt()
+        }
+    })
+    console.log(response)
+}
+
+async function loginWithGoogleWithRedirect() {
+    window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth'
+    '?client_id=' + import.meta.env.VITE_GOOGLE_AUTH_CLIENT_ID +
+    '&redirect_uri=' + window.location.origin +
+    '&response_type=code' +
+    '&scope=openid%20email%20profile' +
+    '&access_type=offline' +
+    '&prompt=consent';
+}
+
+declare global {
+    interface Window {
+        google: {
+            accounts: {
+                id: {
+                    initialize: (config: { client_id: string, callback: (response: unknown) => void }) => void
+                    renderButton: (element: HTMLElement | null, options: { theme: string, size: string, width: string }) => void
+                    prompt: () => void
+                }
+            }
+        }
     }
 }
 

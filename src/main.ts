@@ -24,6 +24,7 @@ import RegistrationVue from './views/RegistrationVue.vue'
 import ImprintView from './views/ImprintView.vue'
 import PrivacyPolicyView from './views/PrivacyPolicyView.vue'
 
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
