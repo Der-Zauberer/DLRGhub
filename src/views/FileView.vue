@@ -4,19 +4,22 @@
 
         <HeadlineComponent :title="directory.value?.file?.name || 'Dateien'" :back="[ ...$route.params.pathMatch ].length ? { path: '/' + [ 'file', ...$route.params.pathMatch ].splice(0, [ ...$route.params.pathMatch ].length).join('/') } as unknown as RouteLocationAsRelativeGeneric : undefined">
             <template v-if="!directory.value?.file">
+                <swd-dropdown>
+                    <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen"/>
+                    <swd-dropdown-content>
+                        <swd-selection>
+                            <button @click="createDialog = true; fileCreationRequest.type = 'directory'">Ordner</button>
+                            <button @click="createDialog = true; fileCreationRequest.type = 'text/plain'">Textdatei</button>
+                            <button @click="createDialog = true; fileCreationRequest.type = 'text/html'">HTML</button>
+                        </swd-selection>
+                    </swd-dropdown-content>
+                </swd-dropdown>
+
                 <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen" @click="createDialog = true"/>
                 <ButtonComponent color="ELEMENT" icon="upload" aria-label="Hochladen" @click="uploadFile()"/>
                 <DialogComponent title="Neue Datei" action="Speichern" v-model="createDialog" :filter="createFile">
                     <form class="grid-cols-1">
-                        <InputComponent label="Name" v-model="fileForm.name" required/>
-                        <swd-dropdown>
-                            <InputComponent label="Type" v-model="fileForm.type" required readonly/>
-                            <swd-dropdown-content>
-                                <swd-selection>
-                                    <a v-for="type of ['text/plain', 'text/html']">{{ type }}</a>
-                                </swd-selection>
-                            </swd-dropdown-content>
-                        </swd-dropdown>
+                        <InputComponent label="Name" v-model="fileCreationRequest.name" required/>
                     </form>
                 </DialogComponent>
             </template>
@@ -141,7 +144,7 @@ import type { BinaryFile, Directory } from '@/core/types'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
 import { BoundQuery, surql, Table } from 'surrealdb'
-import { inject, ref } from 'vue'
+import { inject, ref, reactive, type Reactive } from 'vue'
 import { useRoute, useRouter, type RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const route = useRoute()
@@ -154,7 +157,7 @@ const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profi
 const createDialog = ref<boolean>(false)
 const editableContent = ref<boolean>(false)
 
-const fileForm: { name: string, type: string } = { name: '', type: '' }
+const fileCreationRequest: Reactive<{ name: string, type: 'directory' | 'text/plain' | 'test/html' }> = reactive({ name: '', type: '' })
 
 const directory = resource({
     parameter: { route },
@@ -172,13 +175,14 @@ const directory = resource({
             const path = '/' + [ ...parameter.route.params.pathMatch ]?.join('/')
             query = surql`
                 {
+                    location: SELECT VALUE id FROM ONLY directory WHERE path = ${path},
                     directories: SELECT VALUE <~directory.* FROM ONLY directory WHERE path = ${path},
                     files: SELECT VALUE <~file.* FROM ONLY directory WHERE path = ${path},
                     file:  SELECT * OMIT content FROM ONLY file WHERE path = ${path},
                 }
             `
         }
-        return surrealdb.up().then(() => surrealdb.query<[{ directories: Directory[], files: BinaryFile[], file: BinaryFile | undefined}]>(query).then(result => result[0]))
+        return surrealdb.up().then(() => surrealdb.query<[{ location?: RecordId<'directory'>, directories: Directory[], files: BinaryFile[], file: BinaryFile | undefined}]>(query).then(result => result[0]))
     }
 })
 
@@ -210,10 +214,13 @@ function encodeBinary(content: string): ArrayBuffer {
 
 async function createFile(): Promise<boolean> {
     await surrealdb.up()
-    await surrealdb.insert(new Table('file'), fileForm)
+    if (fileCreationRequest.type === 'directory') {
+        await surrealdb.insert(new Table('directory'), { name: fileCreationRequest.name, parent: directory.value.location })
+    } else {
+        await surrealdb.insert(new Table('file'), { ...fileCreationRequest, parent: directory.value.location })
+    }
     directory.reload()
-    fileForm.name = ''
-    fileForm.type = ''
+    fileCreationRequest.name = ''
     return true
 }
 
