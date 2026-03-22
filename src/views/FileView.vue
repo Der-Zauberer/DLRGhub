@@ -8,22 +8,22 @@
                     <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen" :disabled="!directory.value"/>
                     <swd-dropdown-content>
                         <swd-selection>
-                            <ButtonComponent icon="folder" @click="createDialog = true; fileCreationRequest.type = 'directory'">Ordner</ButtonComponent>
-                            <ButtonComponent icon="file" @click="createDialog = true; fileCreationRequest.type = 'text/plain'">Textdatei</ButtonComponent>
-                            <ButtonComponent icon="file" @click="createDialog = true; fileCreationRequest.type = 'text/html'">HTML</ButtonComponent>
+                            <ButtonComponent icon="folder" @click="createDialog.open = true; createDialog.type = 'directory'">Ordner</ButtonComponent>
+                            <ButtonComponent icon="file" @click="createDialog.open = true; createDialog.type = 'text/plain'">Textdatei</ButtonComponent>
+                            <ButtonComponent icon="file" @click="createDialog.open = true; createDialog.type = 'text/html'">HTML</ButtonComponent>
                         </swd-selection>
                     </swd-dropdown-content>
                 </swd-dropdown>
 
                 <ButtonComponent color="ELEMENT" icon="upload" aria-label="Hochladen" :disabled="!directory.value" @click="uploadFile(directory.value?.location)"/>
-                <DialogComponent title="Neue Datei" action="Speichern" v-model="createDialog" :filter="createFile">
+                <DialogComponent title="Neue Datei" action="Speichern" v-model="createDialog.open" :filter="createFile">
                     <form class="grid-cols-1">
-                        <InputComponent label="Name" v-model="fileCreationRequest.name" required/>
+                        <InputComponent label="Name" v-model="createDialog.name" required/>
                     </form>
                 </DialogComponent>
-                <DialogComponent title="Umbenennen" action="Speichern" v-model="renameDialog">
+                <DialogComponent title="Umbenennen" action="Speichern" v-model="renameDialog.open" :filter="renameFile">
                     <form class="grid-cols-1">
-                        <InputComponent label="Name" v-model="fileCreationRequest.name" required/>
+                        <InputComponent label="Name" v-model="renameDialog.name" required/>
                     </form>
                 </DialogComponent>
             </template>
@@ -50,7 +50,7 @@
                         <ButtonComponent icon="more" apperience="GHOST"></ButtonComponent>
                         <swd-dropdown-content>
                             <swd-selection>
-                                <ButtonComponent icon="file" @click="renameDialog = true">Umbenennen</ButtonComponent>
+                                <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id">Umbenennen</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
                             </swd-selection>
                         </swd-dropdown-content>
@@ -73,7 +73,7 @@
                             <swd-selection>
                                 <ButtonComponent icon="download" @click="downloadFile(entry.path)">Herunterladen</ButtonComponent>
                                 <ButtonComponent icon="pen">Bearbeiten</ButtonComponent>
-                                <ButtonComponent icon="file" @click="renameDialog = true">Umbenennen</ButtonComponent>
+                                <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id">Umbenennen</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
                             </swd-selection>
                         </swd-dropdown-content>
@@ -177,21 +177,18 @@ import type { BinaryFile, Directory } from '@/core/types'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
 import { BoundQuery, surql, Table, RecordId } from 'surrealdb'
-import { inject, ref, reactive, type Reactive } from 'vue'
-import { useRoute, useRouter, type RouteLocationAsRelativeGeneric } from 'vue-router'
+import { inject, ref, reactive } from 'vue'
+import { useRoute, type RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const route = useRoute()
-const router = useRouter()
 const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profile = surrealdb.getProfile().default
 const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profile.namespace}/${profile.database}/file`
 
-const createDialog = ref<boolean>(false)
-const renameDialog = ref<boolean>(false)
+const createDialog = reactive<{ open: boolean, name: string, type: 'directory' | 'text/plain' | 'text/html' }>({ open: false, name: '', type: 'directory' })
+const renameDialog = reactive<{ open: boolean, id: RecordId<'directory'> | RecordId<'file'> | undefined, name: string }>({ open: false, id: undefined, name: '' })
 const editableContent = ref<boolean>(false)
-
-const fileCreationRequest: Reactive<{ name: string, type: 'directory' | 'text/plain' | 'text/html' }> = reactive({ name: '', type: 'directory' })
 
 const directory = resource({
     parameter: { route },
@@ -253,13 +250,22 @@ async function createFile(): Promise<boolean> {
     if (!directory.value) {
         throw Error('Pfad konnte nicht geladen werden')
     }
-    if (fileCreationRequest.type === 'directory') {
-        await surrealdb.insert(new Table('directory'), { name: fileCreationRequest.name, parent: directory.value.location })
+    if (createDialog.type === 'directory') {
+        await surrealdb.insert(new Table('directory'), { name: createDialog.name, parent: directory.value.location })
     } else {
-        await surrealdb.insert(new Table('file'), { ...fileCreationRequest, parent: directory.value.location, content: new ArrayBuffer() })
+        await surrealdb.insert(new Table('file'), { ...createDialog, parent: directory.value.location, content: new ArrayBuffer() })
     }
     directory.reload()
-    fileCreationRequest.name = ''
+    createDialog.name = ''
+    return true
+}
+
+async function renameFile(): Promise<boolean> {
+    await surrealdb.up()
+    await surrealdb.update(renameDialog.id as RecordId).merge({ name: renameDialog.name })
+    directory.reload()
+    renameDialog.id = undefined
+    renameDialog.name = ''
     return true
 }
 
