@@ -4,7 +4,6 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa';
 import vue from '@vitejs/plugin-vue'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue({
@@ -40,7 +39,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ttf,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ttf,ico,png,jpg,svg}'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.hostname === 'dlrg.derzauberer.eu',
