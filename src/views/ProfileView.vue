@@ -2,18 +2,27 @@
 
     <div class="container-xl">
 
-        <h3>Profileinstellungen</h3>
+        <h2>Profileinstellungen</h2>
 
         <OfflineComponent v-if="parseCustomSurrealDbError(user.error).key === 'error.connection'" :loading="user.loading" @reload="user.reload()"/>
         <dlrg-error v-if="user?.status === 'ERROR' && parseCustomSurrealDbError(user.error).key !== 'error.connection'">{{ user?.error }}</dlrg-error>
         <swd-loading-spinner v-if="user?.status === 'LOADING' && !user?.value" class="width-100" loading="true"></swd-loading-spinner>
 
         <div class="grid-cols-md-2 grid-cols-1" v-if="user.value">
-            <InputComponent label="Benutzername" disabled :value="user.value?.name"/>
-            <InputComponent label="Email" type="email" disabled :value="user.value?.email"/>
-            <InputComponent label="Anzeigename" disabled :value="user.value?.displayname"/>
             <div>
-                {{ user.value?.login?.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
+                {{ user.value.name }}
+                <swd-subtitle>Benutzername</swd-subtitle>
+            </div>
+            <div>
+                {{ user.value.email }}
+                <swd-subtitle>Email</swd-subtitle>
+            </div>
+            <div>
+                {{ user.value.displayname }}
+                <swd-subtitle>Anzeigename</swd-subtitle>
+            </div>
+            <div v-if="user.value.login">
+                {{ user.value.login.toLocaleString([], { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}
                 <swd-subtitle>Letzter Login</swd-subtitle>
             </div>
         </div>
@@ -23,7 +32,7 @@
             <button @click="dialogServcie.open = { title: 'Ausloggen', content: [`Willst du dich wirklich von allen Geräten ausloggen?`], action: 'Ausloggen', filter: async () => surrealdb.invalidateAllDevices().then((() => true)), success: () => surrealdb.redirectPostInvalidate()}">Ausloggen von allen Geräten</button>
         </div>
 
-        <h3>Passwort ändern</h3>
+        <h2>Passwort ändern</h2>
 
         <form @submit.prevent="changePassword()">
             <div class="grid-cols-md-3 grid-cols-1">
@@ -40,18 +49,18 @@
             
         </form>
 
-        <h3>Rechtliches</h3>
+        <h2>Rechtliches</h2>
         <div class="grid-cols-1">
             <ButtonLinkComponent :to="{ name: 'imprint' }">Impressum</ButtonLinkComponent>
             <ButtonLinkComponent :to="{ name: 'privacy-policy' }">Datenschutzerklärung</ButtonLinkComponent>
         </div>
 
-        <h3>
+        <h2>
             <div class="flex flex-space-between">
                 Entwickleroptionen
                 <ButtonComponent :icon="devtools ? 'down' : 'right'" color="ELEMENT"  @click="devtools = !devtools"/>
             </div>
-        </h3>
+        </h2>
 
         <div class="grid-cols-1" v-if="devtools">
             <p>
