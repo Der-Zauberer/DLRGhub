@@ -66,6 +66,7 @@ export type BinaryFile = {
     type: string
     parent: RecordId<'directory'> | undefined
     path: string
+    content?: ArrayBuffer
     created: {
         user: RecordId<'user'>
         timestamp: Date

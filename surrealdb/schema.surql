@@ -79,7 +79,7 @@ DEFINE FIELD OVERWRITE updated.timestamp ON TABLE file TYPE datetime VALUE time:
 DEFINE API '/file' FOR get 
     MIDDLEWARE api::timeout(1s)
     THEN {
-        LET $base = '/api/dlrg.derzauberer.eu/main/file'
+        LET $base = '/api/dlrg.derzauberer.eu/main/file';
         LET $root = array::union((SELECT name, path FROM directory WHERE !parent), (SELECT name, path FROM file WHERE !parent));
         {
             status: 200,
@@ -90,11 +90,10 @@ DEFINE API '/file' FOR get
         }
     };
 
-
 DEFINE API '/file/*path' FOR get
     MIDDLEWARE api::timeout(1s)
     THEN {
-        LET $base = '/api/dlrg.derzauberer.eu/main/file'
+        LET $base = '/api/dlrg.derzauberer.eu/main/file';
         LET $path = $request.params.path.fold('', |$a, $b| $a + '/' + $b);
         LET $file = SELECT name, type, content FROM ONLY file WHERE path = $path;
         IF $file {{
@@ -102,7 +101,7 @@ DEFINE API '/file/*path' FOR get
             body: $file.content,
             headers: {
                 'Content-Type': $file.type,
-                'Content-Disposition': 'inline; filename="' + $file.name + '"'
+                'Content-Disposition': (IF $request.query.keys().includes('download') { 'attachment;' } ELSE { 'inline;' }) + ' filename="' + $file.name + '"'
             }
         }} ELSE {
             LET $directory = SELECT parent.path, array::union(<~directory.{ name, path }, <~file.{ name, path }) AS children FROM ONLY directory WHERE path = $path;

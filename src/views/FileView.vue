@@ -29,7 +29,7 @@
             </template>
             <template v-if="directory.value?.file">
                 <ButtonComponent v-if="!['image', 'video', 'audio'].includes(directory.value?.file.type.split('/')[0])" :color="editableContent ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (editableContent ? 'done': 'pen')" :aria-label="editableContent ? 'save' : 'edit'" @click="editableContent ? saveFile.reload() : editableContent = true"/>
-                <ButtonComponent color="ELEMENT" icon="download" aria-label="download" @click="downloadFile(directory.value?.file)"/>
+                <ButtonComponent color="ELEMENT" icon="download" aria-label="download" @click="downloadFile(directory.value?.file.path)"/>
             </template>
         </HeadlineComponent>
 
@@ -44,7 +44,7 @@
                     <path d="M1 3 H7 V7 H1 Z" style="fill: var(--theme-secondary-color); stroke: var(--theme-secondary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                     <path d="M1 5 H 17 V13 H1 Z" style="fill: var(--theme-primary-color); stroke: var(--theme-primary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                 </svg>
-                <div class="flex">
+                <div class="flex margin-bottom-0">
                     <div class="directory__name">{{ entry.name}}</div>
                     <swd-dropdown class="directory__options" @click="$event.preventDefault()">
                         <ButtonComponent icon="more" apperience="GHOST"></ButtonComponent>
@@ -65,12 +65,13 @@
                 </svg>
                 <svg v-if="entry.type.startsWith('image/')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"></svg>
                 <img v-if="entry.type.startsWith('image/')" :src="profileApiFilePath + entry.path">
-                <div class="flex">
+                <div class="flex margin-bottom-0">
                     <div class="directory__name">{{ entry.name}}</div>
                     <swd-dropdown class="directory__options" @click="$event.preventDefault()">
                         <ButtonComponent icon="more" apperience="GHOST"></ButtonComponent>
                         <swd-dropdown-content>
                             <swd-selection>
+                                <ButtonComponent icon="download" @click="downloadFile(entry.path)">Herunterladen</ButtonComponent>
                                 <ButtonComponent icon="pen">Bearbeiten</ButtonComponent>
                                 <ButtonComponent icon="file" @click="renameDialog = true">Umbenennen</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
@@ -269,9 +270,10 @@ async function uploadFile(parent: RecordId<"directory"> | undefined) {
     directory.reload()
 }
 
-async function downloadFile(file: BinaryFile) {
-    if (!content.value) return
-    const url = URL.createObjectURL(new Blob([content.value], { type: file.type }))
+async function downloadFile(path: string) {
+    await surrealdb.up()
+    const [file] = await surrealdb.query<[BinaryFile]>(surql`SELECT * FROM ONLY file WHERE path = ${path};`);
+    const url = URL.createObjectURL(new Blob([file.content!], { type: file.type }))
     const a = document.createElement('a')
     a.href = url
     a.download = file.name
@@ -288,7 +290,6 @@ function openDeleteDialog(id: RecordId<'directory'> | RecordId<'file'>, name: st
         success: () => directory.reload()
     }
 }
-
 
 async function loadFiles(): Promise<{ name: string, type: string, content: ArrayBuffer }[]> {
     return new Promise((resolve, reject) => {

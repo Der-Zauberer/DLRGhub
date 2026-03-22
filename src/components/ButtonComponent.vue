@@ -1,5 +1,5 @@
 <template>
-    <component :is="to ? 'RouterLink' : 'button'" :class="toClass(color, apperience, to)" :selected="selected !== false ? true : undefined" :aria-selected="selected ? true : undefined" :disabled="disabled ? true : undefined" @click="$emit('click', $event)" :to="to">
+    <component :is="to ? 'RouterLink' : (href ? 'a' : 'button')" :class="toClass(color, apperience, to)" :selected="selected !== false ? true : undefined" :aria-selected="selected ? true : undefined" :disabled="disabled ? true : undefined" @click="$emit('click', $event)" :to="to" :href="href">
         <swd-icon v-if="icon" :class="`${icon}-icon`" aria-hidden="true"></swd-icon>
         <slot></slot>
     </component>
@@ -17,7 +17,7 @@ import type { RouteLocationRaw } from 'vue-router';
 
 export type ButtonColor = 'PRMARY' | 'SECONDARY' | 'ACCENT' | 'ELEMENT'
 export type ButtonApperience = 'DEFAULT' | 'OUTLINE' | 'GHOST'
-defineProps<{ to?: RouteLocationRaw, icon?: string, color?: ButtonColor, apperience?: ButtonApperience, selected?: boolean, disabled?: boolean }>()
+defineProps<{ to?: RouteLocationRaw, href?: string, icon?: string, color?: ButtonColor, apperience?: ButtonApperience, selected?: boolean, disabled?: boolean }>()
 defineEmits<{ (e: 'click', event: MouseEvent): void }>()
 
 function toClass(color?: ButtonColor, apperience?: ButtonApperience, to?: RouteLocationRaw): string {
