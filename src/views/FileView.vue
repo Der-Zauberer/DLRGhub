@@ -21,11 +21,15 @@
                         <InputComponent label="Name" v-model="fileCreationRequest.name" required/>
                     </form>
                 </DialogComponent>
+                <DialogComponent title="Umbenennen" action="Speichern" v-model="renameDialog">
+                    <form class="grid-cols-1">
+                        <InputComponent label="Name" v-model="fileCreationRequest.name" required/>
+                    </form>
+                </DialogComponent>
             </template>
             <template v-if="directory.value?.file">
                 <ButtonComponent v-if="!['image', 'video', 'audio'].includes(directory.value?.file.type.split('/')[0])" :color="editableContent ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (editableContent ? 'done': 'pen')" :aria-label="editableContent ? 'save' : 'edit'" @click="editableContent ? saveFile.reload() : editableContent = true"/>
                 <ButtonComponent color="ELEMENT" icon="download" aria-label="download" @click="downloadFile(directory.value?.file)"/>
-                <ButtonComponent color="ELEMENT" icon="delete" aria-label="delete" @click="openDeleteDialog(directory.value?.file)"/>
             </template>
         </HeadlineComponent>
 
@@ -40,7 +44,18 @@
                     <path d="M1 3 H7 V7 H1 Z" style="fill: var(--theme-secondary-color); stroke: var(--theme-secondary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                     <path d="M1 5 H 17 V13 H1 Z" style="fill: var(--theme-primary-color); stroke: var(--theme-primary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                 </svg>
-                <span class="directory__name">{{ entry.name }}</span>
+                <div class="flex">
+                    <div class="directory__name">{{ entry.name}}</div>
+                    <swd-dropdown class="directory__options" @click="$event.preventDefault()">
+                        <ButtonComponent icon="more" apperience="GHOST"></ButtonComponent>
+                        <swd-dropdown-content>
+                            <swd-selection>
+                                <ButtonComponent icon="file" @click="renameDialog = true">Umbenennen</ButtonComponent>
+                                <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
+                            </swd-selection>
+                        </swd-dropdown-content>
+                    </swd-dropdown>
+                </div>
             </RouterLink>
             <RouterLink v-for="entry of directory.value?.files" :to="'/file' + entry.path">
                 <svg v-if="!entry.type.startsWith('image/')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
@@ -50,7 +65,19 @@
                 </svg>
                 <svg v-if="entry.type.startsWith('image/')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"></svg>
                 <img v-if="entry.type.startsWith('image/')" :src="profileApiFilePath + entry.path">
-                <span class="directory__name">{{ entry.name}}</span>
+                <div class="flex">
+                    <div class="directory__name">{{ entry.name}}</div>
+                    <swd-dropdown class="directory__options" @click="$event.preventDefault()">
+                        <ButtonComponent icon="more" apperience="GHOST"></ButtonComponent>
+                        <swd-dropdown-content>
+                            <swd-selection>
+                                <ButtonComponent icon="pen">Bearbeiten</ButtonComponent>
+                                <ButtonComponent icon="file" @click="renameDialog = true">Umbenennen</ButtonComponent>
+                                <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
+                            </swd-selection>
+                        </swd-dropdown-content>
+                    </swd-dropdown>
+                </div>
             </RouterLink>
         </div>
 
@@ -62,13 +89,13 @@
             <audio v-if="directory.value.file.type.startsWith('audio/')" controls class="media-content">
                 <source :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type">
             </audio>
-            
-            <embed v-if="directory.value.file.type === 'application/pdf'" :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type" class="pdf-content"/>
             <div v-if="directory.value.file.type === 'text/html'" v-html="content.value" :contenteditable="editableContent" @input="editContent = ($event.target as HTMLDivElement).innerHTML"></div>
             <div v-if="!['image', 'video', 'audio'].includes(directory.value.file.type.split('/')[0]) && directory.value.file.type !== 'application/pdf' && directory.value.file.type !== 'text/html'" class="text-content" :contenteditable="editableContent" @input="editContent = ($event.target as HTMLDivElement).innerHTML">{{ content.value }}</div>
         </template>
 
     </div>
+
+    <embed v-if="directory?.value?.file?.type === 'application/pdf'" :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type" class="pdf-content"/>
 
 </template>
 
@@ -83,7 +110,6 @@
         position: relative;
         padding: calc(var(--theme-element-spacing));
         border-radius: var(--theme-border-radius);
-        text-align: center;
         text-decoration: unset !important;
         color: var(--theme-text-color);
 
@@ -106,6 +132,11 @@
             overflow: hidden;
             text-overflow: elipsis;
             font-size: 0.8em;
+            width: 100%;
+        }
+
+        & .directory__options {
+            margin-right: calc((round(.6em,1px) - var(--theme-border-width)) / -1);
         }
 
     }
@@ -156,6 +187,7 @@ const profile = surrealdb.getProfile().default
 const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profile.namespace}/${profile.database}/file`
 
 const createDialog = ref<boolean>(false)
+const renameDialog = ref<boolean>(false)
 const editableContent = ref<boolean>(false)
 
 const fileCreationRequest: Reactive<{ name: string, type: 'directory' | 'text/plain' | 'text/html' }> = reactive({ name: '', type: 'directory' })
@@ -170,7 +202,7 @@ const directory = resource({
                     directories: SELECT * FROM directory WHERE !parent,
                     files: SELECT * OMIT content FROM file WHERE !parent,
                     file: NONE,
-                    index: SELECT VALUE <string>content FROM file WHERE name = 'index.html' AND !parent
+                    index: SELECT VALUE <string>content FROM ONLY file WHERE name = 'index.html' AND !parent
                 }
             `
         } else {
@@ -180,8 +212,8 @@ const directory = resource({
                     location: SELECT VALUE id FROM ONLY directory WHERE path = ${path},
                     directories: SELECT VALUE <~directory.* FROM ONLY directory WHERE path = ${path},
                     files: SELECT VALUE <~file.* FROM ONLY directory WHERE path = ${path},
-                    file:  SELECT * OMIT content FROM ONLY file WHERE path = ${path},
-                    index: SELECT VALUE <string>content FROM file WHERE name = 'index.html' AND path = ${path}
+                    file: SELECT * OMIT content FROM ONLY file WHERE path = ${path},
+                    index: SELECT VALUE <string>content FROM ONLY file WHERE name = 'index.html AND path = ${path}'
                 }
             `
         }
@@ -247,13 +279,13 @@ async function downloadFile(file: BinaryFile) {
     URL.revokeObjectURL(url)
 }
 
-function openDeleteDialog(file: BinaryFile) {
+function openDeleteDialog(id: RecordId<'directory'> | RecordId<'file'>, name: string) {
     dialogService.open = {
         title: 'Datei löschen',
-        content: ['Bist du sicher die Datei zu löschen?', `<code>${file.name}</code>`],
+        content: ['Bist du sicher die Datei zu löschen?', `<code>${name}</code>`],
         action: 'Löschen',
-        filter: () => surrealdb.up().then(() => surrealdb.delete(file.id)).then(() => true),
-        success: () => router.push({ name: 'files' })
+        filter: () => surrealdb.up().then(() => surrealdb.delete(id)).then(() => true),
+        success: () => directory.reload()
     }
 }
 
