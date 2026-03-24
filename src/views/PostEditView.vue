@@ -9,7 +9,7 @@
             </swd-loading-spinner>
         </HeadlineComponent>
 
-        <OfflineComponent v-if="parseCustomSurrealDbError(post.error).key === 'error.connection'" :loading="post.loading" @reload="post.reload()"/>
+        <OfflineComponent  :loading="post.loading" @reload="post.reload()"/>/>
         <dlrg-error v-if="(post?.status === 'ERROR' && parseCustomSurrealDbError(post.error).key !== 'error.connection') || savePost?.status === 'ERROR'">{{ post?.error || savePost?.error }}</dlrg-error>
         <swd-loading-spinner v-if="post?.status === 'LOADING' && !post?.value" class="width-100" loading="true"></swd-loading-spinner>
 

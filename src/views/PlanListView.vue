@@ -2,8 +2,6 @@
 
     <div class="container-xl">
 
-        <OfflineComponent v-if="parseCustomSurrealDbError(plans.error || shifts.error).key === 'error.connection'" :loading="plans.loading || shifts.loading" @reload="(plans.reload(), shifts.reload())"/>
-
         <HeadlineComponent title="Dienstpläne" :resource="plans" type="Dienstpläne">
             <ButtonComponent icon="add" color="ELEMENT" :aria-label="plans.status!=='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined" @click="planCreateDialog = true">{{ plans.status==='EMPTY' ? 'Neuen Dienstplan erstellen' : undefined }}</ButtonComponent>
             <DialogComponent title="Neuer Wachplan" action="Speichern" v-model="planCreateDialog" :filter="createPlan">
@@ -13,6 +11,7 @@
             </DialogComponent>
         </HeadlineComponent>
 
+        <OfflineComponent :loading="plans.loading" @reload="plans.reload()"/>
         <dlrg-empty v-if="plans?.status === 'EMPTY'">Keine Dienstpläne gefunden!</dlrg-empty>
         <dlrg-error v-if="plans?.status === 'ERROR' && parseCustomSurrealDbError(plans.error).key !== 'error.connection'">{{ plans?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plans?.status === 'LOADING' && !plans?.value" class="width-100" loading="true"></swd-loading-spinner>

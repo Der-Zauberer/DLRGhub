@@ -6,7 +6,7 @@
             <ButtonComponent :to="{ name: 'plan-edit', params: { id: $route.params.id } }" color="ELEMENT" icon="settings" aria-label="Schicht bearbeiten"/>
         </HeadlineComponent>
 
-        <OfflineComponent v-if="parseCustomSurrealDbError(plan.error).key === 'error.connection'" :loading="plan.loading" @reload="plan.reload()"/>
+        <OfflineComponent :loading="plan.loading" @reload="plan.reload()"/>
         <dlrg-empty v-if="plan?.status === 'EMPTY' || !plan.value?.shifts.length">Keine Schichten gefunden!</dlrg-empty>
         <dlrg-error v-if="plan?.status === 'ERROR' && parseCustomSurrealDbError(plan.error).key !== 'error.connection'">{{ plan?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>

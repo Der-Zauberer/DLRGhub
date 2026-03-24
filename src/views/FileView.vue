@@ -33,6 +33,7 @@
             </template>
         </HeadlineComponent>
 
+        <OfflineComponent :loading="directory.loading" @reload="directory.reload()"/>
         <swd-loading-spinner v-if="directory.loading || saveFile.loading || content.loading" :loading="directory.loading || saveFile.loading || content.loading" class="width-100"></swd-loading-spinner>
         <div class="red-text" v-if="directory.error || saveFile.error">{{ directory.error || saveFile.error }}</div>
 
@@ -172,6 +173,7 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
+import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { BinaryFile, Directory } from '@/core/types'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'

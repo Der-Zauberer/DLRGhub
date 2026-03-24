@@ -6,7 +6,7 @@
             <ButtonComponent :to="{ name: 'user-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" aria-label="add"/>
         </HeadlineComponent>
 
-        <OfflineComponent v-if="parseCustomSurrealDbError(users.error).key === 'error.connection'" :loading="users.loading" @reload="users.reload()"/>
+        <OfflineComponent :loading="users.loading" @reload="users.reload()"/>
         <dlrg-empty v-if="users?.status === 'EMPTY'">Keine Benutzer gefunden!</dlrg-empty>
         <dlrg-error v-if="(users?.status === 'ERROR' && parseCustomSurrealDbError(users.error).key !== 'error.connection')">{{ users?.error }}</dlrg-error>
         <swd-loading-spinner v-if="users?.status === 'LOADING' && !users?.value" class="width-100" loading="true"></swd-loading-spinner>

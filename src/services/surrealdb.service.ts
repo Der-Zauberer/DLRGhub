@@ -40,9 +40,10 @@ export type SurrealDbProfile = {
 
 export type SurrealDbAccount =  {
     id: string
-    access: string
-    refresh?: string
-    expiration: number
+    accessToken: string
+    accessExpiration: number
+    refreshToken?: string
+    refreshExpiration?: number
 }
 
 export type SurrealDbConfig = {
@@ -147,7 +148,7 @@ let account = loadAccount()
 let stopLogoutTimeout: () => void
 let loginRedirect: RouteLocationNormalized | undefined
 
-const user = resource<User, unknown>({ loader: () => account && account.expiration > new Date().getTime() ? undefined : undefined })
+const user = resource<User, unknown>({ loader: () => account && account.accessExpiration < new Date().getTime() && (!account.refreshExpiration || account.refreshExpiration < new Date().getTime()) ? undefined : undefined })
 
 export class SurrealDbService extends Surreal {
 
@@ -187,11 +188,14 @@ export class SurrealDbService extends Surreal {
             variables: credentials
         })
         const jwt = new JwtToken(typeof tokens === 'string' ? tokens : tokens.access)
+        const refreshExpiration = new Date()
+        refreshExpiration.setDate(refreshExpiration.getDate() + 30)
         account = {
             id: '',
-            access: jwt.raw,
-            refresh: tokens.refresh,
-            expiration: jwt.getExpirationAsDate()!.getTime()
+            accessToken: jwt.raw,
+            accessExpiration: jwt.getExpirationAsDate()!.getTime(),
+            refreshToken: tokens.refresh,
+            refreshExpiration: tokens.refresh ? refreshExpiration.getTime() : undefined
         }
         cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account), jwt.getExpirationAsDate())
         this.setLogoutTimeout()
@@ -217,12 +221,12 @@ export class SurrealDbService extends Surreal {
 
     async authenticate(token?: Token | Tokens): Promise<Tokens> {
         await this.up(profiles.default, true)
-        const tokens = token ? (typeof token === 'string' ? token : token.access) : account?.access
+        const tokens = token ? (typeof token === 'string' ? token : token.access) : account?.accessToken
         if (!tokens) {
             account = undefined
             throw new SurrealError('There was a problem with authentication')
         }
-        if (account && account.expiration < new Date().getTime()) {
+        if (account && account.accessExpiration < new Date().getTime() && (!account.refreshExpiration || account.refreshExpiration < new Date().getTime())) {
             account = undefined
             cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account))
             throw new SurrealError('There was a problem with authentication')
@@ -230,11 +234,14 @@ export class SurrealDbService extends Surreal {
         return super.authenticate(tokens)
             .then(async result => {
                 const jwt = new JwtToken(typeof result === 'string' ? result : result.access)
+                const refreshExpiration = new Date()
+                refreshExpiration.setDate(refreshExpiration.getDate() + 30)
                 account = {
                     id: '',
-                    access: jwt.raw,
-                    refresh: result.refresh,
-                    expiration: jwt.getExpirationAsDate()!.getTime()
+                    accessToken: jwt.raw,
+                    accessExpiration: jwt.getExpirationAsDate()!.getTime(),
+                    refreshToken: result.refresh,
+                    refreshExpiration: result.refresh ? refreshExpiration.getTime() : undefined
                 }
                 cookies.set(`${ACCOUNT_COOKIE}_${profiles.default.name}`, JSON.stringify(account), jwt.getExpirationAsDate())
                 this.setLogoutTimeout()
@@ -277,7 +284,7 @@ export class SurrealDbService extends Surreal {
 
     private setLogoutTimeout() {
         if (!account) return
-        const timeout = setTimeout(() => this.invalidate(), Math.max(new Date(account.expiration).getTime() - Date.now(), 0))
+        const timeout = setTimeout(() => account && (!account.refreshExpiration || account.refreshExpiration < new Date().getTime()) ? this.invalidate() : this.authenticate(), Math.max(new Date(account.accessExpiration).getTime() - Date.now(), 0))
         stopLogoutTimeout = () => clearTimeout(timeout)
     }
 
@@ -304,16 +311,14 @@ function loadAccount(): SurrealDbAccount | undefined {
     if (!json) return undefined
     const account = JSON.parse(json) as SurrealDbAccount | undefined
     if (!account) return undefined
-    if (account.expiration < new Date().getTime()) {
-        cookies.delete(`${ACCOUNT_COOKIE}_${profiles.default.name}`)
-        return undefined
-    }
     return account
 }
 
 export function auth(condition: (user: User) => boolean = () => true): NavigationGuardWithThis<undefined> {
     return (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-        if (account && account.expiration < new Date().getTime()) account = undefined
+        if (account && account.accessExpiration < new Date().getTime() && (!account.refreshExpiration || account.refreshExpiration < new Date().getTime())) {
+            account = undefined
+        }
         if (!account && to.path !== '/login') {
             loginRedirect = to
             next('/login')

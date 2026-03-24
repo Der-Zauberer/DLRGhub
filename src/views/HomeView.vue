@@ -22,7 +22,7 @@
 			</div>
 			<div class="grid-span-md-2 grid-span-1">
 
-				<OfflineComponent v-if="parseCustomSurrealDbError(posts.error).key === 'error.connection'" :loading="posts.loading" @reload="posts.reload()"/>
+				<OfflineComponent :loading="posts.loading" @reload="posts.reload()"/>
 				<dlrg-empty v-if="posts?.status === 'EMPTY'">Keine Posts gefunden!</dlrg-empty>
 				<dlrg-error v-if="posts?.status === 'ERROR' && parseCustomSurrealDbError(posts.error).key !== 'error.connection'">{{ posts?.error }}</dlrg-error>				
 				<swd-loading-spinner v-if="posts?.status === 'LOADING' && !posts?.value" class="width-100" loading="true"></swd-loading-spinner>

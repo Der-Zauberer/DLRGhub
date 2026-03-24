@@ -236,15 +236,16 @@ DEFINE ACCESS OVERWRITE user ON DATABASE TYPE RECORD
         UPDATE $user.id SET login = time::now();
         RETURN $user;
     }
+    WITH REFRESH
     AUTHENTICATE {
-        IF $auth.account.enabled == false || (type::is_datetime($auth.account.expiry) && $auth.account.expiry < time::now()) {
+        LET $user = IF $auth { $auth } ELSE { <record>$token.ID }
+        IF $user.account.enabled == false || (type::is_datetime($user.account.expiry) && $user.account.expiry < time::now()) {
             THROW 'error.user.deactivated: Your account is deactivated!';
-        } ELSE IF type::is_datetime($auth.account.valid) && time::unix($auth.account.valid) > $token.iat {
+        } ELSE IF type::is_datetime($user.account.valid) && time::unix($user.account.valid) > $token.iat {
             THROW 'error.user.authentication: Your authentication is expired!';
         };
-        RETURN $auth;
-    } 
-    --WITH REFRESH
+        RETURN $user;
+    }
     DURATION FOR TOKEN 8h, FOR SESSION 8h, FOR GRANT 30d;
 
 INSERT IGNORE INTO user {
