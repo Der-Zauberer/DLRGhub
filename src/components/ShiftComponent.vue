@@ -33,17 +33,17 @@
 
             <div class="person-entry" v-for="person of shift.people.filter(person => person.role === role).map(person => person.name)">
                 <button disabled>{{ person }}</button>
-                <ButtonComponent class="right-item" color="ELEMENT" icon="delete" aria-label="Löschen" @click="data.removeShiftPerson(shift.id, role ? { name: person, role: role } : { name: person })"/>
+                <ButtonComponent class="right-item" color="ELEMENT" icon="delete" aria-label="Löschen" @click="data.removeShiftPerson(shift.id, role ? { name: person, role } : { name: person })"/>
             </div>
             
             <swd-dropdown>
                 <div class="person-input">
-                    <input ref="input" @keydown.enter="proccessInput(($refs.input as HTMLInputElement[])[index], input => !shift.people.filter(person => person.role === role).find(person => person.name === input) ? data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }) : {})">
-                    <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="proccessInput(($refs.input as HTMLInputElement[])[index], (input) => data.addShiftPerson(shift.id, role ? { name: input, role: role } : { name: input }))"/>
+                    <input v-model="inputs[index]" @keydown.enter="!shift.people.filter(person => person.role === role).find(person => person.name === inputs[index]) ? data.addShiftPerson(shift.id, role ? { name: inputs[index], role: role } : { name: inputs[index] }) : {}; inputs[index] = ''">
+                    <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="data.addShiftPerson(shift.id, role ? { name: inputs[index], role } : { name: inputs[index] }); inputs[index] = ''"/>
                 </div>
                 <swd-dropdown-content>
                     <swd-selection v-if="user">
-                        <button v-for="name of user.filter(name => !($refs.input as HTMLInputElement[] | undefined)?.[index]?.value || name.includes(($refs.input as HTMLInputElement[])[index].value)).filter(name => !shift.people.filter(person => person.role === role).find(person => person.name === name))">{{ name }}</button>
+                        <button v-for="name of user.filter(name => inputs[index] && name.includes(inputs[index])).filter(name => !shift.people.filter(person => person.role === role).find(person => person.name === name))">{{ name }}</button>
                     </swd-selection>
                 </swd-dropdown-content>
             </swd-dropdown>
@@ -191,6 +191,7 @@ const props = defineProps<{ shift: Shift, roles: string[], user: string[], userD
 
 const component = useTemplateRef('component')
 const dialog = ref<boolean>(false)
+const inputs = ref<string[]>([])
 
 let initialLoading = true
 watch(() => props.shift, () => {
@@ -199,11 +200,5 @@ watch(() => props.shift, () => {
         initialLoading = false
     }
 })
-
-function proccessInput(input: HTMLInputElement, callback: (input: string) => unknown) {
-    if (!input.value) return
-    callback(input.value)
-    input.value = ''
-}
 
 </script>

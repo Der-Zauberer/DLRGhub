@@ -127,41 +127,32 @@ DEFINE API '/file/*path' FOR get
 
 DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
 	PERMISSIONS
-		FOR select, update WHERE id = $auth.id || $auth.admin,
+		FOR select WHERE $auth.id,
+        FOR update WHERE id = $auth.id || $auth.admin,
         FOR create, delete WHERE $auth.admin;
-DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is_email($value);
-DEFINE FIELD OVERWRITE name ON TABLE user TYPE string;
+DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is_email($value) PERMISSIONS FOR select WHERE id = $auth.id;
+DEFINE FIELD OVERWRITE name ON TABLE user TYPE string PERMISSIONS FOR select WHERE id = $auth.id;
 DEFINE FIELD OVERWRITE displayname ON TABLE user TYPE string;
 DEFINE FIELD OVERWRITE password ON TABLE user TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value })
-    PERMISSIONS
-        FOR select NONE,
-        FOR create, update WHERE $auth.admin;
+    PERMISSIONS FOR select NONE, FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE admin ON TABLE user TYPE bool DEFAULT false
-    PERMISSIONS
-        FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update WHERE $auth.admin;
+    PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin, FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE account ON TABLE user TYPE object DEFAULT {}
-    PERMISSIONS
-        FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update WHERE $auth.admin;
+    PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin, FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE account.enabled ON TABLE user TYPE bool DEFAULT false;
 DEFINE FIELD OVERWRITE account.valid ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE account.expiry ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE credentials ON TABLE user TYPE object DEFAULT {}
-    PERMISSIONS
-        FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update WHERE $auth.admin;
+    PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin, FOR create, update WHERE $auth.admin;
 DEFINE FIELD OVERWRITE credentials.change ON TABLE user TYPE bool DEFAULT false;
 DEFINE FIELD OVERWRITE credentials.expiry ON TABLE user TYPE option<datetime>;
 DEFINE FIELD OVERWRITE login ON TABLE user TYPE option<datetime>    
-    PERMISSIONS
-        FOR select WHERE id = $auth.id || $auth.admin,
-        FOR create, update NONE;
+    PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin, FOR create, update NONE;
 
 DEFINE INDEX OVERWRITE email ON user FIELDS email UNIQUE;
 DEFINE INDEX OVERWRITE name ON user FIELDS name UNIQUE;
 
-DEFINE TABLE OVERWRITE user_public SCHEMAFULL AS SELECT id, email, name, displayname FROM user WHERE account.enabled && (!type::is_datetime(account.expiry) || account.expiry > time::now()) PERMISSIONS FOR select WHERE $auth.id;
+DEFINE TABLE OVERWRITE user_public SCHEMAFULL AS SELECT id, displayname FROM user WHERE account.enabled && (!type::is_datetime(account.expiry) || account.expiry > time::now()) PERMISSIONS FOR select WHERE $auth.id;
 
 DEFINE TABLE OVERWRITE _password_change_request SCHEMAFULL
 	PERMISSIONS
