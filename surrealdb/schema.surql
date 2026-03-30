@@ -130,8 +130,8 @@ DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
 		FOR select WHERE $auth.id,
         FOR update WHERE id = $auth.id || $auth.admin,
         FOR create, delete WHERE $auth.admin;
-DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is_email($value) PERMISSIONS FOR select WHERE id = $auth.id;
-DEFINE FIELD OVERWRITE name ON TABLE user TYPE string PERMISSIONS FOR select WHERE id = $auth.id;
+DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is_email($value) PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin;
+DEFINE FIELD OVERWRITE name ON TABLE user TYPE string PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin;
 DEFINE FIELD OVERWRITE displayname ON TABLE user TYPE string;
 DEFINE FIELD OVERWRITE password ON TABLE user TYPE string VALUE (IF !$value.starts_with('$argon2id$') { crypto::argon2::generate($value) } ELSE { $value })
     PERMISSIONS FOR select NONE, FOR create, update WHERE $auth.admin;
