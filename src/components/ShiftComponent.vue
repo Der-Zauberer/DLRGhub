@@ -178,7 +178,7 @@
 
 <script setup lang="ts">
 import type { Shift } from '@/core/types';
-import { computed, inject, ref, useTemplateRef, watch } from 'vue';
+import { inject, ref, useTemplateRef, watch } from 'vue';
 import DialogComponent from './DialogComponent.vue';
 import { DATA_SERVICE, DataService } from '@/services/data.service';
 import { useRoute } from 'vue-router';

@@ -28,7 +28,7 @@
                 </DialogComponent>
             </template>
             <template v-if="directory.value?.file">
-                <ButtonComponent v-if="!['image', 'video', 'audio'].includes(directory.value?.file.type.split('/')[0])" :color="editableContent ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (editableContent ? 'done': 'pen')" :aria-label="editableContent ? 'save' : 'edit'" @click="editableContent ? saveFile.reload() : editableContent = true"/>
+                <ButtonComponent v-if="!['image', 'video', 'audio'].includes(directory.value?.file.type.split('/')[0])" :color="Object.keys(route.query).includes('edit') ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (Object.keys(route.query).includes('edit') ? 'save': 'pen')" :aria-label="Object.keys(route.query).includes('edit') ? 'save' : 'edit'" @click="Object.keys(route.query).includes('edit') ? saveFile.reload() : router.push({ name: route.name, params: route.params, query: { edit: null } })"/>
                 <ButtonComponent color="ELEMENT" icon="download" aria-label="download" @click="downloadFile(directory.value?.file.path)"/>
             </template>
         </HeadlineComponent>
@@ -67,14 +67,14 @@
                 <svg v-if="entry.type.startsWith('image/')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"></svg>
                 <img v-if="entry.type.startsWith('image/')" :src="profileApiFilePath + entry.path">
                 <div class="flex margin-bottom-0">
-                    <div class="directory__name">{{ entry.name}}</div>
+                    <div class="directory__name">{{ entry.name }}</div>
                     <swd-dropdown class="directory__options" @click="$event.preventDefault()">
                         <ButtonComponent icon="more" apperience="GHOST"></ButtonComponent>
                         <swd-dropdown-content>
                             <swd-selection>
                                 <ButtonComponent icon="download" @click="downloadFile(entry.path)">Herunterladen</ButtonComponent>
-                                <ButtonComponent icon="pen">Bearbeiten</ButtonComponent>
-                                <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id">Umbenennen</ButtonComponent>
+                                <ButtonComponent icon="pen" class="grey-color" :to="'/file' + entry.path  + '?edit'">Bearbeiten</ButtonComponent>
+                                <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id; renameDialog.name = entry.name">Umbenennen</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
                             </swd-selection>
                         </swd-dropdown-content>
@@ -83,7 +83,7 @@
             </RouterLink>
         </div>
 
-        <template v-if="directory.value?.file">
+        <template v-if="directory.value?.file && !Object.keys(route.query).includes('edit')">
             <img v-if="directory.value.file.type.startsWith('image/')" :src="profileApiFilePath + directory.value.file.path" class="media-content">
             <video v-if="directory.value.file.type.startsWith('video/')" controls class="media-content">
                 <source :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type">
@@ -91,13 +91,19 @@
             <audio v-if="directory.value.file.type.startsWith('audio/')" controls class="media-content">
                 <source :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type">
             </audio>
-            <div v-if="directory.value.file.type === 'text/html'" v-html="content.value" :contenteditable="editableContent" @input="editContent = ($event.target as HTMLDivElement).innerHTML"></div>
-            <div v-if="!['image', 'video', 'audio'].includes(directory.value.file.type.split('/')[0]) && directory.value.file.type !== 'application/pdf' && directory.value.file.type !== 'text/html'" class="text-content" :contenteditable="editableContent" @input="editContent = ($event.target as HTMLDivElement).innerHTML">{{ content.value }}</div>
+            <div v-if="directory.value.file.type === 'text/html'" v-html="content.value"></div>
+            <div v-if="!['image', 'video', 'audio'].includes(directory.value.file.type.split('/')[0]) && directory.value.file.type !== 'application/pdf' && directory.value.file.type !== 'text/html'" class="text-content">{{ content.value }}</div>
+        </template>
+
+        <template v-if="directory.value?.file && Object.keys(route.query).includes('edit')">
+            <swd-input>
+                <textarea ref="editor" class="text-edit" v-model="content.value"></textarea>
+            </swd-input>
         </template>
 
     </div>
 
-    <embed v-if="directory?.value?.file?.type === 'application/pdf'" :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type" class="pdf-content"/>
+    <embed v-if="directory?.value?.file?.type === 'application/pdf' && !Object.keys(route.query).includes('edit')" :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type" class="pdf-content"/>
 
 </template>
 
@@ -166,6 +172,12 @@
     white-space: pre-wrap;
 }
 
+.text-edit {
+    height: auto;
+    resize: none;
+    overflow: hidden;
+}
+
 </style>
 
 <script lang="ts" setup>
@@ -179,10 +191,11 @@ import type { BinaryFile, Directory } from '@/core/types'
 import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
 import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
 import { BoundQuery, surql, Table, RecordId } from 'surrealdb'
-import { inject, ref, reactive } from 'vue'
-import { useRoute, type RouteLocationAsRelativeGeneric } from 'vue-router'
+import { inject, reactive, useTemplateRef, nextTick, watch } from 'vue'
+import { useRoute, useRouter, type RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profile = surrealdb.getProfile().default
@@ -190,7 +203,8 @@ const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profi
 
 const createDialog = reactive<{ open: boolean, name: string, type: 'directory' | 'text/plain' | 'text/html' }>({ open: false, name: '', type: 'directory' })
 const renameDialog = reactive<{ open: boolean, id: RecordId<'directory'> | RecordId<'file'> | undefined, name: string }>({ open: false, id: undefined, name: '' })
-const editableContent = ref<boolean>(false)
+
+const editor = useTemplateRef<HTMLTextAreaElement>('editor')
 
 const directory = resource({
     parameter: { route },
@@ -226,20 +240,27 @@ const content = resource({
     loader: parameter => parameter.directory.value?.file && !['image', 'video', 'audio'].includes(parameter.directory.value.file.type.split('/')[0]) && parameter.directory.value.file.type !== 'application/pdf' ? fetch(profileApiFilePath + parameter.directory.value?.file.path).then(result => result.text()) : undefined
 })
 
-const editContent = ref<string | undefined>(undefined)
+watch(content, async () => {
+    await nextTick()
+    if (!editor.value) return
+    editor.value.style.height = 'auto'
+    editor.value.style.height = editor.value.scrollHeight + 'px'
+    
+})
+
 const saveFile = resource({
     loader: async () => {
-        if (directory.value?.file && editContent.value !== undefined) {
+        if (directory.value?.file) {
             await surrealdb.up()
             await surrealdb.update<BinaryFile>(directory.value.file.id).content({ 
                 name: directory.value.file.name,
                 type: directory.value.file.type,
                 parent: directory.value.file.parent,
-                content: encodeBinary(editContent.value) 
+                content: encodeBinary(content.value!)
             })
             await directory.reload()
+            router.push({ name: route.name, params: route.params })
         }
-        editableContent.value = false
     }
 })
 
@@ -255,7 +276,7 @@ async function createFile(): Promise<boolean> {
     if (createDialog.type === 'directory') {
         await surrealdb.insert(new Table('directory'), { name: createDialog.name, parent: directory.value.location })
     } else {
-        await surrealdb.insert(new Table('file'), { ...createDialog, parent: directory.value.location, content: new ArrayBuffer() })
+        await surrealdb.insert(new Table('file'), { name: createDialog.name, type: createDialog.type, parent: directory.value.location, content: new ArrayBuffer() })
     }
     directory.reload()
     createDialog.name = ''
