@@ -49,8 +49,10 @@
             </swd-dropdown>
         </div>
         
-        <h5>Beschreibung</h5>
-        <textarea class="dialog-description" :value="shift.description" @change="data.editDescription(shift.id, ($event.target as HTMLInputElement).value)"></textarea>
+        <div class="grid-cols-1 dialog-section">
+            <h5>Beschreibung</h5>
+            <textarea class="dialog-description" :value="shift.description" @change="data.editDescription(shift.id, ($event.target as HTMLInputElement).value)"></textarea>
+        </div>
     </DialogComponent>
 
 </template>
@@ -124,7 +126,7 @@
 }
 
 .dialog-section {
-    margin-top: calc(2 * var(--theme-element-spacing));
+    margin-top: var(--theme-element-spacing);
 
     & .person-entry {
         display: flex;

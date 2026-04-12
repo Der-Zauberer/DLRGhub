@@ -17,14 +17,10 @@
 
                 <ButtonComponent color="ELEMENT" icon="upload" aria-label="Hochladen" :disabled="!directory.value" @click="uploadFile(directory.value?.location)"/>
                 <DialogComponent title="Neue Datei" action="Speichern" v-model="createDialog.open" :filter="createFile">
-                    <form class="grid-cols-1">
-                        <InputComponent label="Name" v-model="createDialog.name" required/>
-                    </form>
+                    <InputComponent label="Name" v-model="createDialog.name" required/>
                 </DialogComponent>
                 <DialogComponent title="Umbenennen" action="Speichern" v-model="renameDialog.open" :filter="renameFile">
-                    <form class="grid-cols-1">
-                        <InputComponent label="Name" v-model="renameDialog.name" required/>
-                    </form>
+                    <InputComponent label="Name" v-model="renameDialog.name" required/>
                 </DialogComponent>
             </template>
             <template v-if="directory.value?.file">

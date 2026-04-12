@@ -1,23 +1,25 @@
 <template>
 
     <swd-dialog role="dialog" shown v-if="open">
-        <swd-card ref="slot">
+        <form ref="form" @submit="$event.preventDefault()" @keydown="$event.code === 'Escape' ? open = false : {}">
+            <swd-card ref="slot">
 
-            <div class="flex flex-space-between flex-center">
-                <h3>{{ title }}</h3>
-                <ButtonComponent v-if="!consent" icon="close" apperience="GHOST" @click="open = false"/>
-            </div>
+                <div class="flex flex-space-between flex-center">
+                    <h3>{{ title }}</h3>
+                    <ButtonComponent v-if="!consent" icon="close" apperience="GHOST" @click="open = false" type="button"/>
+                </div>
 
-            <slot></slot>
+                <div class="grid-cols-1"><slot></slot></div>
 
-            <p v-if="error" class="red-text">{{ error }}</p>
+                <p v-if="error" class="red-text">{{ error }}</p>
 
-            <div :class="consent ? 'grid-cols-1' : 'grid-cols-2'" v-if="action">
-                <button v-if="!consent" class="grey-color" @click="open = false">Abbrechen</button>
-                <button @click="success()">{{ action }}</button>
-            </div>
+                <div :class="consent ? 'grid-cols-1' : 'grid-cols-2'" v-if="action">
+                    <button type="button" v-if="!consent" class="grey-color" @click="open = false">Abbrechen</button>
+                    <button type="submit" @click="success()">{{ action }}</button>
+                </div>
 
-        </swd-card>
+            </swd-card>
+        </form>
     </swd-dialog>
 
 </template>
@@ -33,12 +35,13 @@ const error = ref<Error | undefined>()
 const props = defineProps<{ title: string, consent?: boolean, action?: string, filter?: () => boolean | Promise<boolean> }>()
 const emits = defineEmits<{ ( e: 'success', value: void ): Promise<void> }>()
 
+const form = useTemplateRef<HTMLFormElement>('form')
+
 async function success() {
     error.value = undefined
     if (slotRef.value) {
-        const form = (slotRef.value as HTMLElement).querySelector('form') as HTMLFormElement | undefined
-        if (form && !form.checkValidity()) {
-            form.reportValidity()
+        if (form.value && !form.value.checkValidity()) {
+            form.value.reportValidity()
             return
         }
     }
