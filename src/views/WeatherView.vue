@@ -16,7 +16,7 @@
 					<div>{{ prediction.time }}:</div>
 					<div>{{ prediction.rain + '%' }}</div>
 					<div>
-						<div class="weather-prediction-grid__bar" :style="`margin-left: ${prediction.minOffset}%; width: ${100 - prediction.minOffset - prediction.maxOffset}%; background: linear-gradient(90deg, hsl(${prediction.hslMin}, 100%, 50%), hsl(${prediction.hslMax}, 100%, 50%))`">
+						<div class="weather-prediction-grid__bar" :style="`margin-left: ${prediction.minOffset}%; width: ${100 - prediction.minOffset - prediction.maxOffset}%; background: ${mapHslToCssGradient(prediction.hslValues)}`">
 							<span>{{ prediction.min }}°</span>
 							<span>{{ prediction.max}}°</span>
 						</div>
@@ -99,11 +99,11 @@ function mapLocalDate(date: string | number): string {
 	return localDate.toLocaleString([], new Date().toDateString() === localDate.toDateString() ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
-function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, hslMin: number, hslMax: number }[] {
+function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, hslValues: number[] }[] {
 	const allMin = Math.round(Math.min(...weather.daily.temperature_2m_min))
 	const allMax = Math.round(Math.max(...weather.daily.temperature_2m_max))
 	const range = allMax - allMin
-	const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, hslMin: number, hslMax: number }[] = []
+	const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, hslValues: number[] }[] = []
 	for (const [index, time] of weather.daily.time.entries()) {
 		const min = Math.round(weather.daily.temperature_2m_min[index])
 		const max = Math.round(weather.daily.temperature_2m_max[index])
@@ -114,28 +114,43 @@ function getSevenDayPrediction(weather: Weather): { time: string, rain: number, 
 			max,
 			minOffset: (min - allMin) / range * 100,
 			maxOffset: (allMax - max) / range * 100,
-			hslMin: calculateTemperatureHslValue(min),
-			hslMax: calculateTemperatureHslValue(max),
+			hslValues: calculateTemperatureHslValues(min, max),
 		})
 	}
 	return prediction
 }
 
-function calculateTemperatureHslValue(temperature: number): number {
-	const ppoints: { temp: number, hsl: number }[] = [ { temp: 0, hsl: 230 }, { temp: 20, hsl: 125 }, { temp: 35, hsl: 30 }, { temp: 40, hsl: 310 } ]
-	ppoints.sort((x: { temp: number, hsl: number }, y: { temp: number, hsl: number }) => x.temp - y.temp)
-	if (temperature <= ppoints[0].temp) return ppoints[0].hsl
-	if (temperature >= ppoints[ppoints.length - 1].temp) return ppoints[ppoints.length - 1].hsl
-	for (let i = 0; i < ppoints.length - 1; i++) {
-		if (temperature >= ppoints[i].temp && temperature <= ppoints[i + 1].temp) {
-			const alpha = (temperature - ppoints[i].temp) / (ppoints[i + 1].temp - ppoints[i].temp)
-			const delta = ((ppoints[i + 1].hsl - ppoints[i].hsl + 540) % 360) - 180;
-			return (((ppoints[i].hsl + alpha * delta) % 360) + 360) % 360
+function mapHslToCssGradient(hslValues: number[]): string {
+	const last = hslValues.length - 1
+	return `linear-gradient(90deg, ${hslValues
+		.map((hslValue, idx) => `hsl(${hslValue}, 100%, 50%) ${(idx * 100) / last}%`)
+		.join(", ")})`
+}
+
+function calculateTemperatureHslValues(minTemp: number, maxTemp: number): number[] {
+	const points = [ { temp: 0, hsl: 230 }, { temp: 20, hsl: 120 }, { temp: 30, hsl: 65 }, { temp: 35, hsl: 0 }, { temp: 40, hsl: 310 }].sort((a, b) => a.temp - b.temp)
+	const getHsl = (temp: number): number => {
+		if (temp <= points[0].temp) return points[0].hsl
+		if (temp >= points.at(-1)!.temp) return points.at(-1)!.hsl
+
+		for (let i = 0; i < points.length - 1; i++) {
+			const a = points[i]
+			const b = points[i + 1]
+			if (temp >= a.temp && temp <= b.temp) {
+				const alpha = (temp - a.temp) / (b.temp - a.temp)
+				const delta = ((b.hsl - a.hsl + 540) % 360) - 180
+				return (((a.hsl + alpha * delta) % 360) + 360) % 360
+			}
 		}
+
+		return points[0].hsl
 	}
 
-	// Should never end here, just here for compile to shut up
-	return ppoints[ppoints.length - 1].hsl
+	return [ 
+		getHsl(minTemp),
+		...points.filter(p => minTemp < p.temp && p.temp < maxTemp).map(p => p.hsl),
+		getHsl(maxTemp),
+	]
 }
 
 </script>
