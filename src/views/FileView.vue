@@ -160,7 +160,7 @@
 .pdf-content {
     display: block;
     width: 100%;
-    height: calc(100vh - var(--theme-menu-height) - (5 * var(--theme-element-spacing)) - round(2.5em, 1px));
+    height: calc(100vh - var(--theme-menu-height) - (4 * var(--theme-element-spacing)) - round(2.2em, 1px));
 }
 
 .text-content {
