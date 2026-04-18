@@ -7,19 +7,21 @@
 		<WeatherComponent :weather="weather" :water="water" class="grid-span-md-2 grid-span-1"/>
 
 		<swd-card>
-			<h3>
-				7-Tage-Trend
-				<swd-subtitle>Gailingen am Hochrhein</swd-subtitle>
-			</h3>
+			<div class="flex flex-space-between">
+				<h3>7-Tage-Trend<swd-subtitle>Gailingen am Hochrhein</swd-subtitle></h3>
+				{{ weather.value?.current.temperature_2m.toFixed(1) }}°
+			</div>
 			<div class="weather-prediction-grid" v-if="weather.value">
-				<div class="contents" v-for="prediction of getSevenDayPrediction(weather.value)">
+				<div class="contents" v-for="[index, prediction] of getSevenDayPrediction(weather.value).entries()">
 					<div>{{ prediction.time }}:</div>
 					<div>{{ prediction.rain + '%' }}</div>
-					<div>
+					<div style="position: relative;">
 						<div class="weather-prediction-grid__bar" :style="`margin-left: ${prediction.minOffset}%; width: ${100 - prediction.minOffset - prediction.maxOffset}%; background: ${mapHslToCssGradient(prediction.hslValues)}`">
-							<span>{{ prediction.min }}°</span>
-							<span>{{ prediction.max}}°</span>
+							<strong>{{ prediction.min }}°</strong>
+							<strong>{{ prediction.max }}°</strong>
 						</div>
+						<div  v-if="index == 0" class="weather-prediction-grid__indicator" :style="`left: ${prediction.currentOffset(weather.value.current.temperature_2m)}%;`"></div>
+						<swd-icon v-if="index == 0" class="arrow-down-icon" :style="`position: absolute; transform: translate(-50%, -130%); left: ${prediction.currentOffset(weather.value.current.temperature_2m)}%;`"></swd-icon>
 					</div>
 				</div>
 			</div>
@@ -64,6 +66,18 @@
 		background-color: light-dark(var(--theme-primary-color), var(--theme-accent-color));
 		border-radius: var(--theme-border-radius);
 		padding: 0 round(0.3em, 1px);
+
+		* {
+			z-index: 1;
+		}
+	}
+
+	& .weather-prediction-grid__indicator {
+		position: absolute;
+		transform: translateX(-50%);
+		height: round(1.6em, 1px);
+		background: var(--theme-text-color);
+		width: 2px;
 	}
 
 	& .weather-grid__value {
@@ -81,7 +95,6 @@
 </style>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
 import HeadlineComponent from '@/components/HeadlineComponent.vue';
 import PlotComponent from '@/components/PlotComponent.vue';
 import WeatherComponent from '@/components/WeatherComponent.vue';
@@ -99,11 +112,11 @@ function mapLocalDate(date: string | number): string {
 	return localDate.toLocaleString([], new Date().toDateString() === localDate.toDateString() ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
-function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, hslValues: number[] }[] {
+function getSevenDayPrediction(weather: Weather): { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, currentOffset: (temperature: number) => number, hslValues: number[] }[] {
 	const allMin = Math.round(Math.min(...weather.daily.temperature_2m_min))
 	const allMax = Math.round(Math.max(...weather.daily.temperature_2m_max))
 	const range = allMax - allMin
-	const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, hslValues: number[] }[] = []
+	const prediction : { time: string, rain: number, min: number, max: number, minOffset: number, maxOffset: number, currentOffset: (temperature: number) => number, hslValues: number[] }[] = []
 	for (const [index, time] of weather.daily.time.entries()) {
 		const min = Math.round(weather.daily.temperature_2m_min[index])
 		const max = Math.round(weather.daily.temperature_2m_max[index])
@@ -114,6 +127,7 @@ function getSevenDayPrediction(weather: Weather): { time: string, rain: number, 
 			max,
 			minOffset: (min - allMin) / range * 100,
 			maxOffset: (allMax - max) / range * 100,
+			currentOffset: (temperature: number) => (temperature - allMin) / range * 100,
 			hslValues: calculateTemperatureHslValues(min, max),
 		})
 	}
@@ -122,16 +136,14 @@ function getSevenDayPrediction(weather: Weather): { time: string, rain: number, 
 
 function mapHslToCssGradient(hslValues: number[]): string {
 	const last = hslValues.length - 1
-	return `linear-gradient(90deg, ${hslValues
-		.map((hslValue, idx) => `hsl(${hslValue}, 100%, 50%) ${(idx * 100) / last}%`)
-		.join(", ")})`
+	return `linear-gradient(90deg, ${hslValues.map((hslValue, idx) => `light-dark(hsl(${hslValue}, 100%, 40%), hsl(${hslValue}, 100%, 50%)) ${(idx * 100) / last}%`).join(', ')})`
 }
 
 function calculateTemperatureHslValues(minTemp: number, maxTemp: number): number[] {
-	const points = [ { temp: 0, hsl: 230 }, { temp: 20, hsl: 120 }, { temp: 30, hsl: 65 }, { temp: 35, hsl: 0 }, { temp: 40, hsl: 310 }].sort((a, b) => a.temp - b.temp)
+	const points = [ { temp: 0, hsl: 230 }, { temp: 5, hsl: 202 }, { temp: 10, hsl: 175 }, { temp: 15, hsl: 147 }, { temp: 20, hsl: 120 }, { temp: 25, hsl: 93 }, { temp: 30, hsl: 65 }, { temp: 35, hsl: 0 }, { temp: 40, hsl: 310 }].sort((a, b) => a.temp - b.temp)
 	const getHsl = (temp: number): number => {
 		if (temp <= points[0].temp) return points[0].hsl
-		if (temp >= points.at(-1)!.temp) return points.at(-1)!.hsl
+		if (temp >= points[points.length - 1].temp) return points[points.length - 1].hsl
 
 		for (let i = 0; i < points.length - 1; i++) {
 			const a = points[i]
@@ -146,11 +158,7 @@ function calculateTemperatureHslValues(minTemp: number, maxTemp: number): number
 		return points[0].hsl
 	}
 
-	return [ 
-		getHsl(minTemp),
-		...points.filter(p => minTemp < p.temp && p.temp < maxTemp).map(p => p.hsl),
-		getHsl(maxTemp),
-	]
+	return [ getHsl(minTemp), ...points.filter(p => minTemp < p.temp && p.temp < maxTemp).map(p => p.hsl), getHsl(maxTemp) ]
 }
 
 </script>

@@ -29,7 +29,7 @@ const pointer = ref<{ x: string, y: string, value: { x: number | string, y: numb
 
 const values = computed(() => {
     if (!props.x || !props.y) return { height: 0, width: 0, xMin: 0, xMax: 0, yMin: 0, yMax: 0, stepX: 0, stepY: 0, points: [], ySteps: [] }
-    const [height, width] = [200, 400]
+    const [height, width] = [196, 400]
     //const xValues = props.x.map(entry => typeof entry === 'number' ? entry : new Date(entry).valueOf())
     const [xMin, xMax] = /*[Math.min(...xValues), Math.max(...xValues)]*/ [0, props.x.length - 1]
     const [yMin, yMax] = [Math.min(...props.y), Math.max(...props.y)]
