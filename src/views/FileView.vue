@@ -60,8 +60,9 @@
                     <path d="M3 1 H11 V5 H15 V17 H3 Z" style="fill: #e0e0e0; stroke: #e0e0e0; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                     <text x="3" y="16.5" style="font-size: 4px; font-weight: bold; fill: #00000080;">{{ entry.type.split('/')[1].toUpperCase() }}</text>
                 </svg>
-                <svg v-if="entry.type.startsWith('image/')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18"></svg>
-                <img v-if="entry.type.startsWith('image/')" :src="profileApiFilePath + entry.path">
+                <div v-if="entry.type.startsWith('image/')" class="directory__image">
+                    <img :src="profileApiFilePath + entry.path">
+                </div>
                 <div class="flex margin-bottom-0">
                     <div class="directory__name">{{ entry.name }}</div>
                     <swd-dropdown class="directory__options" @click="$event.preventDefault()">
@@ -117,14 +118,18 @@
         text-decoration: unset !important;
         color: var(--theme-text-color);
 
-        & img {
-            position: absolute;
+        & .directory__image {
+            display: block;
             box-sizing: border-box;
-            top: 0;
-            left: 0;
-            width: calc(100% - var(--theme-element-spacing) * 2);
-            margin: calc(var(--theme-element-spacing));
-            border-radius: var(--theme-border-radius);
+            aspect-ratio: 1/1;
+            width: 100%;
+
+            & img {
+                width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                border-radius: var(--theme-border-radius);
+            }
         }
 
         & .directory__name {
@@ -223,7 +228,7 @@ const directory = resource({
                     directories: SELECT VALUE <~directory.* FROM ONLY directory WHERE path = ${path},
                     files: SELECT VALUE <~file.* FROM ONLY directory WHERE path = ${path},
                     file: SELECT * OMIT content FROM ONLY file WHERE path = ${path},
-                    index: SELECT VALUE <string>content FROM ONLY file WHERE name = 'index.html AND path = ${path}'
+                    index: SELECT VALUE <string>content FROM ONLY file WHERE name = 'index.html' AND path = ${path + '/index.html'}
                 }
             `
         }
@@ -289,9 +294,11 @@ async function renameFile(): Promise<boolean> {
 }
 
 async function uploadFile(parent: RecordId<"directory"> | undefined) {
-    const input = await loadFiles()
-    await surrealdb.up()
-    await surrealdb.insert(new Table('file'), { ...input, parent })
+    const inputs = await loadFiles()
+    for (const input of inputs) {
+        await surrealdb.up()
+        await surrealdb.insert(new Table('file'), { ...input, parent })
+    }
     directory.reload()
 }
 
@@ -338,6 +345,7 @@ async function loadFiles(): Promise<{ name: string, type: string, content: Array
                     content: content.buffer as ArrayBuffer
                 })
             }
+            console.log()
             resolve(output)
         }
         input.onerror = error => reject(error) 
