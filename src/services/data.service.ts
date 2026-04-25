@@ -3,7 +3,7 @@ import { LiveSubscription, RecordId, surql, Table } from "surrealdb"
 import { markRaw, ref, watch, type App } from "vue"
 import { resource, type Resource } from "@/core/resource"
 import type { WaterTemperature, Weather, WeatherService } from "./weather.service"
-import type { SurrealDbService } from "./surrealdb.service"
+import { Cookies, type SurrealDbService } from "./surrealdb.service"
 
 export class DataService {
 
@@ -153,8 +153,8 @@ export class DataService {
     }
 
     clearCache() {
-        this.cache.clear()
-        localStorage.clear()
+        new Cookies().clear()
+        indexedDB.databases().then(dbs => dbs.forEach(db => db.name ? indexedDB.deleteDatabase(db.name) : {}))
     }
 
     private createCachedResource<T>(cache: Promise<T>, query: () => Promise<T>, kill?: Promise<void>, trackedTables?: string[]): Resource<T, unknown> {

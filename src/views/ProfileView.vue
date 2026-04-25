@@ -49,6 +49,14 @@
             
         </form>
 
+        <h2>Credits</h2>
+    
+        <div class="grid-cols-1">
+            <div>Fabian Döller <a href="https://github.com/FabiTheGuy">GitHub</a><swd-subtitle>Darstellung Wetterdaten</swd-subtitle></div>
+            <div>André Sommer <a href="https://github.com/FabiTheGuy">GitHub</a><swd-subtitle>Allgemeine Entwicklung</swd-subtitle></div>
+            <div>Das Projekt ist Open Source und steht auf <a href="https://github.com/Der-Zauberer/DLRGhub">GitHub</a> zur Mitarbeit zur Verfügung!</div>
+        </div>
+
         <h2>Rechtliches</h2>
         <div class="grid-cols-1">
             <ButtonLinkComponent :to="{ name: 'imprint' }">Impressum</ButtonLinkComponent>
@@ -81,10 +89,10 @@
                 {{ $dataService.online }}<br>
                 <swd-subtitle>Service Worker Online</swd-subtitle>
             </p>
-            <div class="flex">
-                <button @click="$surrealDbService.close()">Disconnect</button>
-                <button @click="$surrealDbService.autoConnect()">Reconnect</button>
-                <button @click="$dataService.clearCache()">Clear Cache</button>
+            <div class="flex flex-wrap">
+                <button @click="$surrealDbService.close()">Verbindung trennen</button>
+                <button @click="$surrealDbService.autoConnect()">Neu verbinden</button>
+                <button @click="$dataService.clearCache()">Cache leeren</button>
             </div>
         </div>
 

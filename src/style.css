@@ -26,6 +26,10 @@ h6 { font-size: 0.9em; letter-spacing: 1px; font-weight: bold; text-transform: u
 .secondary-text { color: #a5010c !important }
 .accent-text { color: #ffed00 !important }
 
+a:not(.button) {
+    --theme-primary-color: light-dark(#e30613, #ffed00);
+}
+
 @media (display-mode: standalone) {
     html, body {
         overscroll-behavior: none;

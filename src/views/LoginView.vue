@@ -85,7 +85,7 @@
             <RouterLink :to="{ name: 'login' }" class="button text-center">Zurück zum Login</RouterLink>
         </form>
 
-        <footer class="grey-text">
+        <footer>
             <RouterLink :to="{ name: 'register' }">Registrieren</RouterLink>
             <RouterLink :to="{ name: 'imprint' }">Impressum</RouterLink>
             <RouterLink :to="{ name: 'privacy-policy' }">Datenschutzerklärung</RouterLink>
@@ -136,7 +136,7 @@
 
 button.link-button, button.link-button:focus, button.link-button:active {
     background: transparent;
-    color: var(--theme-primary-color);
+    color: light-dark(var(--theme-primary-color), var(--theme-accent-color));
     margin: 0;
 }
 
@@ -148,8 +148,12 @@ button.link-button:hover, button.link-button:focus, button.link-button:active {
 
 footer {
     position: absolute;
-    bottom: 0.3em;
-    right: 1ch;
+    background: black;
+    color: white;
+    opacity: 60%;
+    padding: 0 0.5ch;
+    bottom: 0;
+    right: 0;
     display: flex;
     gap: 1ch;
     justify-content: end;
