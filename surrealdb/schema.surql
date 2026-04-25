@@ -121,6 +121,42 @@ DEFINE API '/file/*path' FOR get
         };
     };
 
+-------------
+--- proxy ---
+-------------
+
+DEFINE TABLE OVERWRITE proxy_cache SCHEMALESS TYPE NORMAL
+    PERMISSIONS
+        FOR select, create, update, delete NONE;
+DEFINE FIELD OVERWRITE id ON TABLE proxy_cache;
+DEFINE FIELD OVERWRITE content ON TABLE proxy_cache TYPE string | object;
+DEFINE FIELD OVERWRITE updated ON TABLE proxy_cache TYPE datetime VALUE time::now();
+
+DEFINE API '/proxy/*path' FOR get
+    MIDDLEWARE api::timeout(1s), api::res::body('auto')
+    THEN {
+        LET $path = $request.params.path.join('/').replace(':/', '://');
+        LET $cache = SELECT VALUE content FROM ONLY type::record('proxy_cache', $path) WHERE time::now() < updated + 1h;
+        CREATE type::record('debug', time::now()) CONTENT { path: $path, 'Content-Type': (IF type::of($cache) == 'object' { 'application/json' } ELSE { 'text/html' }) };
+        IF $cache {{
+            status: 200,
+            body: $cache,
+            headers: {
+                'Content-Type': (IF type::of($cache) == 'object' { 'application/json' } ELSE { 'text/html' }),
+            }
+        }} ELSE {
+            LET $result = http::get($path);
+            UPSERT type::record('proxy_cache', $path) CONTENT { content: $result };
+            {
+                status: 200,
+                body: $result,
+                headers: {
+                    'Content-Type': (IF type::of($result) == 'object' { 'application/json' } ELSE { 'text/html' }),
+                }
+            }
+        };
+    };
+
 ------------
 --- user ---
 ------------

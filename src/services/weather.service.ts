@@ -13,8 +13,8 @@ export class WeatherService {
         return result
     }
 
-    async getWaterTemperature(): Promise<WaterTemperature> {
-        const url = 'https://api.cors.lol/?url=https://www.hydrodaten.admin.ch/plots/temperature_7days/2288_temperature_7days_de.json'
+    async getWaterTemperature(proxy: string): Promise<WaterTemperature> {
+        const url = `${proxy}/https://www.hydrodaten.admin.ch/plots/temperature_7days/2288_temperature_7days_de.json`
         const result = await fetch(url).then(result => result.json())
         const data = result.plot.data[0]
         return {

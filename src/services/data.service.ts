@@ -144,9 +144,8 @@ export class DataService {
     getWaterTemperature(): Resource<WaterTemperature, unknown> {
         const cache = this.cache.get<WaterTemperature>(new RecordId('water', '*'))
         const query = async (): Promise<WaterTemperature> => {
-            const result = await cache
-            if (result?.source?.updated && Date.now() - new Date(result.source.updated).getTime() < 60 * 60 * 1000) return result
-            const water = await this.weatherService.getWaterTemperature()
+            const profile = this.surrealDbService.getProfile().default
+            const water = await this.weatherService.getWaterTemperature(`${profile.address.replace('ws', 'http')}/api/${profile.namespace}/${profile.database}/proxy`)
             this.cache.put({ id: new RecordId('water', '*'), ...water })
             return water
         }
