@@ -149,7 +149,6 @@ button.link-button:hover, button.link-button:focus, button.link-button:active {
 footer {
     position: absolute;
     background: black;
-    color: white;
     opacity: 60%;
     padding: 0 0.5ch;
     bottom: 0;
@@ -157,6 +156,10 @@ footer {
     display: flex;
     gap: 1ch;
     justify-content: end;
+
+    & a {
+        color: white;
+    }
 }
 
 </style>

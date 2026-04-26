@@ -1,6 +1,6 @@
 import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan, User } from "@/core/types"
 import { LiveSubscription, RecordId, surql, Table } from "surrealdb"
-import { markRaw, ref, watch, type App } from "vue"
+import { markRaw, ref, type App } from "vue"
 import { resource, type Resource } from "@/core/resource"
 import type { WaterTemperature, Weather, WeatherService } from "./weather.service"
 import { Cookies, type SurrealDbService } from "./surrealdb.service"
