@@ -36,7 +36,7 @@
         <div v-if="directory.value?.index" v-html="directory.value.index" class="margin-bottom"></div>
 
         <div v-if="directory.value?.directories && directory.value?.files" class="grid-cols-xl-6 grid-cols-lg-5 grid-cols-md-4 grid-cols-sm-3 grid-cols-2 directories">
-            <RouterLink v-for="entry of directory.value?.directories" :to="'/file' + entry.path">
+            <RouterLink v-for="entry of directory.value?.directories.sort((a, b) => a.name.localeCompare(b.name))" :to="'/file' + entry.path">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
                     <path d="M1 3 H7 V7 H1 Z" style="fill: var(--theme-secondary-color); stroke: var(--theme-secondary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                     <path d="M1 5 H 17 V13 H1 Z" style="fill: var(--theme-primary-color); stroke: var(--theme-primary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
@@ -54,7 +54,7 @@
                     </swd-dropdown>
                 </div>
             </RouterLink>
-            <RouterLink v-for="entry of directory.value?.files" :to="'/file' + entry.path">
+            <RouterLink v-for="entry of directory.value?.files.sort((a, b) => a.name.localeCompare(b.name))" :to="'/file' + entry.path">
                 <svg v-if="!entry.type.startsWith('image/')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
                     <path d="M11 1H12 L15 4 V5 H11 Z" style="fill: #cccccc; stroke: #cccccc; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                     <path d="M3 1 H11 V5 H15 V17 H3 Z" style="fill: #e0e0e0; stroke: #e0e0e0; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
