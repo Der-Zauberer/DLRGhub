@@ -52,9 +52,9 @@
         <h2>Credits</h2>
     
         <div class="grid-cols-1">
-            <div>Fabian Döller <a href="https://github.com/FabiTheGuy">GitHub</a><swd-subtitle>Darstellung Wetterdaten</swd-subtitle></div>
-            <div>André Sommer <a href="https://github.com/FabiTheGuy">GitHub</a><swd-subtitle>Allgemeine Entwicklung</swd-subtitle></div>
-            <div>Das Projekt ist Open Source und steht auf <a href="https://github.com/Der-Zauberer/DLRGhub">GitHub</a> zur Mitarbeit zur Verfügung!</div>
+            <div>Fabian Döller <a target="_blank" href="https://github.com/FabiTheGuy">GitHub</a><swd-subtitle>Darstellung Wetterdaten</swd-subtitle></div>
+            <div>André Sommer <a target="_blank" href="https://github.com/Der-Zauberer">GitHub</a><swd-subtitle>Allgemeine Entwicklung</swd-subtitle></div>
+            <div>Das Projekt ist Open Source und steht auf <a target="_blank" href="https://github.com/Der-Zauberer/DLRGhub">GitHub</a> zur Mitarbeit zur Verfügung!</div>
         </div>
 
         <h2>Rechtliches</h2>
