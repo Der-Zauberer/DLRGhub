@@ -60,9 +60,9 @@
 
             <div>
                 <swd-card-outline>
-                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), people: [], plan: { id: new RecordId('plan', '01234'), name: 'Wachplan 2025', roles: [] } }"/>
-                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Beachbar', people: [], plan: { id: new RecordId('plan', '01234'), name: 'Beachbar', roles: [] } }"/>
-                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Aufbau', begin: '13:00', end: '19:00', people: [], plan: { id: new RecordId('plan', '01234'), name: 'Beachbar', roles: [] } }"/>
+                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), people: [], plan: { id: new RecordId('plan', '01234'), name: 'Wachplan 2025', roles: [], clock: false } }"/>
+                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Beachbar', people: [], plan: { id: new RecordId('plan', '01234'), name: 'Beachbar', roles: [], clock: false } }"/>
+                    <AppointmentComponent :shift="{ id: new RecordId('shift', '01234'), date: new Date(), name: 'Aufbau', begin: '13:00', end: '19:00', people: [], plan: { id: new RecordId('plan', '01234'), name: 'Beachbar', roles: [], clock: false } }"/>
                 </swd-card-outline>
                 <swd-card>
                     Shift Snippet (Button)

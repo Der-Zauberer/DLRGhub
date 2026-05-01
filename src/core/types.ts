@@ -20,6 +20,7 @@ export type Plan = {
     id: RecordId<'plan'>
     name: string
     roles: string[]
+    clock: boolean
 }
 
 export type Shift = {
@@ -38,6 +39,11 @@ export type Shift = {
 
 export type PlanSchedulesShift = Plan & {
     shifts: Shift[]
+    clocking: {
+        user: { start: Date, end: Date }[]
+        today: { user: RecordId<'user'>, start: Date, end: Date }[]
+        highscore: { user: RecordId<'user'>, hours: number }[]
+    }
 }
 
 export type ShiftScheduledByPlan = Omit<Shift, 'plan'> & {

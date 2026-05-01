@@ -49,13 +49,20 @@ export class DataService {
         const cache = this.cache.get<PlanSchedulesShift | undefined>(id)
         
         const query = async (): Promise<PlanSchedulesShift | undefined> => {
+            const request = surql`
+                SELECT *, (SELECT * FROM (SELECT * FROM $this<~shift.*) ORDER BY date, begin, end) as shifts, { 
+                    user: (SELECT start, end FROM clocking:[$parent.id, $auth.id, NONE].. ORDER BY start DESC),
+                    today: (SELECT user, start, end FROM clocking:[$parent.id, NONE, NONE].. WHERE id[2] = time::format(time::now(), "%Y-%m-%d") ORDER BY start),
+                    highscore: (SELECT user, math::sum(duration::hours(end - start)) AS hours FROM $this<~clocking.*  GROUP BY user ORDER BY hours DESC)
+                } as clocking FROM ONLY ${id}
+            `
             await this.surrealDbService.up()
-            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this<~shift.*) ORDER BY date, begin, end) as shifts FROM ONLY ${id};`)
+            const [plan] = await this.surrealDbService.query<[PlanSchedulesShift]>(request)
             if (plan) this.cache.put(plan)
             return plan
         }
 
-        return this.createCachedResource<PlanSchedulesShift | undefined>(cache, query, kill, ['plan', 'shift'])
+        return this.createCachedResource<PlanSchedulesShift | undefined>(cache, query, kill, ['plan', 'shift', 'clocking'])
     }
 
     getPersonShift(kill?: Promise<void>): Resource<ShiftScheduledByPlan[], unknown> {

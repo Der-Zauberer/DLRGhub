@@ -18,6 +18,7 @@
             <h6>Allgemein</h6>
             <div class="grid-cols-sm-2 grid-cols-1">
                 <InputComponent label="Name" v-model="plan.value.name"/>
+                <InputComponent label="Zeiterfassung" type="checkbox" v-model="plan.value.clock"/>
             </div>
 
             <h6>Rollen</h6>

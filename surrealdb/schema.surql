@@ -29,16 +29,15 @@ DEFINE FIELD OVERWRITE updated ON TABLE post TYPE option<datetime> VALUE time::n
 --- plan ---
 ------------
 
-DEFINE TABLE OVERWRITE plan SCHEMAFULL TYPE NORMAL
-    PERMISSIONS
-        FOR select, create, update, delete WHERE $auth.id != NONE;
+DEFINE TABLE OVERWRITE plan SCHEMAFULL TYPE NORMAL PERMISSIONS
+    FOR select, create, update, delete WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE plan;
 DEFINE FIELD OVERWRITE name ON TABLE plan TYPE string;
 DEFINE FIELD OVERWRITE roles ON TABLE plan TYPE array<string> DEFAULT [];
+DEFINE FIELD OVERWRITE clock ON TABLE plan TYPE bool DEFAULT false;
 
-DEFINE TABLE OVERWRITE shift SCHEMAFULL TYPE NORMAL
-    PERMISSIONS
-        FOR select, create, update, delete WHERE $auth.id != NONE;
+DEFINE TABLE OVERWRITE shift SCHEMAFULL TYPE NORMAL PERMISSIONS
+    FOR select, create, update, delete WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE shift;
 DEFINE FIELD OVERWRITE name ON TABLE shift TYPE option<string>;
 DEFINE FIELD OVERWRITE date ON TABLE shift TYPE datetime;
@@ -50,21 +49,29 @@ DEFINE FIELD OVERWRITE people[*].name ON TABLE shift TYPE string;
 DEFINE FIELD OVERWRITE people[*].role ON TABLE shift TYPE option<string>;
 DEFINE FIELD OVERWRITE plan ON TABLE shift TYPE record<plan> REFERENCE ON DELETE CASCADE;
 
+DEFINE TABLE OVERWRITE clocking SCHEMAFULL TYPE NORMAL PERMISSIONS
+    FOR select WHERE $auth.id != NONE,
+    FOR create, update WHERE user = $auth.id AND $this.id[1] = $auth.id AND $this.id[2] = time::format(time::now(), '%Y-%m-%d'),
+    FOR delete NONE;
+DEFINE FIELD OVERWRITE id ON TABLE clocking TYPE [record<plan>, record<user>, string];
+DEFINE FIELD OVERWRITE user ON TABLE clocking TYPE record<user> REFERENCE ON DELETE CASCADE DEFAULT $auth.id ASSERT $this.id[1] = $value;
+DEFINE FIELD OVERWRITE start ON TABLE clocking TYPE datetime ASSERT $this.id[2] = time::format($value, '%Y-%m-%d');
+DEFINE FIELD OVERWRITE end ON TABLE clocking TYPE datetime ASSERT $this.id[2] = time::format($value, '%Y-%m-%d') AND $this.start < $value;
+DEFINE FIELD OVERWRITE plan ON TABLE clocking TYPE record<plan> REFERENCE ON DELETE CASCADE ASSERT $this.id[0] = $value;
+
 ------------
 --- file ---
 ------------
 
-DEFINE TABLE OVERWRITE directory SCHEMAFULL TYPE NORMAL
-    PERMISSIONS
-        FOR select, create, update, delete WHERE $auth.id != NONE;
+DEFINE TABLE OVERWRITE directory SCHEMAFULL TYPE NORMAL PERMISSIONS
+    FOR select, create, update, delete WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE directory;
 DEFINE FIELD OVERWRITE name ON TABLE directory TYPE string; --TODO prevent slashes
 DEFINE FIELD OVERWRITE parent ON TABLE directory TYPE option<record<directory>> REFERENCE ON DELETE CASCADE; --TODO prevent loop
 DEFINE FIELD OVERWRITE path ON TABLE directory COMPUTED (IF parent.path { parent.path + '/' } ELSE { '/' }) + name TYPE string;
 
-DEFINE TABLE OVERWRITE file SCHEMAFULL TYPE NORMAL
-    PERMISSIONS
-        FOR select, create, update, delete WHERE $auth.id != NONE;
+DEFINE TABLE OVERWRITE file SCHEMAFULL TYPE NORMAL PERMISSIONS
+    FOR select, create, update, delete WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE file;
 DEFINE FIELD OVERWRITE name ON TABLE file TYPE string; --TODO prevent slashes
 DEFINE FIELD OVERWRITE type ON TABLE file TYPE string;
@@ -125,9 +132,8 @@ DEFINE API '/file/*path' FOR get
 --- proxy ---
 -------------
 
-DEFINE TABLE OVERWRITE proxy_cache SCHEMALESS TYPE NORMAL
-    PERMISSIONS
-        FOR select, create, update, delete NONE;
+DEFINE TABLE OVERWRITE proxy_cache SCHEMALESS TYPE NORMAL PERMISSIONS
+    FOR select, create, update, delete NONE;
 DEFINE FIELD OVERWRITE id ON TABLE proxy_cache;
 DEFINE FIELD OVERWRITE content ON TABLE proxy_cache TYPE string | object;
 DEFINE FIELD OVERWRITE updated ON TABLE proxy_cache TYPE datetime VALUE time::now();
@@ -137,7 +143,6 @@ DEFINE API '/proxy/*path' FOR get
     THEN {
         LET $path = $request.params.path.join('/').replace(':/', '://');
         LET $cache = SELECT VALUE content FROM ONLY type::record('proxy_cache', $path) WHERE time::now() < updated + 1h;
-        CREATE type::record('debug', time::now()) CONTENT { path: $path, 'Content-Type': (IF type::of($cache) == 'object' { 'application/json' } ELSE { 'text/html' }) };
         IF $cache {{
             status: 200,
             body: $cache,
@@ -161,11 +166,10 @@ DEFINE API '/proxy/*path' FOR get
 --- user ---
 ------------
 
-DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL
-	PERMISSIONS
-		FOR select WHERE $auth.id,
-        FOR update WHERE id = $auth.id || $auth.admin,
-        FOR create, delete WHERE $auth.admin;
+DEFINE TABLE OVERWRITE user SCHEMAFULL TYPE NORMAL PERMISSIONS
+	FOR select WHERE $auth.id,
+    FOR update WHERE id = $auth.id || $auth.admin,
+    FOR create, delete WHERE $auth.admin;
 DEFINE FIELD OVERWRITE email ON TABLE user TYPE string ASSERT string::is_email($value) PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin;
 DEFINE FIELD OVERWRITE name ON TABLE user TYPE string PERMISSIONS FOR select WHERE id = $auth.id || $auth.admin;
 DEFINE FIELD OVERWRITE displayname ON TABLE user TYPE string;
@@ -190,9 +194,8 @@ DEFINE INDEX OVERWRITE name ON user FIELDS name UNIQUE;
 
 DEFINE TABLE OVERWRITE user_public SCHEMAFULL AS SELECT id, displayname FROM user WHERE account.enabled && (!type::is_datetime(account.expiry) || account.expiry > time::now()) PERMISSIONS FOR select WHERE $auth.id;
 
-DEFINE TABLE OVERWRITE _password_change_request SCHEMAFULL
-	PERMISSIONS
-		FOR create FULL;
+DEFINE TABLE OVERWRITE _password_change_request SCHEMAFULL PERMISSIONS
+	FOR create FULL;
 DEFINE FIELD OVERWRITE id ON TABLE _password_change_request;
 DEFINE FIELD OVERWRITE username ON TABLE _password_change_request TYPE string DEFAULT (IF !$input.username && $auth { $auth.name });
 DEFINE FIELD OVERWRITE old ON TABLE _password_change_request TYPE string;
@@ -214,9 +217,8 @@ DEFINE EVENT OVERWRITE _password_change_request ON TABLE _password_change_reques
     DELETE $after.id;
 };
 
-DEFINE TABLE OVERWRITE _invalidate_all_devices_request SCHEMAFULL
-	PERMISSIONS
-		FOR create WHERE $auth.id != NONE;
+DEFINE TABLE OVERWRITE _invalidate_all_devices_request SCHEMAFULL PERMISSIONS
+	FOR create WHERE $auth.id != NONE;
 DEFINE FIELD OVERWRITE id ON TABLE _invalidate_all_devices_request;
 DEFINE FIELD OVERWRITE user ON TABLE _invalidate_all_devices_request TYPE record<user> DEFAULT $auth.id;
 DEFINE FIELD OVERWRITE created ON TABLE _invalidate_all_devices_request TYPE datetime VALUE time::now() READONLY;
@@ -226,10 +228,9 @@ DEFINE EVENT OVERWRITE _invalidate_all_devices_request ON TABLE _invalidate_all_
     DELETE $after.id;
 };
 
-DEFINE TABLE OVERWRITE registration SCHEMAFULL
-	PERMISSIONS
-		FOR create FULL,
-        FOR select, update, delete WHERE $auth.admin;
+DEFINE TABLE OVERWRITE registration SCHEMAFULL PERMISSIONS
+	FOR create FULL,
+    FOR select, update, delete WHERE $auth.admin;
 DEFINE FIELD OVERWRITE id ON TABLE registration;
 DEFINE FIELD OVERWRITE email ON TABLE registration TYPE string ASSERT string::is_email($value);
 DEFINE FIELD OVERWRITE firstname ON TABLE registration TYPE string;
