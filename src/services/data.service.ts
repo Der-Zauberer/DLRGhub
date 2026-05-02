@@ -52,8 +52,8 @@ export class DataService {
             const request = surql`
                 SELECT *, (SELECT * FROM (SELECT * FROM $this<~shift.*) ORDER BY date, begin, end) as shifts, { 
                     user: (SELECT start, end FROM clocking:[$parent.id, $auth.id, NONE].. ORDER BY start DESC),
-                    today: (SELECT user, start, end FROM clocking:[$parent.id, NONE, NONE].. WHERE id[2] = time::format(time::now(), "%Y-%m-%d") ORDER BY start),
-                    highscore: (SELECT user, math::sum(duration::hours(end - start)) AS hours FROM $this<~clocking.*  GROUP BY user ORDER BY hours DESC)
+                    today: (SELECT user.displayname as user, start, end FROM clocking:[$parent.id, NONE, NONE].. WHERE id[2] = time::format(time::now(), "%Y-%m-%d") ORDER BY start),
+                    highscore: (SELECT user.displayname as user, math::sum(duration::hours(end - start)) AS hours FROM $this<~clocking.* GROUP BY user ORDER BY hours DESC)
                 } as clocking FROM ONLY ${id}
             `
             await this.surrealDbService.up()
@@ -132,7 +132,7 @@ export class DataService {
 
     getUserNames(): Resource<string[], unknown> {
         return resource({
-            loader: () => this.surrealDbService.up().then(() => this.surrealDbService.select<User>(new Table('user_public')).then(result => result.map(user => user.displayname)))
+            loader: () => this.surrealDbService.up().then(() => this.surrealDbService.select<User>(new Table('user')).then(result => result.map(user => user.displayname)))
         })
     }
 

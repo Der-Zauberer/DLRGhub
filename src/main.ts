@@ -34,6 +34,7 @@ const router = createRouter({
     { path: '/privacy-policy', name: 'privacy-policy', component: PrivacyPolicyView },
     { path: '/plan', name: 'plans', component: PlanListView, beforeEnter: auth() },
     { path: '/plan/:id', name: 'plan', component: PlanView, beforeEnter: auth() },
+    { path: '/plan/:id/:tab', name: 'plan-tab', component: PlanView, beforeEnter: auth() },
     { path: '/plan/edit/:id', name: 'plan-edit', component: PlanEditView, beforeEnter: auth() },
     { path: '/file/:pathMatch(.*)*', name: 'files', component: FileView, beforeEnter: auth() },
     { path: '/post/:id', name: 'post-edit', component: PostEditView, beforeEnter: auth() },

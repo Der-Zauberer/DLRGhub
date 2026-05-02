@@ -6,10 +6,10 @@
             <ButtonComponent :to="{ name: 'plan-edit', params: { id: $route.params.id } }" color="ELEMENT" icon="settings" aria-label="Schicht bearbeiten"/>
         </HeadlineComponent>
 
-        <div class="tabs" v-if="(plan.value && plan.value.clock) || tab !== 'SHIFTS'">
-            <button :selected="tab === 'SHIFTS' ? true : undefined" @click="tab = 'SHIFTS'">Schichten</button>
-            <button :selected="tab === 'CLOCKING' ? true : undefined" @click="tab = 'CLOCKING'">Zeiten</button>
-            <button :selected="tab === 'HIGHSCORE' ? true : undefined" @click="tab = 'HIGHSCORE'">Rangliste</button>
+        <div class="tabs" v-if="(plan.value && plan.value.clock) || !route.params.tab">
+            <button :selected="!route.params.tab ? true : undefined" @click="router.push({ name: 'plan', params: { id: route.params.id } })">Schichten</button>
+            <button :selected="route.params.tab === 'clocking' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'clocking' } })">Zeiten</button>
+            <button :selected="route.params.tab === 'highscore' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'highscore' } })">Rangliste</button>
         </div>
 
         <OfflineComponent :loading="plan.loading" @reload="plan.reload()"/>
@@ -17,7 +17,7 @@
         <dlrg-error v-if="plan?.status === 'ERROR' && parseCustomSurrealDbError(plan.error).key !== 'error.connection'">{{ plan?.error }}</dlrg-error>
         <swd-loading-spinner v-if="plan?.status === 'LOADING' && !plan?.value" class="width-100" loading="true"></swd-loading-spinner>
 
-        <div v-if="tab === 'SHIFTS'">
+        <div v-if="!route.params.tab">
             <ul class="grid-cols-xl-3 grid-cols-md-2 grid-cols-1" v-if="currentShifts?.length">
                 <li v-for="shift of currentShifts">
                     <ShiftComponent :shift="shift" :roles="plan.value?.roles || []" :user="userNames.value || []" :userDisplayName="user.value?.displayname"/>
@@ -31,7 +31,7 @@
             </ul>
         </div>
 
-        <div v-if="tab === 'CLOCKING'">
+        <div v-if="route.params.tab === 'clocking'">
 
             <form class="flex" @submit.prevent="saveClocking()" v-if="plan.value && plan.value.clock">
                 <input type="time" v-model="clocking.start" required>
@@ -41,30 +41,36 @@
             </form>
 
             <div class="grid-cols-md-2 grid-cols-1" v-if="plan.value && plan.value.clock">
-                <div>
-                    <h4 class="margin-top-0">Zeiten Heute</h4>
+                <swd-card class="grid-cols-1">
+                    <div class="flex flex-space-between">
+                        <h4 class="margin-top-0">Zeiten Heute</h4>
+                        <div>Gesammt {{ Math.floor(plan.value.clocking.today.map(entry => entry.end.getTime() - entry.start.getTime()).reduce((a, b) => a + b) / HOURS) }}h</div>
+                    </div>
                     <div class="clocking-today" v-for="today of plan.value.clocking.today">
-                        <div>{{ today.user.id.toString() }}</div>
-                        <div>{{ today.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }} - {{ today.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }}</div>
+                        <div>{{ today.user }}</div>
+                        <div>{{ Math.floor((today.end.getTime() - today.start.getTime()) / HOURS) }}h {{ today.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }} - {{ today.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }}</div>
                     </div>
-                </div>
-                <div>
-                    <h4 class="margin-top-0">Meine Zeiten</h4>
+                </swd-card>
+                <swd-card class="grid-cols-1">
+                    <div class="flex flex-space-between">
+                        <h4 class="margin-top-0">Meine Zeiten</h4>
+                        <div>Gesammt {{ Math.floor(plan.value.clocking.user.map(entry => entry.end.getTime() - entry.start.getTime()).reduce((a, b) => a + b) / HOURS) }}h</div>
+                    </div>
                     <div class="clocking-user" v-for="user of plan.value.clocking.user">
-                        <div>{{ user.start.toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' }) }}</div>
-                        <div>{{ user.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }} - {{ user.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }}</div>
+                        <div>{{ user.start.toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' }) }} ({{ user.start.toLocaleString([], { weekday: 'short' }).slice(0, 2) }})</div>
+                        <div>{{ Math.floor((user.end.getTime() - user.start.getTime()) / HOURS) }}h {{ user.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }} - {{ user.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) }}</div>
                     </div>
-                </div>
+                </swd-card>
             </div>
 
         </div>
 
-        <div v-if="tab === 'HIGHSCORE' && plan.value && plan.value.clock">
-            <h4>Rangliste</h4>
+        <div v-if="route.params.tab === 'highscore' && plan.value && plan.value.clock">
+            <HeadlineComponent title="Rangliste">Gesammt {{ plan.value.clocking.highscore.map(entry => entry.hours).reduce((a, b) => a + b) }}h</HeadlineComponent>
             <div class="clocking-highscore">
                 <div v-for="highscore of plan.value.clocking.highscore" class="highscore-bar">
                     <div class="highscore-bar__progress" :style="{ width: (highscore.hours / Math.max(...plan.value.clocking.highscore.map(h => h.hours))) * 100 + '%' }"></div>
-                    <span>{{ highscore.user.id.toString() }}</span>
+                    <span>{{ highscore.user }}</span>
                     <span>{{ highscore.hours }}h</span>
                 </div>
             </div>
@@ -167,15 +173,17 @@ import { DATA_SERVICE, DataService } from '@/services/data.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql } from 'surrealdb'
 import { computed, inject, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+
+const HOURS = 1000 * 60 * 60
 
 const route = useRoute()
+const router = useRouter()
 const data = inject(DATA_SERVICE) as DataService
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
 const userNames = data.getUserNames()
 const user = data.getUser()
-const tab = ref<'SHIFTS' | 'CLOCKING' | 'HIGHSCORE'>('SHIFTS')
 
 const plan = data.getPlan(new RecordId('plan', route.params.id), new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
 const currentShifts = computed(() => plan.value?.shifts.filter(shift => shift.date >= getYesterday()))
