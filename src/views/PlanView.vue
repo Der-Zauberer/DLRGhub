@@ -33,18 +33,28 @@
 
         <div v-if="route.params.tab === 'clocking'">
 
-            <form class="flex" @submit.prevent="saveClocking()" v-if="plan.value && plan.value.clock">
-                <input type="time" v-model="clocking.start" required>
-                <input type="time" v-model="clocking.end" required>
-                <swd-loading-spinner :loading="clocking.loading"><button>Speichern</button></swd-loading-spinner>
+            <div></div><HeadlineComponent title="Zeiterfassung"/>
+
+            <form class="grid-cols-md-5 grid-cols-2" @submit.prevent="saveClocking()" v-if="plan.value && plan.value.clock">
+                <swd-input class="grid-span-md-2 grid-span-1">
+                    <label for="clocking-start">Beginn</label>
+                    <input id="clocking-start" type="time" v-model="clocking.start" required>
+                </swd-input>
+                <swd-input class="grid-span-md-2 grid-span-1">
+                    <label for="clocking-end">Ende</label>
+                    <input id="clocking-end" type="time" v-model="clocking.end" required>
+                </swd-input>
+                <swd-loading-spinner class="grid-span-md-1 grid-span-2" :loading="clocking.loading"><button class="width-100">Speichern</button></swd-loading-spinner>
                 <div v-if="clocking.error" class="red-text">{{ clocking.error }}</div>
             </form>
+
+            <HeadlineComponent title="Verlauf"/>
 
             <div class="grid-cols-md-2 grid-cols-1" v-if="plan.value && plan.value.clock">
                 <swd-card class="grid-cols-1">
                     <div class="flex flex-space-between">
                         <h4 class="margin-top-0">Zeiten Heute</h4>
-                        <div>Gesammt {{ Math.floor(plan.value.clocking.today.map(entry => entry.end.getTime() - entry.start.getTime()).reduce((a, b) => a + b) / HOURS) }}h</div>
+                        <div>Gesammt {{ Math.floor(plan.value.clocking.today.map(entry => entry.end.getTime() - entry.start.getTime()).reduce((a, b) => a + b, 0) / HOURS) }}h</div>
                     </div>
                     <div class="clocking-today" v-for="today of plan.value.clocking.today">
                         <div>{{ today.user }}</div>
@@ -54,7 +64,7 @@
                 <swd-card class="grid-cols-1">
                     <div class="flex flex-space-between">
                         <h4 class="margin-top-0">Meine Zeiten</h4>
-                        <div>Gesammt {{ Math.floor(plan.value.clocking.user.map(entry => entry.end.getTime() - entry.start.getTime()).reduce((a, b) => a + b) / HOURS) }}h</div>
+                        <div>Gesammt {{ Math.floor(plan.value.clocking.user.map(entry => entry.end.getTime() - entry.start.getTime()).reduce((a, b) => a + b, 0) / HOURS) }}h</div>
                     </div>
                     <div class="clocking-user" v-for="user of plan.value.clocking.user">
                         <div>{{ user.start.toLocaleDateString([], { year: 'numeric', month: '2-digit', day: '2-digit' }) }} ({{ user.start.toLocaleString([], { weekday: 'short' }).slice(0, 2) }})</div>
