@@ -45,7 +45,7 @@
                     <input id="clocking-end" type="time" v-model="clocking.end" required>
                 </swd-input>
                 <swd-loading-spinner class="grid-span-md-1 grid-span-2" :loading="clocking.loading"><button class="width-100">Speichern</button></swd-loading-spinner>
-                <div v-if="clocking.error" class="red-text">{{ clocking.error }}</div>
+                <div v-if="clocking.error" class="grid-span-md-5 grid-span-2 red-text">{{ clocking.error }}</div>
             </form>
 
             <HeadlineComponent title="Verlauf"/>

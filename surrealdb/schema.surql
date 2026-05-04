@@ -56,7 +56,7 @@ DEFINE TABLE OVERWRITE clocking SCHEMAFULL TYPE NORMAL PERMISSIONS
 DEFINE FIELD OVERWRITE id ON TABLE clocking TYPE [record<plan>, record<user>, string];
 DEFINE FIELD OVERWRITE user ON TABLE clocking TYPE record<user> REFERENCE ON DELETE CASCADE DEFAULT $auth.id ASSERT $this.id[1] = $value;
 DEFINE FIELD OVERWRITE start ON TABLE clocking TYPE datetime ASSERT $this.id[2] = time::format($value, '%Y-%m-%d');
-DEFINE FIELD OVERWRITE end ON TABLE clocking TYPE datetime ASSERT $this.id[2] = time::format($value, '%Y-%m-%d') AND $this.start < $value;
+DEFINE FIELD OVERWRITE end ON TABLE clocking TYPE datetime ASSERT $this.id[2] = time::format($value, '%Y-%m-%d') AND $this.start <= $value;
 DEFINE FIELD OVERWRITE plan ON TABLE clocking TYPE record<plan> REFERENCE ON DELETE CASCADE ASSERT $this.id[0] = $value;
 
 ------------
