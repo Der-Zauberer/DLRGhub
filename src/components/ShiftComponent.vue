@@ -38,8 +38,8 @@
             
             <swd-dropdown>
                 <div class="person-input">
-                    <input v-model="inputs[index]" @keydown.enter="!shift.people.filter(person => person.role === role).find(person => person.name === inputs[index]) ? data.addShiftPerson(shift.id, role ? { name: inputs[index], role: role } : { name: inputs[index] }) : {}; inputs[index] = ''">
-                    <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="data.addShiftPerson(shift.id, role ? { name: inputs[index], role } : { name: inputs[index] }); inputs[index] = ''"/>
+                    <input v-model="inputs[index]" @input="!$event.isTrusted ? (addPerson(shift, inputs[index], role), inputs[index] = '') : {}" @keydown="$event.key === 'Enter' ? runLater(() => (($event.target as HTMLInputElement).value) ? (addPerson(shift, inputs[index], role), inputs[index] = '') : {}) : {}">
+                    <ButtonComponent color="ELEMENT" icon="add" aria-label="Hinzufügen" @click="addPerson(shift, inputs[index], role); inputs[index] = ''"/>
                 </div>
                 <swd-dropdown-content>
                     <swd-selection v-if="user">
@@ -202,5 +202,20 @@ watch(() => props.shift, () => {
         initialLoading = false
     }
 })
+
+function runLater(callback: FrameRequestCallback) {
+    setTimeout(() => requestAnimationFrame(callback), 100)
+}
+
+let doubleNameCheck = ''
+function addPerson(shift: Shift, name: string, role?: string, ) {
+    if (!name || shift.people.filter(person => person.role === role).find(person => person.name === name)) return
+    if (name === doubleNameCheck) {
+        doubleNameCheck = ''
+        return
+    }
+    data.addShiftPerson(shift.id, role ? { name, role } : { name })
+    doubleNameCheck = name
+}
 
 </script>
