@@ -76,7 +76,7 @@
         </div>
 
         <div v-if="route.params.tab === 'highscore' && plan.value && plan.value.clock">
-            <HeadlineComponent title="Rangliste">Gesammt {{ plan.value.clocking.highscore.map(entry => entry.hours).reduce((a, b) => a + b) }}h</HeadlineComponent>
+            <div></div><HeadlineComponent title="Rangliste">Gesammt {{ plan.value.clocking.highscore.map(entry => entry.hours).reduce((a, b) => a + b) }}h</HeadlineComponent>
             <div class="clocking-highscore">
                 <div v-for="highscore of plan.value.clocking.highscore" class="highscore-bar">
                     <div class="highscore-bar__progress" :style="{ width: (highscore.hours / Math.max(...plan.value.clocking.highscore.map(h => h.hours))) * 100 + '%' }"></div>
