@@ -6,7 +6,7 @@
             <ButtonComponent :to="{ name: 'plan-edit', params: { id: $route.params.id } }" color="ELEMENT" icon="settings" aria-label="Schicht bearbeiten"/>
         </HeadlineComponent>
 
-        <div class="tabs" v-if="(plan.value && plan.value.clock) || !route.params.tab">
+        <div class="tabs" v-if="(plan.value && plan.value.clock) || route.params.tab">
             <button :selected="!route.params.tab ? true : undefined" @click="router.push({ name: 'plan', params: { id: route.params.id } })">Schichten</button>
             <button :selected="route.params.tab === 'clocking' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'clocking' } })">Zeiten</button>
             <button :selected="route.params.tab === 'highscore' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'highscore' } })">Rangliste</button>

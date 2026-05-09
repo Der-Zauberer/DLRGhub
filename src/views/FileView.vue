@@ -226,7 +226,7 @@ const directory = resource({
                 {
                     location: SELECT VALUE id FROM ONLY directory WHERE path = ${path},
                     directories: SELECT VALUE <~directory.* FROM ONLY directory WHERE path = ${path},
-                    files: SELECT VALUE <~file.* FROM ONLY directory WHERE path = ${path},
+                    files: SELECT VALUE <~file.{id, name, type, parent, path, created, updated} FROM ONLY directory WHERE path = ${path},
                     file: SELECT * OMIT content FROM ONLY file WHERE path = ${path},
                     index: SELECT VALUE <string>content FROM ONLY file WHERE name = 'index.html' AND path = ${path + '/index.html'}
                 }
