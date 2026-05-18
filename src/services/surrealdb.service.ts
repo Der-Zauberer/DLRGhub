@@ -39,7 +39,6 @@ export type SurrealDbProfile = {
 }
 
 export type SurrealDbAccount =  {
-    id: string
     accessToken: string
     accessExpiration: number
     refreshToken?: string
@@ -191,7 +190,6 @@ export class SurrealDbService extends Surreal {
         const refreshExpiration = new Date()
         refreshExpiration.setDate(refreshExpiration.getDate() + 30)
         account = {
-            id: '',
             accessToken: jwt.raw,
             accessExpiration: jwt.getExpirationAsDate()!.getTime(),
             refreshToken: tokens.refresh,
@@ -237,7 +235,6 @@ export class SurrealDbService extends Surreal {
                 const refreshExpiration = new Date()
                 refreshExpiration.setDate(refreshExpiration.getDate() + 30)
                 account = {
-                    id: '',
                     accessToken: jwt.raw,
                     accessExpiration: jwt.getExpirationAsDate()!.getTime(),
                     refreshToken: result.refresh,
@@ -302,7 +299,7 @@ export class SurrealDbService extends Surreal {
 
 function loadProfiles(): SurrealDbConfig {
     const json = cookies.get(PROFILE_COOKIE)
-    if (!json) return { default: config.default, profiles: [ config.default ] }
+    if (!json) return { default: config.default, profiles: config.profiles }
     return JSON.parse(json) as SurrealDbConfig
 }
 

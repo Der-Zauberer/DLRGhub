@@ -169,7 +169,7 @@ import InputComponent from '@/components/InputComponent.vue'
 import type { Registration } from '@/core/types'
 import { config, normalize, parseCustomSurrealDbError, SURREAL_DB_SERVICE, type PasswordChangeRequest, type SurrealDbService } from '@/services/surrealdb.service'
 import { Table } from 'surrealdb'
-import { inject, reactive, ref } from 'vue'
+import { inject, reactive, ref, toRaw } from 'vue'
 
 const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
 const profiles = surrealdb.getProfile()
@@ -197,6 +197,7 @@ async function login() {
         await surrealdb.redirectPostLogin()
         loginError.value = undefined
     } catch (exception) {
+        console.log(exception)
         const dbError = parseCustomSurrealDbError(exception as Error)
         if (dbError.success && dbError.key === 'error.user.password.change.required') {
             passwordChange.value = { username: credentials.username, old: '', new: '', repeat: '' }
