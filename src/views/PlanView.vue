@@ -7,9 +7,9 @@
         </HeadlineComponent>
 
         <div class="tabs" v-if="(plan.value && plan.value.clock) || route.params.tab">
-            <button :selected="!route.params.tab ? true : undefined" @click="router.push({ name: 'plan', params: { id: route.params.id } })">Schichten</button>
-            <button :selected="route.params.tab === 'clocking' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'clocking' } })">Zeiten</button>
-            <button :selected="route.params.tab === 'highscore' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'highscore' } })">Rangliste</button>
+            <button :selected="!route.params.tab ? true : undefined" @click="router.push({ name: 'plan', params: { id: route.params.id } })" class="grey-color">Schichten</button>
+            <button :selected="route.params.tab === 'clocking' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'clocking' } })" class="grey-color">Zeiten</button>
+            <button :selected="route.params.tab === 'highscore' ? true : undefined" @click="router.push({ name: 'plan-tab', params: { id: route.params.id, tab: 'highscore' } })" class="grey-color">Rangliste</button>
         </div>
 
         <OfflineComponent :loading="plan.loading" @reload="plan.reload()"/>
@@ -98,8 +98,6 @@
     
     & button {
         width: 100%;
-        --theme-primary-color: var(--theme-element-primary-color);
-        --theme-secondary-color: var(--theme-element-secondary-color);
     }
 
     & button:not(:first-child) {
@@ -141,7 +139,7 @@
     & .highscore-bar__progress {
         position: absolute;
         height: round(1.6em, 1px);
-        background: var(--theme-primary-color);
+        background: light-dark(#ffed00, #e30613);
         border-radius: var(--theme-border-radius);
     }
 
