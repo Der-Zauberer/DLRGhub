@@ -2,27 +2,24 @@
 
     <div v-if="!route.params.id" class="container-xl">
 
-        <HeadlineComponent :back="{ name: 'home' }" title="Benutzer">
-            <ButtonComponent :to="{ name: 'user-edit', params: { id: 'new' } }" color="ELEMENT" icon="add" aria-label="add"/>
-        </HeadlineComponent>
+        <HeadlineComponent :back="{ name: 'home' }" title="Benutzer"/>
 
         <OfflineComponent :loading="users.loading" @reload="users.reload()"/>
-        <dlrg-empty v-if="users?.status === 'EMPTY'">Keine Benutzer gefunden!</dlrg-empty>
         <dlrg-error v-if="(users?.status === 'ERROR' && parseCustomSurrealDbError(users.error).key !== 'error.connection')">{{ users?.error }}</dlrg-error>
-        <swd-loading-spinner v-if="users?.status === 'LOADING' && !users?.value" class="width-100" loading="true"></swd-loading-spinner>
 
-        <div class="grid-cols-1">
-            <ButtonLinkComponent v-for="user in users.value" :to="{ name: 'user-edit', params: { id: user.id.id.toString() } }">
-                <span>
-                    {{ user.displayname }}
-                    <swd-subtitle>{{ user.name }}</swd-subtitle>
-                    <swd-subtitle>{{ user.email }}</swd-subtitle>
-                </span>
-                <swd-chip class="red-color" v-if="user.admin">Admin</swd-chip>
-                <swd-chip class="red-color" v-if="!user.account.enabled">Disabled</swd-chip>
-                <swd-chip class="red-color" v-if="user.account.enabled && user.account.expiry && user.account.expiry < new Date()">Expired</swd-chip>
-            </ButtonLinkComponent>
-        </div>
+        <TableComponent :modelValue="parameter" @update:modelValue="Object.assign(parameter, $event)" :resource="users" :header="[ 'Name', 'Email', 'Status', 'Letzter Login' ]">
+            <a v-for="user of users.value" :key="user.id.id.toString()" @click="router.push({ name: 'user-edit', params: { id: user.id.id.toString() } })">
+                <div>{{ user.displayname }}</div>
+                <div>{{ user.name }} <swd-chip class="red-color" v-if="user.admin">Admin</swd-chip><swd-subtitle>{{ user.email }}</swd-subtitle></div>
+                <div>
+                    <swd-chip class="green-color" v-if="user.account.enabled && !(user.account.expiry && user.account.expiry < new Date())">Aktiviert</swd-chip>
+                    <swd-chip class="red-color" v-if="!user.account.enabled">Deaktiviert</swd-chip>
+                    <swd-chip class="red-color" v-if="user.account.enabled && user.account.expiry && user.account.expiry < new Date()">Abgelaufen</swd-chip>
+                    <swd-subtitle v-if="user.account.expiry">{{ user.account.expiry?.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }) }}</swd-subtitle>
+                </div>
+                <div>{{ user.login?.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }) }}</div>
+            </a>
+        </TableComponent>
 
     </div>
 
@@ -88,13 +85,14 @@ import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
+import TableComponent, { type TableParameter } from '@/components/TableComponent.vue'
 import { resource } from '@/core/resource'
 import type { User } from '@/core/types'
 import { dateToIsoDate, isoDateToDate } from '@/services/data.service'
 import { DIALOG_SERVICE, type DialogService } from '@/services/dialog.service'
 import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
-import { inject, markRaw, ref, useTemplateRef } from 'vue'
+import { inject, markRaw, reactive, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -102,9 +100,15 @@ const router = useRouter()
 const dialogService = inject(DIALOG_SERVICE) as DialogService
 const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
 
+const parameter = reactive<TableParameter>({ search: '', page: 1, size: 100, count: 0 })
 const users = resource({
-    parameter: { route },
-    loader: parameter => !parameter.route.params.id ? surreal.up().then(() => surreal.select<User>(new Table('user'))) : undefined
+    parameter,
+	loader: async (parameter) => {
+        await surreal.up()
+        const [result, count] = await surreal.query<[User[], number]>(`SELECT * FROM user ${parameter.search ? 'WHERE name.lowercase().starts_with($search.lowercase())' : ''} ORDER BY name START ($page - 1) * $size LIMIT $size; (SELECT count() FROM user ${parameter.search ? 'WHERE name CONTAINS $search' : ''} GROUP ALL)[0].count`, parameter)
+        parameter.count = count
+        return result
+    }
 })
 
 const formRef = useTemplateRef('form')
