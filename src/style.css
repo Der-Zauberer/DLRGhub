@@ -3,6 +3,7 @@
     --theme-primary-color: #e30613;
     --theme-secondary-color: #a5010c;
     --theme-accent-color: #ffed00;
+    --theme-accent-text-color: light-dark(#e30613, #ffed00);
     font-size: 16px;
 }
 
@@ -24,11 +25,8 @@ h6 { font-size: 0.9em; letter-spacing: 1px; font-weight: bold; text-transform: u
 
 .primary-text { color: #e30613 !important }
 .secondary-text { color: #a5010c !important }
-.accent-text { color: #ffed00 !important }
-
-a {
-    color: light-dark(#e30613, #ffed00);
-}
+.accent-text{ color: var(--theme-accent-text-color) !important }
+a { color: var(--theme-accent-text-color) }
 
 @media (display-mode: standalone) {
     html, body {
