@@ -41,6 +41,8 @@
 			</swd-subtitle>
 		</swd-card>
 
+		<iframe class="weather_radar" src="https://embed.windy.com/embed.html?type=map&overlay=radar&lat=47.69&lon=8.75&zoom=20"></iframe>
+
 	</div>
 
 </template>
@@ -90,6 +92,14 @@
 		box-sizing: border-box;
 	}
 
+}
+
+.weather_radar {
+	box-sizing: border-box;
+	aspect-ratio: 1/1;
+	border: none;
+	border-radius: var(--theme-border-radius);
+	background-color: var(--theme-element-primary-color);
 }
 
 </style>
