@@ -5,8 +5,8 @@
 			<img src="@/assets/logo.svg" height="25px">
 			<div class="logo__seperator"></div>
 			<div class="logo__client">
-			<span class="accent-text">Gruppe</span>
-			<span class="accent-text">Gailingen e.V.</span>
+				<span>Gruppe</span>
+				<span>Gailingen e.V.</span>
 			</div>
 		</RouterLink>
 		<div class="menu">
@@ -60,6 +60,10 @@ swd-menu a {
 		font-size: 12px;
 		color: var(--theme-accent-color) !important;
 		font-weight: bold;
+
+		& * {
+			color: var(--theme-accent-color) !important;
+		}
 	}
 
 }
