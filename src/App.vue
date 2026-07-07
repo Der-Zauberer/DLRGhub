@@ -114,13 +114,13 @@ swd-menu a {
 </style>
 
 <script setup lang="ts">
-import { inject, watch } from 'vue'
+import { watch } from 'vue'
 import DialogComponent from './components/DialogComponent.vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { DIALOG_SERVICE, DialogService } from './services/dialog.service'
+import { RouterLink, RouterView } from 'vue-router'
+import { useDialogService } from './services/dialog.service'
 import { Cookies } from './services/surrealdb.service'
 
-const dialog = inject(DIALOG_SERVICE) as DialogService
+const dialog = useDialogService()
 const cookies = new Cookies()
 let success: () => unknown = () => {}
 watch(dialog.open, () => { if (dialog.open.value?.success) success = dialog.open.value.success })

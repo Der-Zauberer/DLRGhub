@@ -1,6 +1,6 @@
 import type { Plan, PlanSchedulesShift, Post, ShiftScheduledByPlan, User } from "@/core/types"
 import { LiveSubscription, RecordId, surql, Table } from "surrealdb"
-import { markRaw, ref, type App } from "vue"
+import { inject, markRaw, ref, type App } from "vue"
 import { resource, type Resource } from "@/core/resource"
 import type { WaterTemperature, Weather, WeatherService } from "./weather.service"
 import { Cookies, type SurrealDbService } from "./surrealdb.service"
@@ -298,7 +298,12 @@ export function isoDateToDate(string?: string): Date | undefined {
     return string && string.match(/\d{4}-\d{2}-\d{2}/g) ? new Date(string) : undefined
 }
 
-export const DATA_SERVICE = 'dataService'
+const DATA_SERVICE = 'dataService'
+
+export function useDataService(): DataService {
+    return inject(DATA_SERVICE) as DataService
+}
+
 
 export default {
     install(app: App) {

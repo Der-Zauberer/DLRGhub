@@ -28,8 +28,8 @@
         </div>
 
         <div class="flex">
-            <button class="margin-left-auto" @click="surrealdb.invalidate(), surrealdb.redirectPostInvalidate()">Ausloggen</button>
-            <button @click="dialogServcie.open = { title: 'Ausloggen', content: [`Willst du dich wirklich von allen Geräten ausloggen?`], action: 'Ausloggen', filter: async () => surrealdb.invalidateAllDevices().then((() => true)), success: () => surrealdb.redirectPostInvalidate()}">Ausloggen von allen Geräten</button>
+            <button class="margin-left-auto" @click="surreal.invalidate(), surreal.redirectPostInvalidate()">Ausloggen</button>
+            <button @click="dialog.open = { title: 'Ausloggen', content: [`Willst du dich wirklich von allen Geräten ausloggen?`], action: 'Ausloggen', filter: async () => surreal.invalidateAllDevices().then((() => true)), success: () => surreal.redirectPostInvalidate()}">Ausloggen von allen Geräten</button>
         </div>
 
         <h2>Passwort ändern</h2>
@@ -82,7 +82,7 @@
                 <swd-subtitle>Benutzer</swd-subtitle>
             </p>
             <p>
-                {{ surrealdb.status }}<br>
+                {{ surreal.status }}<br>
                 <swd-subtitle>DB Status</swd-subtitle>
             </p>
             <p>
@@ -105,23 +105,23 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
-import { DATA_SERVICE, DataService } from '@/services/data.service'
-import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service'
-import { inject, reactive, ref, type Ref } from 'vue'
+import { useDataService } from '@/services/data.service'
+import { useDialogService } from '@/services/dialog.service'
+import { parseCustomSurrealDbError, useSurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service'
+import { reactive, ref, type Ref } from 'vue'
 
-const dialogServcie = inject(DIALOG_SERVICE) as DialogService
-const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
-const dataService = inject(DATA_SERVICE) as DataService
-const profiles = surrealdb.getProfile()
-const user = dataService.getUser()
+const dialog = useDialogService()
+const surreal = useSurrealDbService()
+const data = useDataService()
+const profiles = surreal.getProfile()
+const user = data.getUser()
 
 const devtools: Ref<boolean> = ref(false)
 const password = reactive<PasswordChangeRequest & { error?: string } & { success?: boolean }>({ username: '' , old: '', new: '', repeat: '' })
 
 async function changePassword() {
     try {
-        await surrealdb.changePassword({ ...password, username: user.value?.name || ''})
+        await surreal.changePassword({ ...password, username: user.value?.name || ''})
         password.old = ''
         password.new = ''
         password.repeat = ''

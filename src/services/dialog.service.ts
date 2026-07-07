@@ -1,4 +1,4 @@
-import { ref, type App, type Ref } from "vue"
+import { inject, ref, type App, type Ref } from "vue"
 
 export type DialogOptions = { title: string, content: string[], action?: string, consent?: boolean, filter?: () => boolean | Promise<boolean>, success?: () => unknown | Promise<unknown> }
 
@@ -14,7 +14,11 @@ export class DialogService {
     }
 }
 
-export const DIALOG_SERVICE = 'dialogService'
+const DIALOG_SERVICE = 'dialogService'
+
+export function useDialogService(): DialogService {
+    return inject(DIALOG_SERVICE) as DialogService
+}
 
 export default {
     install(app: App) {

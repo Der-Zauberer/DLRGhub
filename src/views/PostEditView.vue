@@ -33,21 +33,21 @@ import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource';
 import type { Post } from '@/core/types';
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { parseCustomSurrealDbError, useSurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, Table } from 'surrealdb'
-import { inject, ref, useTemplateRef } from 'vue'
+import { useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
+import { useDialogService } from '@/services/dialog.service'
 
 const route = useRoute()
 const router = useRouter()
-const dialogService = inject(DIALOG_SERVICE) as DialogService
-const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const dialog = useDialogService()
+const surreal = useSurrealDbService()
 
 const formRef = useTemplateRef('form')
 
 const post = resource({
-    loader: route.params.id !== 'new' ? surrealdb.up().then(() => surrealdb.select<Post>(new RecordId('post', route.params.id))) : {} as Post
+    loader: route.params.id !== 'new' ? surreal.up().then(() => surreal.select<Post>(new RecordId('post', route.params.id))) : {} as Post
 })
 
 const savePost = resource({
@@ -63,19 +63,19 @@ const savePost = resource({
         delete (post.value as any).created
         delete (post.value as any).updated
 
-        await surrealdb.up()
-        post.value.id ? await surrealdb.update(post.value.id).content(post.value) : await surrealdb.insert(new Table('post'), post.value)
+        await surreal.up()
+        post.value.id ? await surreal.update(post.value.id).content(post.value) : await surreal.insert(new Table('post'), post.value)
 
         router.push({ name: 'home' })
     }
 })
 
 function openDeleteDialog(post: Post) {
-    dialogService.open = {
+    dialog.open = {
         title: 'Dienstplan löschen',
         content: ['Bist du sicher den Post zu löschen?', `<code>${post.title}</code>`],
         action: 'Löschen',
-        filter: () => surrealdb.delete(post.id).then(() => true),
+        filter: () => surreal.delete(post.id).then(() => true),
         success: () => router.push({ name: 'home' })
     }
 }

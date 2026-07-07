@@ -158,23 +158,23 @@ import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { Plan, PlanSchedulesShift, Shift } from '@/core/types'
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
-import { DATA_SERVICE, DataService, dateToIsoDate, isoDateToDate } from '@/services/data.service'
+import { parseCustomSurrealDbError, useSurrealDbService } from '@/services/surrealdb.service'
+import { dateToIsoDate, isoDateToDate, useDataService } from '@/services/data.service'
 import { RecordId, surql } from 'surrealdb'
-import { inject, toRaw, useTemplateRef } from 'vue'
+import { toRaw, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
+import { useDialogService } from '@/services/dialog.service'
 
 const route = useRoute()
 const router = useRouter()
-const dialogService = inject(DIALOG_SERVICE) as DialogService
-const dataService = inject(DATA_SERVICE) as DataService
-const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const dialog = useDialogService()
+const data = useDataService()
+const surreal = useSurrealDbService()
 
 const formRef = useTemplateRef('form')
 
 const plan = resource({
-    loader: () => surrealdb.up().then(() => surrealdb.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this<~shift.*) ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`)).then(result => result[0]),
+    loader: () => surreal.up().then(() => surreal.query<[PlanSchedulesShift]>(surql`SELECT *, (SELECT * FROM (SELECT * FROM $this<~shift.*) ORDER BY date) as shifts FROM ONLY ${new RecordId('plan', route.params.id)};`)).then(result => result[0]),
 })
 
 const shiftsToAdd: Shift[] = []
@@ -205,8 +205,8 @@ const savePlan = resource({
             form.reportValidity()
             return
         }
-        await surrealdb.up()
-        await surrealdb.query(surql`
+        await surreal.up()
+        await surreal.query(surql`
             BEGIN TRANSACTION;
             UPDATE ${plan.value.id} CONTENT (SELECT * OMIT shifts FROM ONLY ${plan.value});
             FOR $shift IN ${shiftsToAdd} {
@@ -227,11 +227,11 @@ const savePlan = resource({
 })
 
 function openDeleteDialog(plan: Plan) {
-    dialogService.open = {
+    dialog.open = {
         title: 'Dienstplan löschen',
         content: ['Bist du sicher den Dienstplan zu löschen?', `<code>${plan.name}</code>`],
         action: 'Löschen',
-        filter: () => dataService.deletePlan(plan.id).then(() => true),
+        filter: () => data.deletePlan(plan.id).then(() => true),
         success: () => router.push({ name: 'plans' })
     }
 }

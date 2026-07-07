@@ -154,9 +154,9 @@
 </style>
 
 <script lang="ts" setup>
-import type { UnknownResource } from '@/core/resource';
-import { useTemplateRef, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import type { UnknownResource } from '@/core/resource'
+import { useTemplateRef, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 export type TableParameter = { search: string, page: number, size: number, count: number }
 

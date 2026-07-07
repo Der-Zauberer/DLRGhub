@@ -179,15 +179,15 @@
 </style>
 
 <script setup lang="ts">
-import type { Shift } from '@/core/types';
-import { inject, ref, useTemplateRef, watch } from 'vue';
-import DialogComponent from './DialogComponent.vue';
-import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { useRoute } from 'vue-router';
-import ButtonComponent from './ButtonComponent.vue';
+import type { Shift } from '@/core/types'
+import { ref, useTemplateRef, watch } from 'vue'
+import DialogComponent from './DialogComponent.vue'
+import { useRoute } from 'vue-router'
+import ButtonComponent from './ButtonComponent.vue'
+import { useDataService } from '@/services/data.service.ts'
 
 const route = useRoute()
-const data = inject(DATA_SERVICE) as DataService
+const data = useDataService()
 
 const props = defineProps<{ shift: Shift, roles: string[], user: string[], userDisplayName?: string }>()
 

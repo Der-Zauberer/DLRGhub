@@ -56,14 +56,14 @@ import OfflineComponent from '@/components/OfflineComponent.vue'
 import WeatherComponent from '@/components/WeatherComponent.vue'
 import { resource } from '@/core/resource'
 import type { BeforeInstallPromptEvent} from '@/core/types'
-import { DATA_SERVICE, DataService } from '@/services/data.service'
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { useDataService } from '@/services/data.service'
+import { parseCustomSurrealDbError, useSurrealDbService } from '@/services/surrealdb.service'
 import { surql } from 'surrealdb'
-import { inject, onBeforeUnmount } from 'vue'
+import { onBeforeUnmount } from 'vue'
 
-const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
-const dataService = inject(DATA_SERVICE) as DataService
-const user = dataService.getUser()
+const surreal = useSurrealDbService()
+const data = useDataService()
+const user = data.getUser()
 const pwa = (window as unknown as {pwa: BeforeInstallPromptEvent | undefined}).pwa
 
 const openRegistrations = resource({
@@ -78,8 +78,8 @@ function install() {
     }
 }
 
-const posts = dataService.getPosts(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
-const weather = dataService.getWeather()
-const water = dataService.getWaterTemperature()
+const posts = data.getPosts(new Promise<void>(resolve => onBeforeUnmount(() => resolve())))
+const weather = data.getWeather()
+const water = data.getWaterTemperature()
 
 </script>

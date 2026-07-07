@@ -177,18 +177,18 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import ShiftComponent from '@/components/ShiftComponent.vue'
-import { DATA_SERVICE, DataService } from '@/services/data.service'
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { useDataService } from '@/services/data.service'
+import { parseCustomSurrealDbError, useSurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql } from 'surrealdb'
-import { computed, inject, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const HOURS = 1000 * 60 * 60
 
 const route = useRoute()
 const router = useRouter()
-const data = inject(DATA_SERVICE) as DataService
-const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const data = useDataService()
+const surreal = useSurrealDbService()
 
 const userNames = data.getUserNames()
 const user = data.getUser()
@@ -217,7 +217,7 @@ async function saveClocking() {
     const end = new Date()
     end.setHours(endHour, endMinute, 0, 0)
     try {
-        await surrealdb.query(surql`
+        await surreal.query(surql`
             UPSERT clocking:[${plan.value!.id}, $auth.id, time::format(time::now(), "%Y-%m-%d")] CONTENT {
                 user: $auth.id,
                 start: ${start},

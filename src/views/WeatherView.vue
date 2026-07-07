@@ -105,17 +105,16 @@
 </style>
 
 <script setup lang="ts">
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import PlotComponent from '@/components/PlotComponent.vue';
-import WeatherComponent from '@/components/WeatherComponent.vue';
-import { DATA_SERVICE, DataService } from '@/services/data.service';
-import { type Weather } from '@/services/weather.service';
-import { inject } from 'vue';
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import PlotComponent from '@/components/PlotComponent.vue'
+import WeatherComponent from '@/components/WeatherComponent.vue'
+import { useDataService } from '@/services/data.service'
+import { type Weather } from '@/services/weather.service'
 
-const dataService = inject(DATA_SERVICE) as DataService
+const data = useDataService()
 
-const weather = dataService.getWeather()
-const water = dataService.getWaterTemperature()
+const weather = data.getWeather()
+const water = data.getWaterTemperature()
 
 function mapLocalDate(date: string | number): string {
 	const localDate = new Date(date.toString())

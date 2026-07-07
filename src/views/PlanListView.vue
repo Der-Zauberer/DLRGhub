@@ -44,11 +44,11 @@ import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
-import { DATA_SERVICE, DataService } from '@/services/data.service'
+import { useDataService } from '@/services/data.service'
 import { parseCustomSurrealDbError } from '@/services/surrealdb.service'
 import { inject, onBeforeUnmount, reactive, ref } from 'vue'
 
-const data = inject(DATA_SERVICE) as DataService
+const data = useDataService()
 
 const planCreateDialog = ref<boolean>(false)
 

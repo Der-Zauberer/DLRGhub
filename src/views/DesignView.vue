@@ -152,12 +152,12 @@
 </style>
 
 <script setup lang="ts">
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue';
-import HeadlineComponent from '@/components/HeadlineComponent.vue';
-import InputComponent from '@/components/InputComponent.vue';
-import PlotComponent from '@/components/PlotComponent.vue';
-import AppointmentComponent from '@/components/AppointmentComponent.vue';
-import { RecordId } from 'surrealdb';
-import ShiftComponent from '@/components/ShiftComponent.vue';
+import ButtonComponent from '@/components/ButtonComponent.vue'
+import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
+import HeadlineComponent from '@/components/HeadlineComponent.vue'
+import InputComponent from '@/components/InputComponent.vue'
+import PlotComponent from '@/components/PlotComponent.vue'
+import AppointmentComponent from '@/components/AppointmentComponent.vue'
+import { RecordId } from 'surrealdb'
+import ShiftComponent from '@/components/ShiftComponent.vue'
 </script>

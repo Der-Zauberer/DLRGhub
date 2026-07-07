@@ -1,4 +1,4 @@
-import type { App } from "vue"
+import { inject, type App } from "vue"
 
 export class WeatherService {
 
@@ -89,7 +89,11 @@ export type WaterTemperature = {
       }
 }
 
-export const WEATHER_SERVICE = 'weatherService'
+const WEATHER_SERVICE = 'weatherService'
+
+export function useWeatherService(): WeatherService {
+    return inject(WEATHER_SERVICE) as WeatherService
+}
 
 export default {
     install(app: App) {

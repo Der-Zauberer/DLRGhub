@@ -81,7 +81,6 @@
 
 <script setup lang="ts">
 import ButtonComponent from '@/components/ButtonComponent.vue'
-import ButtonLinkComponent from '@/components/ButtonLinkComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
@@ -89,16 +88,16 @@ import TableComponent, { type TableParameter } from '@/components/TableComponent
 import { resource } from '@/core/resource'
 import type { User } from '@/core/types'
 import { dateToIsoDate, isoDateToDate } from '@/services/data.service'
-import { DIALOG_SERVICE, type DialogService } from '@/services/dialog.service'
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { useDialogService } from '@/services/dialog.service'
+import { parseCustomSurrealDbError, useSurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
-import { inject, markRaw, reactive, ref, useTemplateRef } from 'vue'
+import { markRaw, reactive, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const dialogService = inject(DIALOG_SERVICE) as DialogService
-const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const dialog = useDialogService()
+const surreal = useSurrealDbService()
 
 const parameter = reactive<TableParameter>({ search: '', page: 1, size: 100, count: 0 })
 const users = resource({
@@ -155,7 +154,7 @@ const saveUser = resource({
 })
 
 function openDeleteDialog(user: User) {
-    dialogService.open = {
+    dialog.open = {
         title: 'Benutzer löschen',
         content: ['Bist du sicher den Benutzer zu löschen?', `<swd-card>${user.displayname}<swd-subtitle>${user.name}</swd-subtitle><swd-subtitle>${user.email}</swd-subtitle></swd-card>`],
         action: 'Löschen',
@@ -165,12 +164,12 @@ function openDeleteDialog(user: User) {
 }
 
 async function logoutFromAllDevices(id: RecordId<'user'>, name: string) {
-    dialogService.open = {
+    dialog.open = {
         title: 'Benutzer ausloggen',
         content: [`Soll der Benutzer ${name} von allen Geräten ausgeloggt werden?`],
         action: 'Ausloggen',
         filter: async () => await surreal.up().then(() => surreal.query(surql`UPDATE ${id} SET account.valid = ${new Date()}`)).then(() => true),
-        success: () => dialogService.open = {
+        success: () => dialog.open = {
             title: 'Benutzer ausgeloggt',
             content: [`Der Benutzer ${name} wurde erfolgreich von allen Geräten ausgeloggt.`]
         }

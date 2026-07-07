@@ -1,5 +1,5 @@
 <template>
-    <swd-card class="offline-card" v-if="surrealdb.status !== 'connected'">
+    <swd-card class="offline-card" v-if="surreal.status !== 'connected'">
         <div class="offline-card__content">
             <swd-icon class="offline-icon"></swd-icon>
             <div>
@@ -7,7 +7,7 @@
                 <span>Du bist offline oder es konnte keine Verbindung zum Server hergestellt werden.</span>
             </div>
         </div>
-        <ButtonComponent v-if="surrealdb.status === 'disconnected'" color="ELEMENT" :icon="loading ? 'loading-spinner' : 'reload'" @click="emits('reload')">Erneut versuchen</ButtonComponent>
+        <ButtonComponent v-if="surreal.status === 'disconnected'" color="ELEMENT" :icon="loading ? 'loading-spinner' : 'reload'" @click="emits('reload')">Erneut versuchen</ButtonComponent>
     </swd-card>
 </template>
 
@@ -37,11 +37,12 @@
 </style>
 
 <script setup lang="ts">
-import { inject } from 'vue';
 import ButtonComponent from './ButtonComponent.vue'
-import { SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service';
-const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
+import { useSurrealDbService } from '@/services/surrealdb.service'
+
+const surreal = useSurrealDbService()
 
 defineProps<{ loading: boolean }>()
 const emits = defineEmits<{ ( e: 'reload', value: void ): unknown }>()
+
 </script>

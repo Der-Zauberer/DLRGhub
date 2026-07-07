@@ -1,7 +1,7 @@
 import { resource, type Resource } from '@/core/resource'
 import type { User } from '@/core/types'
 import { DateTime, FileRef, Surreal, SurrealError, Table, type ConnectOptions, type DriverOptions, type Token, type Tokens, RecordId } from 'surrealdb'
-import { markRaw, type App } from 'vue'
+import { inject, markRaw, type App } from 'vue'
 import type { NavigationGuardNext, NavigationGuardWithThis, RouteLocationNormalized, Router } from 'vue-router'
 
 export const config: SurrealDbConfig = {
@@ -373,13 +373,17 @@ export function normalize(name: string, seperator?: string): string {
     return normalized
 }
 
-export const SURREAL_DB_SERVICE = 'surrealDbService'
+const SURREAL_DB_SERVICE = 'surrealDbService'
+
+export function useSurrealDbService(): SurrealDbService {
+    return inject(SURREAL_DB_SERVICE) as SurrealDbService
+}
 
 export default {
     install(app: App) {
         const router = app.config.globalProperties.$router
         const surrealDbService = new SurrealDbService(router)
         app.config.globalProperties.$surrealDbService = surrealDbService
-        app.provide('surrealDbService', surrealDbService)
+        app.provide(SURREAL_DB_SERVICE, surrealDbService)
     }
 }

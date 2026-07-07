@@ -189,16 +189,16 @@ import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { BinaryFile, Directory } from '@/core/types'
-import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
-import { SURREAL_DB_SERVICE, type SurrealDbService } from '@/services/surrealdb.service'
+import { useDialogService } from '@/services/dialog.service'
+import { useSurrealDbService } from '@/services/surrealdb.service'
 import { BoundQuery, surql, Table, RecordId } from 'surrealdb'
-import { inject, reactive, useTemplateRef, nextTick, watch } from 'vue'
+import { reactive, useTemplateRef, nextTick, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const dialogService = inject(DIALOG_SERVICE) as DialogService
-const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const dialog = useDialogService()
+const surrealdb = useSurrealDbService()
 const profile = surrealdb.getProfile().default
 const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profile.namespace}/${profile.database}/file`
 
@@ -314,7 +314,7 @@ async function downloadFile(path: string) {
 }
 
 function openDeleteDialog(id: RecordId<'directory'> | RecordId<'file'>, name: string) {
-    dialogService.open = {
+    dialog.open = {
         title: 'Datei löschen',
         content: ['Bist du sicher die Datei zu löschen?', `<code>${name}</code>`],
         action: 'Löschen',

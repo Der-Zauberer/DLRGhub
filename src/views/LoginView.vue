@@ -167,12 +167,12 @@ footer {
 <script setup lang="ts">
 import InputComponent from '@/components/InputComponent.vue'
 import type { Registration } from '@/core/types'
-import { config, normalize, parseCustomSurrealDbError, SURREAL_DB_SERVICE, type PasswordChangeRequest, type SurrealDbService } from '@/services/surrealdb.service'
+import { config, normalize, parseCustomSurrealDbError, useSurrealDbService, type PasswordChangeRequest } from '@/services/surrealdb.service'
 import { Table } from 'surrealdb'
-import { inject, reactive, ref, toRaw } from 'vue'
+import { reactive, ref } from 'vue'
 
-const surrealdb = inject(SURREAL_DB_SERVICE) as SurrealDbService
-const profiles = surrealdb.getProfile()
+const surreal = useSurrealDbService()
+const profiles = surreal.getProfile()
 
 const credentials = reactive({ profile: profiles.default.name, username: '', password: ''})
 const passwordChange = ref<PasswordChangeRequest>()
@@ -192,9 +192,9 @@ async function login() {
     loginLoading.value = true
     loginError.value = undefined
     try {
-        await surrealdb.up(credentials.profile !== profiles.default.name ? profiles.profiles.find(profile => credentials.profile == profile.name) : undefined, true)
-        await surrealdb.signin(credentials)
-        await surrealdb.redirectPostLogin()
+        await surreal.up(credentials.profile !== profiles.default.name ? profiles.profiles.find(profile => credentials.profile == profile.name) : undefined, true)
+        await surreal.signin(credentials)
+        await surreal.redirectPostLogin()
         loginError.value = undefined
     } catch (exception) {
         console.log(exception)
@@ -214,8 +214,8 @@ async function login() {
 async function changePassword(credentials: PasswordChangeRequest) {
     loginLoading.value = true
     try {
-        await surrealdb.changePassword(credentials)
-        await surrealdb.redirectPostLogin()
+        await surreal.changePassword(credentials)
+        await surreal.redirectPostLogin()
         passwordChange.value = undefined
     } catch (exception) {
         const key = parseCustomSurrealDbError(exception as Error).key
@@ -239,8 +239,8 @@ async function register() {
     registrationLoading.value = true
     registrationError.value = undefined
     try {
-        await surrealdb.up()
-        registrationSuccess.value = await surrealdb.insert(new Table('registration'), registration).then(() => true)
+        await surreal.up()
+        registrationSuccess.value = await surreal.insert(new Table('registration'), registration).then(() => true)
         loginError.value = undefined
     } catch (exception) {
         registrationError.value = parseCustomSurrealDbError(exception as Error).key

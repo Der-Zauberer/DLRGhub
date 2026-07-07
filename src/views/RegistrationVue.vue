@@ -57,16 +57,16 @@ import InputComponent from '@/components/InputComponent.vue'
 import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { Registration } from '@/core/types'
-import { DIALOG_SERVICE, DialogService } from '@/services/dialog.service'
-import { parseCustomSurrealDbError, SURREAL_DB_SERVICE, SurrealDbService } from '@/services/surrealdb.service'
+import { useDialogService } from '@/services/dialog.service'
+import { parseCustomSurrealDbError, useSurrealDbService } from '@/services/surrealdb.service'
 import { RecordId, surql, Table } from 'surrealdb'
-import { inject, useTemplateRef } from 'vue'
+import { useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-const dialogService = inject(DIALOG_SERVICE) as DialogService
-const surreal = inject(SURREAL_DB_SERVICE) as SurrealDbService
+const dialog = useDialogService()
+const surreal = useSurrealDbService()
 
 const formRef = useTemplateRef('form')
 
@@ -81,12 +81,12 @@ const registration = resource({
 })
 
 async function accept(registration: Registration) {
-    dialogService.open = {
+    dialog.open = {
         title: 'Registrierung annehmen',
         content: [`Soll die Registrierung ${registration.firstname} ${registration.lastname} als Benutzer aufgenommen werden?`],
         action: 'Annehmen',
         filter: async () => await surreal.up().then(() => surreal.query(surql`UPDATE ${registration.id} SET approve = true`)).then(() => true),
-        success: () => (dialogService.open = {
+        success: () => (dialog.open = {
             title: 'Registrierung angenommen',
             content: [`Der Registrierung ${registration.firstname} ${registration.lastname} wurde angenommen.`]
         }, registrations.reload())
@@ -94,12 +94,12 @@ async function accept(registration: Registration) {
 }
 
 async function decline(registration: Registration) {
-    dialogService.open = {
+    dialog.open = {
         title: 'Registrierung ablehnen',
         content: [`Soll die Registrierung ${registration.firstname} ${registration.lastname} abgelehnt werden?`],
         action: 'Ablehnen',
         filter: async () => await surreal.up().then(() => surreal.delete(registration.id)).then(() => true),
-        success: () => (dialogService.open = {
+        success: () => (dialog.open = {
             title: 'Registrierung abgelehnt',
             content: [`Der Registrierung ${registration.firstname} ${registration.lastname} wurde abgelehnt.`]
         }, registrations.reload())
