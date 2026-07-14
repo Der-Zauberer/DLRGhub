@@ -2,7 +2,7 @@
 
     <swd-dialog role="dialog" shown v-if="open">
         <form ref="form" @submit="$event.preventDefault()" @keydown="$event.code === 'Escape' ? open = false : {}">
-            <swd-card ref="slot">
+            <swd-card class="margin-bottom-0" ref="slot">
 
                 <div class="flex flex-space-between flex-center">
                     <h3>{{ title }}</h3>
@@ -15,7 +15,7 @@
 
                 <div :class="consent ? 'grid-cols-1' : 'grid-cols-2'" v-if="action">
                     <button type="button" v-if="!consent" class="grey-color" @click="open = false">Abbrechen</button>
-                    <button type="submit" @click="success()">{{ action }}</button>
+                    <swd-loading-spinner :loading="loading"><button type="submit" @click="success()">{{ action }}</button></swd-loading-spinner>
                 </div>
 
             </swd-card>
@@ -31,6 +31,7 @@ import ButtonComponent from './ButtonComponent.vue'
 const slotRef = useTemplateRef('slot')
 const open = defineModel<boolean>()
 const error = ref<Error | undefined>()
+const loading = ref<boolean>(false)
 
 const props = defineProps<{ title: string, consent?: boolean, action?: string, filter?: () => boolean | Promise<boolean> }>()
 const emits = defineEmits<{ ( e: 'success', value: void ): Promise<void> }>()
@@ -45,6 +46,7 @@ async function success() {
             return
         }
     }
+    loading.value = true
     try {
         const filter = await Promise.resolve(props.filter?.() || true)
         if (!filter) return
@@ -52,6 +54,8 @@ async function success() {
         emits('success')
     } catch(err) {
         error.value = err as Error
+    } finally {
+        loading.value = false
     }
     
 }

@@ -47,7 +47,7 @@
                         <swd-dropdown-content>
                             <swd-selection>
                                 <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id">Umbenennen</ButtonComponent>
-                                <ButtonComponent icon="arrow-right" @click="moveDialog.open = true; moveDialog.id = entry.id">Verschieben</ButtonComponent>
+                                <ButtonComponent icon="arrow-right" @click="moveDialog.open = true; moveDialog.id = entry.id; moveDialog.directory = directory.value.location">Verschieben</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
                             </swd-selection>
                         </swd-dropdown-content>
@@ -72,7 +72,7 @@
                                 <ButtonComponent icon="download" @click="downloadFile(entry.path)">Herunterladen</ButtonComponent>
                                 <ButtonComponent icon="pen" class="grey-color" :to="'/file' + entry.path  + '?edit'">Bearbeiten</ButtonComponent>
                                 <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id; renameDialog.name = entry.name">Umbenennen</ButtonComponent>
-                                <ButtonComponent icon="arrow-right" @click="moveDialog.open = true; moveDialog.id = entry.parent">Verschieben</ButtonComponent>
+                                <ButtonComponent icon="arrow-right" @click="moveDialog.open = true; moveDialog.id = entry.id; moveDialog.directory = directory.value.location;">Verschieben</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
                             </swd-selection>
                         </swd-dropdown-content>
@@ -103,10 +103,10 @@
 
     <embed v-if="directory?.value?.file?.type === 'application/pdf' && !Object.keys(route.query).includes('edit')" :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type" class="pdf-content"/>
 
-    <DialogComponent title="Verschieben" action="Verschieben" v-model="moveDialog.open">
+    <DialogComponent title="Verschieben" action="Verschieben" v-model="moveDialog.open" :filter="moveFile">
         <swd-loading-spinner v-if="moveDirectories.loading" class="width-100"></swd-loading-spinner>
         <div v-if="!moveDirectories.loading">
-            <button class="directoy-button ghost" v-for="directoy of moveDirectories.value" @click="moveDialog.id = directoy.id">
+            <button class="directoy-button ghost" v-for="directoy of moveDirectories.value" @click="moveDialog.directory = directoy.id">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
                     <path d="M1 3 H7 V7 H1 Z" style="fill: var(--theme-secondary-color); stroke: var(--theme-secondary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
                     <path d="M1 5 H 17 V13 H1 Z" style="fill: var(--theme-primary-color); stroke: var(--theme-primary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
@@ -228,8 +228,8 @@ const profile = surrealdb.getProfile().default
 const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profile.namespace}/${profile.database}/file`
 
 const createDialog = reactive<{ open: boolean, name: string, type: 'directory' | 'text/plain' | 'text/html' }>({ open: false, name: '', type: 'directory' })
-const renameDialog = reactive<{ open: boolean, id: RecordId<'directory'> | RecordId<'file'> | undefined, name: string }>({ open: false, id: undefined, name: '' })
-const moveDialog = reactive<{ open: boolean, id: RecordId<'directory'> | undefined, name: string }>({ open: false, id: undefined, name: '' })
+const renameDialog = reactive<{ open: boolean, id?: RecordId<'directory'> | RecordId<'file'>, name: string }>({ open: false, id: undefined, name: '' })
+const moveDialog = reactive<{ open: boolean, id?: RecordId<'directory'> | RecordId<'file'>, directory?: RecordId<'directory'>, name: string }>({ open: false, id: undefined, directory: undefined, name: '' })
 
 const editor = useTemplateRef<HTMLTextAreaElement>('editor')
 
@@ -266,12 +266,9 @@ const moveDirectories = resource({
     parameter: { moveDialog },
     loader: async parameter => {
         if (parameter.moveDialog.open) {
-            const id = parameter.moveDialog.id
-            console.log(id?.toString())
-            const query = surql`${ id ? surql`(SELECT <~directory.* as directories FROM ONLY ${id}).directories` : surql`SELECT * FROM directory WHERE !parent` }; SELECT * FROM ONLY ${id};`
-            console.log(query.toString())
+            const id = parameter.moveDialog.directory
+            const query = surql`${ id ? surql`(SELECT <~directory.* as directories FROM ONLY ${id}).directories; SELECT * FROM ONLY ${id}` : surql`SELECT * FROM directory WHERE !parent; NONE;` }`
             const [directories, current] = await surrealdb.up().then(() => surrealdb.query<[Directory[], Directory]>(query))
-            console.log(directories, current)
             if (current) {
                 current.id = current.parent!
                 current.name = '..'
@@ -339,6 +336,14 @@ async function renameFile(): Promise<boolean> {
     directory.reload()
     renameDialog.id = undefined
     renameDialog.name = ''
+    return true
+}
+
+async function moveFile(): Promise<boolean> {
+    if (!moveDialog.id) return false
+    await surrealdb.up()
+    await surrealdb.query(surql`UPDATE ONLY ${moveDialog.id} SET parent = ${moveDialog.directory}`)
+    await directory.reload()
     return true
 }
 
