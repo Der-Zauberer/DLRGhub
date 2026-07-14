@@ -29,13 +29,12 @@
             </template>
         </HeadlineComponent>
 
-        <OfflineComponent :loading="directory.loading" @reload="directory.reload()"/>
         <swd-loading-spinner v-if="directory.loading || saveFile.loading || content.loading" :loading="directory.loading || saveFile.loading || content.loading" class="width-100"></swd-loading-spinner>
         <div class="red-text" v-if="directory.error || saveFile.error">{{ directory.error || saveFile.error }}</div>
 
-        <div v-if="directory.value?.index" v-html="directory.value.index" class="margin-bottom"></div>
+        <div v-if="!directory.loading && directory.value?.index" v-html="directory.value.index" class="margin-bottom"></div>
 
-        <div v-if="directory.value?.directories && directory.value?.files" class="grid-cols-xl-6 grid-cols-lg-5 grid-cols-md-4 grid-cols-sm-3 grid-cols-2 directories">
+        <div v-if="!directory.loading && (directory.value?.directories && directory.value?.files)" class="grid-cols-xl-6 grid-cols-lg-5 grid-cols-md-4 grid-cols-sm-3 grid-cols-2 directories">
             <RouterLink v-for="entry of directory.value?.directories.sort((a, b) => a.name.localeCompare(b.name))" :to="'/file' + entry.path">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
                     <path d="M1 3 H7 V7 H1 Z" style="fill: var(--theme-secondary-color); stroke: var(--theme-secondary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
@@ -48,6 +47,7 @@
                         <swd-dropdown-content>
                             <swd-selection>
                                 <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id">Umbenennen</ButtonComponent>
+                                <ButtonComponent icon="arrow-right" @click="moveDialog.open = true; moveDialog.id = entry.id">Verschieben</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
                             </swd-selection>
                         </swd-dropdown-content>
@@ -72,6 +72,7 @@
                                 <ButtonComponent icon="download" @click="downloadFile(entry.path)">Herunterladen</ButtonComponent>
                                 <ButtonComponent icon="pen" class="grey-color" :to="'/file' + entry.path  + '?edit'">Bearbeiten</ButtonComponent>
                                 <ButtonComponent icon="file" @click="renameDialog.open = true; renameDialog.id = entry.id; renameDialog.name = entry.name">Umbenennen</ButtonComponent>
+                                <ButtonComponent icon="arrow-right" @click="moveDialog.open = true; moveDialog.id = entry.parent">Verschieben</ButtonComponent>
                                 <ButtonComponent icon="delete" class="red-text" @click="openDeleteDialog(entry.id, entry.name)">Löschen</ButtonComponent>
                             </swd-selection>
                         </swd-dropdown-content>
@@ -80,7 +81,7 @@
             </RouterLink>
         </div>
 
-        <template v-if="directory.value?.file && !Object.keys(route.query).includes('edit')">
+        <template v-if="!directory.loading && directory.value?.file && !Object.keys(route.query).includes('edit')">
             <img v-if="directory.value.file.type.startsWith('image/')" :src="profileApiFilePath + directory.value.file.path" class="media-content">
             <video v-if="directory.value.file.type.startsWith('video/')" controls class="media-content">
                 <source :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type">
@@ -92,15 +93,28 @@
             <div v-if="!['image', 'video', 'audio'].includes(directory.value.file.type.split('/')[0]) && directory.value.file.type !== 'application/pdf' && directory.value.file.type !== 'text/html'" class="text-content">{{ content.value }}</div>
         </template>
 
-        <template v-if="directory.value?.file && Object.keys(route.query).includes('edit')">
+        <template v-if="!directory.loading && directory.value?.file && Object.keys(route.query).includes('edit')">
             <swd-input>
-                <textarea ref="editor" class="text-edit" v-model="content.value"></textarea>
+                <textarea ref="editor" class="text-editor" v-model="content.value"></textarea>
             </swd-input>
         </template>
 
     </div>
 
     <embed v-if="directory?.value?.file?.type === 'application/pdf' && !Object.keys(route.query).includes('edit')" :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type" class="pdf-content"/>
+
+    <DialogComponent title="Verschieben" action="Verschieben" v-model="moveDialog.open">
+        <swd-loading-spinner v-if="moveDirectories.loading" class="width-100"></swd-loading-spinner>
+        <div v-if="!moveDirectories.loading">
+            <button class="directoy-button ghost" v-for="directoy of moveDirectories.value" @click="moveDialog.id = directoy.id">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18">
+                    <path d="M1 3 H7 V7 H1 Z" style="fill: var(--theme-secondary-color); stroke: var(--theme-secondary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
+                    <path d="M1 5 H 17 V13 H1 Z" style="fill: var(--theme-primary-color); stroke: var(--theme-primary-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"/>
+                </svg>
+                <div>{{ directoy.name }}</div>
+            </button>
+        </div>
+    </DialogComponent>
 
 </template>
 
@@ -156,6 +170,17 @@
 
 }
 
+.directoy-button {
+    display: flex;
+    gap: 1ch;
+    align-items: center;
+    width: 100%;
+    
+    & svg {
+        height: 2em;
+    }
+}
+
 .media-content {
     display: block;
     max-width: 100%;
@@ -173,10 +198,11 @@
     white-space: pre-wrap;
 }
 
-.text-edit {
+.text-editor {
     height: auto;
     resize: none;
     overflow: hidden;
+    font-family: 'Roboto Mono', monospace;
 }
 
 </style>
@@ -186,7 +212,6 @@ import ButtonComponent from '@/components/ButtonComponent.vue'
 import DialogComponent from '@/components/DialogComponent.vue'
 import HeadlineComponent from '@/components/HeadlineComponent.vue'
 import InputComponent from '@/components/InputComponent.vue'
-import OfflineComponent from '@/components/OfflineComponent.vue'
 import { resource } from '@/core/resource'
 import type { BinaryFile, Directory } from '@/core/types'
 import { useDialogService } from '@/services/dialog.service'
@@ -204,6 +229,7 @@ const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profi
 
 const createDialog = reactive<{ open: boolean, name: string, type: 'directory' | 'text/plain' | 'text/html' }>({ open: false, name: '', type: 'directory' })
 const renameDialog = reactive<{ open: boolean, id: RecordId<'directory'> | RecordId<'file'> | undefined, name: string }>({ open: false, id: undefined, name: '' })
+const moveDialog = reactive<{ open: boolean, id: RecordId<'directory'> | undefined, name: string }>({ open: false, id: undefined, name: '' })
 
 const editor = useTemplateRef<HTMLTextAreaElement>('editor')
 
@@ -233,6 +259,29 @@ const directory = resource({
             `
         }
         return surrealdb.up().then(() => surrealdb.query<[{ location?: RecordId<'directory'>, directories: Directory[], files: BinaryFile[], file: BinaryFile | undefined, index?: string }]>(query).then(result => result[0]))
+    }
+})
+
+const moveDirectories = resource({
+    parameter: { moveDialog },
+    loader: async parameter => {
+        if (parameter.moveDialog.open) {
+            const id = parameter.moveDialog.id
+            console.log(id?.toString())
+            const query = surql`${ id ? surql`(SELECT <~directory.* as directories FROM ONLY ${id}).directories` : surql`SELECT * FROM directory WHERE !parent` }; SELECT * FROM ONLY ${id};`
+            console.log(query.toString())
+            const [directories, current] = await surrealdb.up().then(() => surrealdb.query<[Directory[], Directory]>(query))
+            console.log(directories, current)
+            if (current) {
+                current.id = current.parent!
+                current.name = '..'
+                return [current, ...directories]
+            } else {
+                return directories
+            }
+        } else {
+            return []
+        }
     }
 })
 

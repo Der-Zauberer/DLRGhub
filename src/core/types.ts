@@ -62,7 +62,7 @@ export type Post = {
 export type Directory = {
     id: RecordId<'directory'>
     name: string
-    parent: RecordId<'directory'> | undefined
+    parent?: RecordId<'directory'>
     path: string
 }
 
@@ -70,7 +70,7 @@ export type BinaryFile = {
     id: RecordId<'file'>
     name: string
     type: string
-    parent: RecordId<'directory'> | undefined
+    parent?: RecordId<'directory'>
     path: string
     content?: ArrayBuffer
     created: {
