@@ -12,7 +12,7 @@
 		<div class="menu">
 			<RouterLink :to="{ name: 'home' }" :exact="false"><swd-icon class="home-icon"></swd-icon><span>Home</span></RouterLink>
 			<RouterLink :to="{ name: 'plans' }" :class="{ 'router-link-active': $route.path.startsWith($router.resolve({ name: 'plans' }).path) }" :exact="false"><swd-icon class="calendar-icon"></swd-icon><span>Dienstpläne</span></RouterLink>
-			<RouterLink :to="{ name: 'files' }" :class="{ 'router-link-active': $route.path.startsWith($router.resolve({ name: 'files' }).path) }" :exact="false"><swd-icon class="folder-icon"></swd-icon><span>Dateien</span></RouterLink>
+			<!--<RouterLink :to="{ name: 'files' }" :class="{ 'router-link-active': $route.path.startsWith($router.resolve({ name: 'files' }).path) }" :exact="false"><swd-icon class="folder-icon"></swd-icon><span>Dateien</span></RouterLink>-->
 			<RouterLink :to="{ name: 'profile' }" :exact="false"><swd-icon class="user-icon"></swd-icon><span>Profil</span></RouterLink>
 		</div>
 		</swd-menu>
