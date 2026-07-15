@@ -2,7 +2,7 @@
 
     <div class="container-xl">
 
-        <HeadlineComponent :title="directory.value?.file?.name || 'Dateien'" :back="[ ...$route.params.pathMatch ].length ? { path: '/' + [ 'file', ...$route.params.pathMatch ].splice(0, [ ...$route.params.pathMatch ].length).join('/') } as unknown as RouteLocationAsRelativeGeneric : undefined">
+        <HeadlineComponent :title="directory.value?.file?.name || 'Dateien'" :back="Array.isArray($route.params.pathMatch) && $route.params.pathMatch.length ? { path: '/' + [ 'file', ...$route.params.pathMatch ].splice(0, $route.params.pathMatch.length).join('/') } as unknown as RouteLocationAsRelativeGeneric : undefined">
             <template v-if="!directory.value?.file">
                 <swd-dropdown>
                     <ButtonComponent color="ELEMENT" icon="add" aria-label="Erstellen" :disabled="!directory.value"/>
@@ -24,15 +24,16 @@
                 </DialogComponent>
             </template>
             <template v-if="directory.value?.file">
-                <ButtonComponent v-if="!['image', 'video', 'audio'].includes(directory.value?.file.type.split('/')[0])" :color="Object.keys(route.query).includes('edit') ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (Object.keys(route.query).includes('edit') ? 'save': 'pen')" :aria-label="Object.keys(route.query).includes('edit') ? 'save' : 'edit'" @click="Object.keys(route.query).includes('edit') ? saveFile.reload() : router.push({ name: route.name, params: route.params, query: { edit: null } })"/>
+                <ButtonComponent v-if="!directory.loading && directory.value?.file && Object.keys(route.query).includes('edit')" color="ELEMENT" icon="hamburger" aria-label="line wrap mode" @click="wrappMode = !wrappMode" :selected="wrappMode"/>
                 <ButtonComponent color="ELEMENT" icon="download" aria-label="download" @click="downloadFile(directory.value?.file.path)"/>
+                <ButtonComponent v-if="!['image', 'video', 'audio'].includes(directory.value?.file.type.split('/')[0])" :color="Object.keys(route.query).includes('edit') ? 'PRMARY' : 'ELEMENT'" :disabled="saveFile.loading" :icon="saveFile.loading ? 'loading-spinner' : (Object.keys(route.query).includes('edit') ? 'save': 'pen')" :aria-label="Object.keys(route.query).includes('edit') ? 'save' : 'edit'" @click="Object.keys(route.query).includes('edit') ? saveFile.reload() : router.push({ name: route.name, params: route.params, query: { edit: null } })"/>
             </template>
         </HeadlineComponent>
 
         <swd-loading-spinner v-if="directory.loading || saveFile.loading || content.loading" :loading="directory.loading || saveFile.loading || content.loading" class="width-100"></swd-loading-spinner>
         <div class="red-text" v-if="directory.error || saveFile.error">{{ directory.error || saveFile.error }}</div>
 
-        <div v-if="!directory.loading && directory.value?.index" v-html="directory.value.index" class="margin-bottom"></div>
+        <div v-if="!directory.loading && directory.value?.index" v-html="directory.value.index" class="margin-bottom" id="html-view"></div>
 
         <div v-if="!directory.loading && (directory.value?.directories && directory.value?.files)" class="grid-cols-xl-6 grid-cols-lg-5 grid-cols-md-4 grid-cols-sm-3 grid-cols-2 directories">
             <RouterLink v-for="entry of directory.value?.directories.sort((a, b) => a.name.localeCompare(b.name))" :to="'/file' + entry.path">
@@ -89,13 +90,13 @@
             <audio v-if="directory.value.file.type.startsWith('audio/')" controls class="media-content">
                 <source :src="profileApiFilePath + directory.value.file.path" :type="directory.value.file.type">
             </audio>
-            <div v-if="directory.value.file.type === 'text/html'" v-html="content.value"></div>
+            <div v-if="directory.value.file.type === 'text/html'" v-html="content.value" id="html-view"></div>
             <div v-if="!['image', 'video', 'audio'].includes(directory.value.file.type.split('/')[0]) && directory.value.file.type !== 'application/pdf' && directory.value.file.type !== 'text/html'" class="text-content">{{ content.value }}</div>
         </template>
 
         <template v-if="!directory.loading && directory.value?.file && Object.keys(route.query).includes('edit')">
             <swd-input>
-                <textarea ref="editor" class="text-editor" v-model="content.value"></textarea>
+                <textarea ref="editor" class="text-editor" v-model="content.value" :style="wrappMode ? 'white-space: initial;' : ''"></textarea>
             </swd-input>
         </template>
 
@@ -199,10 +200,17 @@
 }
 
 .text-editor {
-    height: auto;
+    box-sizing: border-box;
     resize: none;
     overflow: hidden;
     font-family: 'Roboto Mono', monospace;
+    white-space: pre;
+    height: calc(100vh - var(--theme-menu-height) - (4 * var(--theme-element-spacing)) - round(2.2em, 1px));
+    overflow: auto;
+}
+
+@media only screen and (min-width: 576px) {
+    .text-editor {height: calc(100vh - var(--theme-menu-height) - (6 * var(--theme-element-spacing)) - round(2.2em, 1px));}
 }
 
 </style>
@@ -217,7 +225,7 @@ import type { BinaryFile, Directory } from '@/core/types'
 import { useDialogService } from '@/services/dialog.service'
 import { useSurrealDbService } from '@/services/surrealdb.service'
 import { BoundQuery, surql, Table, RecordId } from 'surrealdb'
-import { reactive, useTemplateRef, nextTick, watch } from 'vue'
+import { nextTick, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationAsRelativeGeneric } from 'vue-router'
 
 const route = useRoute()
@@ -227,17 +235,18 @@ const surrealdb = useSurrealDbService()
 const profile = surrealdb.getProfile().default
 const profileApiFilePath = `${profile.address.replace('ws', 'http')}/api/${profile.namespace}/${profile.database}/file`
 
+const wrappMode = ref<boolean>(false)
+const loadedScripts = new Set<HTMLScriptElement>()
+
 const createDialog = reactive<{ open: boolean, name: string, type: 'directory' | 'text/plain' | 'text/html' }>({ open: false, name: '', type: 'directory' })
 const renameDialog = reactive<{ open: boolean, id?: RecordId<'directory'> | RecordId<'file'>, name: string }>({ open: false, id: undefined, name: '' })
 const moveDialog = reactive<{ open: boolean, id?: RecordId<'directory'> | RecordId<'file'>, directory?: RecordId<'directory'>, name: string }>({ open: false, id: undefined, directory: undefined, name: '' })
-
-const editor = useTemplateRef<HTMLTextAreaElement>('editor')
 
 const directory = resource({
     parameter: { route },
     loader: parameter => {
         let query: BoundQuery
-        if (!parameter.route.params.pathMatch) {
+        if (!Array.isArray(parameter.route.params.pathMatch) || parameter.route.params.pathMatch.length === 0) {
             query = surql`
                 {
                     directories: SELECT * FROM directory WHERE !parent,
@@ -247,7 +256,7 @@ const directory = resource({
                 }
             `
         } else {
-            const path = '/' + [ ...parameter.route.params.pathMatch ]?.join('/')
+            const path = '/' + [ ...parameter.route.params.pathMatch ].join('/')
             query = surql`
                 {
                     location: SELECT VALUE id FROM ONLY directory WHERE path = ${path},
@@ -287,12 +296,14 @@ const content = resource({
     loader: parameter => parameter.directory.value?.file && !['image', 'video', 'audio'].includes(parameter.directory.value.file.type.split('/')[0]) && parameter.directory.value.file.type !== 'application/pdf' ? fetch(profileApiFilePath + parameter.directory.value?.file.path).then(result => result.text()) : undefined
 })
 
+watch(directory, async () => {
+    await nextTick()
+    renderHtmlScripts()
+})
+
 watch(content, async () => {
     await nextTick()
-    if (!editor.value) return
-    editor.value.style.height = 'auto'
-    editor.value.style.height = editor.value.scrollHeight + 'px'
-    
+    renderHtmlScripts()
 })
 
 const saveFile = resource({
@@ -310,6 +321,21 @@ const saveFile = resource({
         }
     }
 })
+
+function renderHtmlScripts() {
+    for (const script of loadedScripts) {
+        script.remove()
+    }
+    loadedScripts.clear()
+    for (const oldScript of document.querySelectorAll('#html-view script:not([loaded])')) {
+        oldScript.setAttribute('loaded', 'true')
+        const newScript = document.createElement('script') as HTMLScriptElement
+        loadedScripts.add(newScript)
+        Array.from(oldScript.attributes).forEach((attribute: Attr) => newScript.setAttribute(attribute.name, attribute.value))
+        newScript.textContent = oldScript.textContent
+        oldScript.parentNode!.replaceChild(newScript, oldScript)
+    }
+}
 
 function encodeBinary(content: string): ArrayBuffer {
     return new TextEncoder().encode(content).buffer
